@@ -35,7 +35,7 @@ window.PORTFOLIO_CONTENT = {
   "hero": {
     "kicker": "XE Studio - portfolio of Ng Xue En",
     "headline": "Systems by day.\nWorlds by night.",
-    "subline": "Automation engineer and game builder. Every project below is alive - run the pipelines, step through the escape room, watch the systems think.",
+    "subline": "I build systems that think, automate, and engage. Every project below is alive—run the pipelines, step through the escape room, and watch the systems think.",
     "terminal": [
       "$ whoami",
       "xue-en : business system analyst / creative technologist",
@@ -58,12 +58,14 @@ window.PORTFOLIO_CONTENT = {
         "label": "self-hosted automation platform"
       },
       {
-        "value": "1000s",
-        "label": "of documents processed by AI"
+        "value": "800",
+        "label": "hours spent vibe-coding with AI",
+        "live": { "kind": "hours", "startDate": "2026-04-26", "asOf": "2026-07-21", "asOfValue": 800 }
       },
       {
-        "value": "1",
-        "label": "VR world built from scratch"
+        "value": "—",
+        "label": "visitors and counting",
+        "live": { "kind": "visitors", "goatcounter": "https://xueenng.goatcounter.com/counter/TOTAL.json" }
       }
     ]
   },
@@ -701,7 +703,7 @@ window.PORTFOLIO_CONTENT = {
       "org": "Universiti Tunku Abdul Rahman (UTAR)",
       "place": "Kampar",
       "points": [
-        "President's List for 3 semesters and Dean's List for 2 semesters; awarded the China Ambassador Scholarship (2024)",
+        "President's List for 2 semesters and Dean's List for 4 semesters; awarded the China Ambassador Scholarship (2024)",
         "Final year project: Echoes in Kellie's Castle - a VR escape room of the real heritage site, modelled in Blender and built in Unity",
         "Focus on business systems and applied AI"
       ]
@@ -751,22 +753,22 @@ window.PORTFOLIO_CONTENT = {
   "achievements": [
     {
       "id": "ach-presidents-list",
-      "title": "President's List - 3 semesters",
+      "title": "President's List - 2 semesters",
       "org": "UTAR",
-      "year": "2023 - 2024",
+      "year": "2023",
       "era": "university",
       "category": "academic",
-      "description": "Named to the President's List three semesters running - the university's highest per-semester academic honour.",
+      "description": "Named to the President's List two semesters running - the university's highest per-semester academic honour.",
       "image": ""
     },
     {
       "id": "ach-deans-list",
-      "title": "Dean's List - 2 semesters",
+      "title": "Dean's List - 4 semesters",
       "org": "UTAR",
-      "year": "2023 - 2024",
+      "year": "2023 - 2025",
       "era": "university",
       "category": "academic",
-      "description": "Dean's List honours in two further semesters - five award semesters in total.",
+      "description": "Dean's List honours in four further semesters - five award semesters in total.",
       "image": ""
     },
     {
@@ -783,7 +785,7 @@ window.PORTFOLIO_CONTENT = {
       "id": "ach-aws-cloud",
       "title": "AWS Cloud Foundations",
       "org": "AWS",
-      "year": "",
+      "year": "2024",
       "era": "university",
       "category": "certification",
       "description": "Cloud computing fundamentals - services, architecture, security and pricing.",
@@ -803,7 +805,7 @@ window.PORTFOLIO_CONTENT = {
       "id": "ach-muet",
       "title": "MUET Band 4.5",
       "org": "Malaysian University English Test",
-      "year": "",
+      "year": "2025",
       "era": "university",
       "category": "certification",
       "description": "Operating comfortably in professional English - reading, writing, listening and speaking.",
@@ -813,7 +815,7 @@ window.PORTFOLIO_CONTENT = {
       "id": "ach-tech4good",
       "title": "Tech 4 Good Challenge",
       "org": "",
-      "year": "2024",
+      "year": "2024 -2025",
       "era": "university",
       "category": "cocurricular",
       "description": "Certificate of Participation - putting technology to work for social good.",
@@ -826,7 +828,7 @@ window.PORTFOLIO_CONTENT = {
       "year": "2021",
       "era": "foundation",
       "category": "academic",
-      "description": "Entry scholarship awarded for the Foundation in Science programme.",
+      "description": "Awarded an entry scholarship for the Foundation in Science programme in recognition of outstanding SPM results.",
       "image": ""
     },
     {

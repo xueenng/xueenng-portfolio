@@ -121,11 +121,60 @@
     wrap.innerHTML = "";
     content.hero.stats.forEach(function (s, i) {
       var d = el("div", "stat reveal");
-      var b = el("b", null, s.value); b.setAttribute("data-edit", "hero.stats." + i + ".value");
+      var b = el("b", null, s.value);
+      if (!s.live) b.setAttribute("data-edit", "hero.stats." + i + ".value"); // live stats compute their own value
       var sp = el("span", null, s.label); sp.setAttribute("data-edit", "hero.stats." + i + ".label");
       d.appendChild(b); d.appendChild(sp);
       wrap.appendChild(d);
+      if (s.live) startLiveStat(b, s.live);
     });
+  }
+
+  // A hero stat whose number is computed live and keeps climbing, never hardcoded.
+  function startLiveStat(bEl, live) {
+    function fmtInt(n) { return Math.max(0, Math.floor(n)).toLocaleString(); }
+
+    if (live.kind === "hours") {
+      // Linear from 0 at startDate through asOfValue at asOf, then onward at the same pace.
+      var start = Date.parse(live.startDate + "T00:00:00");
+      var asOf = Date.parse(live.asOf + "T00:00:00");
+      var rate = live.asOfValue / (asOf - start);            // value per millisecond
+      var now = function () { return rate * (Date.now() - start); };
+      countUp(bEl, now(), fmtInt);
+      setInterval(function () { bEl.textContent = fmtInt(now()); }, 5000);
+
+    } else if (live.kind === "visitors") {
+      // A static site can't tally its own visitors; the global count comes from a service.
+      liveVisitorCount(live).then(function (n) {
+        if (n == null) return;                                // leave the seed/fallback text
+        countUp(bEl, n, fmtInt);
+      });
+    }
+  }
+
+  // Ease-out count-up so the number visibly "counts" on reveal, landing on the true value.
+  function countUp(elm, target, fmt) {
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || !target || target < 1) { elm.textContent = fmt(target); return; }
+    var dur = 1200, t0 = performance.now();
+    (function step(t) {
+      var p = Math.min(1, (t - t0) / dur);
+      elm.textContent = fmt(target * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) requestAnimationFrame(step); else elm.textContent = fmt(target);
+    })(performance.now());
+  }
+
+  // Reads the live global count from GoatCounter's counter endpoint (cookieless, CORS-enabled).
+  function liveVisitorCount(live) {
+    if (!live.goatcounter || typeof fetch !== "function") return Promise.resolve(null);
+    return fetch(live.goatcounter).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j) return null;
+        var raw = j.count_unique != null ? j.count_unique : j.count;
+        var n = parseInt(String(raw).replace(/[^0-9]/g, ""), 10);
+        return isNaN(n) ? null : n;
+      })
+      .catch(function () { return null; });
   }
 
   /* ---------- hero polaroid: the visitor's photo pinned into the scene ---------- */
