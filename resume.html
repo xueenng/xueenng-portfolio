@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ng Xue En — Résumé</title>
+<meta name="description" content="Résumé of Ng Xue En — Business System Analyst.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>&#128196;</text></svg>">
+<style>
+  /* ATS-friendly: single column, standard fonts, real text, no tables/graphics.
+     Screen = a centred sheet (the live preview); print = only the sheet. */
+  :root { --accent:#b8791a; --ink:#1c1a15; --ink2:#4a453b; --line:#cfc6b2; --paper:#ffffff; --bg:#e9e3d6; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--ink); font-family:"Segoe UI", Arial, sans-serif; line-height:1.42; }
+
+  .toolbar {
+    position:sticky; top:0; z-index:5; display:flex; gap:.7rem; align-items:center; justify-content:center;
+    padding:.7rem 1rem; background:rgba(28,26,21,.92); backdrop-filter:blur(6px);
+  }
+  .toolbar a, .toolbar button {
+    font-family:inherit; font-size:.85rem; font-weight:600; border-radius:99px; cursor:pointer;
+    padding:.5rem 1.2rem; border:1px solid #6b6353; background:transparent; color:#f3ead6; text-decoration:none;
+  }
+  .toolbar .primary { background:#E8A200; color:#1a1508; border-color:#E8A200; }
+  .toolbar a:hover, .toolbar button:hover { border-color:#E8A200; }
+
+  /* sized in pt/mm so the on-screen sheet is WYSIWYG with the printed A4 -
+     what you preview is what prints (and matches the downloaded PDF) */
+  .sheet {
+    background:var(--paper); width:210mm; min-height:297mm; margin:1.6rem auto; padding:15mm 16mm;
+    box-shadow:0 10px 40px rgba(40,32,18,.25); font-size:10.3pt; line-height:1.4;
+  }
+  .r-name { font-family:Helvetica, Arial, sans-serif; font-size:19pt; font-weight:700; letter-spacing:.2pt; }
+  .r-contact { color:var(--ink2); font-size:9pt; margin-top:3pt; }
+  .r-tag { font-size:9.6pt; margin-top:3pt; font-weight:700; }
+  .r-tag span { color:var(--accent); }
+  h2 {
+    font-size:9pt; font-weight:700; letter-spacing:1.1pt; text-transform:uppercase; color:var(--accent);
+    border-bottom:1px solid var(--line); padding-bottom:2pt; margin:11pt 0 6pt;
+  }
+  .r-objective { text-align:left; }
+  .r-entry { margin-bottom:7pt; }
+  .r-row { display:flex; justify-content:space-between; align-items:baseline; gap:1rem; }
+  .r-role { font-weight:700; font-size:10.5pt; }
+  .r-period { color:var(--ink2); font-size:8.5pt; white-space:nowrap; }
+  .r-org { color:var(--ink2); font-style:italic; margin-bottom:2pt; }
+  ul { margin:2pt 0 0 14pt; }
+  li { margin:1.5pt 0; }
+  .r-note { margin-top:1pt; }
+  .r-add { margin:2pt 0; display:flex; }
+  .r-add b { flex:none; width:118pt; }
+  .r-empty { max-width:210mm; margin:3rem auto; text-align:center; color:#6b6353; }
+
+  @page { size: A4; margin: 15mm 16mm; }
+  @media print {
+    :root { --bg:#fff; }
+    html, body { background:#fff; }
+    .toolbar { display:none; }
+    .sheet { box-shadow:none; margin:0; width:auto; min-height:0; padding:0; }
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <a href="index.html">&larr; back to the valley</a>
+    <button class="primary" id="r-download">&#8681; Download PDF</button>
+    <button id="r-print">&#128424; Print</button>
+  </div>
+  <div id="resume-root"></div>
+
+  <script src="js/content.js"></script>
+  <script src="js/pdf.js"></script>
+  <script src="js/resume.js"></script>
+</body>
+</html>

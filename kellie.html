@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kellie's Castle - Echoes | Ng Xue En</title>
+<meta name="description" content="Step inside Kellie's Castle - the story of the unfinished castle and the VR escape room built inside it. A final year project you can feel.">
+<link rel="canonical" href="https://xueenng.github.io/xueenng-portfolio/kellie.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="XE Studio">
+<meta property="og:title" content="Kellie's Castle — Echoes · a VR escape room inside a real heritage castle">
+<meta property="og:description" content="Step inside Kellie's Castle after dark - the story of the unfinished castle and the VR escape room built inside it. A final year project you can feel.">
+<meta property="og:url" content="https://xueenng.github.io/xueenng-portfolio/kellie.html">
+<meta property="og:image" content="https://xueenng.github.io/xueenng-portfolio/assets/og-card.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A painted valley at dawn, Kellie's Castle on the hill - Ng Xue En: systems by day, worlds by night">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Kellie's Castle — Echoes · a VR escape room inside a real heritage castle">
+<meta name="twitter:description" content="The story of the unfinished castle and the VR escape room built inside it - a final year project you can feel.">
+<meta name="twitter:image" content="https://xueenng.github.io/xueenng-portfolio/assets/og-card.jpg">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>&#128367;</text></svg>">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "Echoes in Kellie's Castle",
+  "author": { "@type": "Person", "name": "Ng Xue En" },
+  "gamePlatform": ["Meta Quest 2", "Windows", "Android"],
+  "genre": "VR escape room",
+  "description": "A VR escape room set inside the real Kellie's Castle heritage site in Perak, Malaysia - modelled in Blender and built in Unity (C#, OpenXR) as a solo final year project at UTAR.",
+  "url": "https://xueenng.github.io/xueenng-portfolio/kellie.html"
+}
+</script>
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/kellie.css">
+</head>
+<body class="k-body">
+
+<!-- ======== THE THRESHOLD (audio unlock gate) ======== -->
+<div class="k-threshold" id="k-threshold">
+  <p class="k-th-kicker">Perak, Malaysia &mdash; begun 1915, never finished</p>
+  <h1 class="k-th-title">KELLIE&rsquo;S CASTLE</h1>
+  <p class="k-th-sub">My final year project takes you inside the castle after dark.<br>
+    Headphones recommended.</p>
+  <div class="k-th-actions">
+    <button class="k-btn k-btn-lit" id="k-enter-sound">&#128367; Enter with sound</button>
+    <button class="k-btn" id="k-enter-quiet">enter quietly</button>
+  </div>
+  <a class="k-th-back" href="index.html">&larr; no, take me back to the valley</a>
+</div>
+
+<!-- fixed chrome -->
+<a class="k-home" href="index.html" title="Back to the valley">&larr; the valley</a>
+<button class="k-sound" id="k-sound" title="Sound on / off" hidden>&#128266;</button>
+
+<!-- drifting fog + occasional passing shadow -->
+<div class="k-fog k-fog-a" aria-hidden="true"></div>
+<div class="k-fog k-fog-b" aria-hidden="true"></div>
+<div class="k-shadow" id="k-shadow" aria-hidden="true"></div>
+
+<main class="k-main" id="k-main">
+
+  <!-- ======== SCENE 1: THE CASTLE & ITS STORY ======== -->
+  <section class="k-scene k-scene-castle">
+    <div class="k-backdrop" aria-hidden="true">
+      <svg viewBox="0 0 1400 760" preserveAspectRatio="xMidYMax meet">
+        <defs>
+          <radialGradient id="kw-glow" cx=".5" cy=".5" r=".5">
+            <stop offset="0" stop-color="rgba(255,209,120,.6)"/><stop offset="1" stop-color="rgba(255,209,120,0)"/>
+          </radialGradient>
+        </defs>
+        <path d="M0 600 Q 320 540 700 580 T 1400 590 L 1400 760 L 0 760 Z" fill="#0a0f1e"/>
+        <g>
+          <!-- square tower -->
+          <rect x="520" y="150" width="120" height="470" fill="#0b1122"/>
+          <path d="M520 150 h120 v-14 h-17 v8 h-19 v-8 h-18 v8 h-19 v-8 h-18 v8 h-17 Z" fill="#0b1122"/>
+          <path d="M540 196 a12 12 0 0 1 24 0 v30 h-24 Z M580 196 a12 12 0 0 1 24 0 v30 h-24 Z" fill="#1b2544"/>
+          <path class="k-window" d="M576 300 a14 14 0 0 1 28 0 v36 h-28 Z" fill="#ffd178"/>
+          <circle cx="590" cy="320" r="64" fill="url(#kw-glow)" class="k-window"/>
+          <path d="M540 430 a12 12 0 0 1 24 0 v30 h-24 Z M580 430 a12 12 0 0 1 24 0 v30 h-24 Z" fill="#151e3a"/>
+          <!-- main block, two arch storeys -->
+          <rect x="640" y="290" width="360" height="330" fill="#0b1122"/>
+          <path d="M664 322 a13 13 0 0 1 26 0 v34 h-26 Z M714 322 a13 13 0 0 1 26 0 v34 h-26 Z M764 322 a13 13 0 0 1 26 0 v34 h-26 Z M814 322 a13 13 0 0 1 26 0 v34 h-26 Z M864 322 a13 13 0 0 1 26 0 v34 h-26 Z M914 322 a13 13 0 0 1 26 0 v34 h-26 Z" fill="#1a2342"/>
+          <path d="M664 430 a13 13 0 0 1 26 0 v36 h-26 Z M714 430 a13 13 0 0 1 26 0 v36 h-26 Z M764 430 a13 13 0 0 1 26 0 v36 h-26 Z M814 430 a13 13 0 0 1 26 0 v36 h-26 Z M864 430 a13 13 0 0 1 26 0 v36 h-26 Z M914 430 a13 13 0 0 1 26 0 v36 h-26 Z" fill="#161f3c"/>
+          <!-- round tower -->
+          <rect x="1000" y="250" width="80" height="370" fill="#0b1122"/>
+          <path d="M1000 250 a40 26 0 0 1 80 0 Z" fill="#0b1122"/>
+          <path d="M1016 292 a10 10 0 0 1 20 0 v24 h-20 Z M1046 292 a10 10 0 0 1 20 0 v24 h-20 Z" fill="#1a2342"/>
+          <!-- the unfinished wing: bare columns against the sky -->
+          <rect x="380" y="440" width="16" height="180" fill="#0b1122"/>
+          <rect x="420" y="420" width="16" height="200" fill="#0b1122"/>
+          <rect x="460" y="450" width="16" height="170" fill="#0b1122"/>
+          <rect x="372" y="424" width="112" height="12" fill="#0b1122" transform="rotate(-3 428 430)"/>
+        </g>
+        <path d="M240 620 q -8 -70 24 -104 q 28 34 18 104 Z" fill="#080d19"/>
+        <path d="M1180 626 q -8 -84 28 -122 q 32 40 20 122 Z" fill="#080d19"/>
+        <rect x="0" y="560" width="1400" height="90" fill="rgba(140,160,205,.06)"/>
+      </svg>
+    </div>
+    <div class="k-panel k-panel-first">
+      <p class="k-kicker">the true story</p>
+      <h2><span class="k-candle" aria-hidden="true"></span>A castle that was never finished</h2>
+      <p>In 1915, a Scottish planter named <b>William Kellie Smith</b> began building a mansion
+        unlike anything Malaya had seen - brick and marble shipped from India, a tower for
+        looking over his rubber estate, plans for an indoor tennis court and the country's
+        first elevator. Seventy craftsmen came from Madras to raise it.</p>
+      <p>Then the Spanish flu swept the estate and took many of the workers. A temple was
+        built nearby to calm the spirits - if you visit it today, you will find a small figure
+        of a white man in a white suit standing among its deities. It is Kellie Smith.</p>
+      <p>In 1926, on a trip to Lisbon to collect the elevator, he died of pneumonia.
+        He was 56. His family left Malaya and never came back.
+        <b>The castle stopped exactly where it stood</b> - corridors that end in open sky,
+        stairways to floors that were never built, and, locals say, secret tunnels below
+        and footsteps above that no one has ever traced.</p>
+    </div>
+  </section>
+
+  <!-- ======== SCENE 2: THE PROJECT ======== -->
+  <section class="k-scene">
+    <div class="k-panel">
+      <p class="k-kicker">the project</p>
+      <h2><span class="k-candle" aria-hidden="true"></span>So I rebuilt it - and locked you inside</h2>
+      <p><b>Echoes in Kellie's Castle</b> is my final year project at UTAR: a VR escape room
+        set inside the real castle. Heritage sites struggle to reach young visitors -
+        my answer was to make the history something you <i>solve</i>, in the dark,
+        with a candle in your hand.</p>
+      <p>I modelled the castle in <b>Blender</b> from historical research - the fa&ccedil;ade, the
+        square tower, the staircases - then built the game in <b>Unity (C#, OpenXR)</b>:
+        three levels of story-driven puzzles. You piece together the diary of the castle,
+        answer for its dates, reveal clues by candlelight, reassemble the floor plan
+        against a timer, and crack the number that opens the final door: <b>1915</b>.</p>
+      <ul class="k-facts">
+        <li><b>90&ndash;200 FPS</b> against the 72 FPS VR comfort bar</li>
+        <li><b>25 / 25</b> system test cases passed</li>
+        <li><b>90%</b> of testers gave the top rating for making them want to know Kellie's Castle</li>
+        <li>Runs on <b>Meta Quest 2</b>, desktop and Android</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ======== SCENE 3: GALLERY OF ECHOES ======== -->
+  <section class="k-scene">
+    <div class="k-panel k-panel-wide">
+      <p class="k-kicker">portraits on the wall</p>
+      <h2><span class="k-candle" aria-hidden="true"></span>Echoes, framed</h2>
+      <p class="k-gallery-hint">moments from inside the build - click any frame to step closer</p>
+      <div class="k-gallery" id="k-gallery"></div>
+    </div>
+  </section>
+
+  <!-- ======== SCENE 4: THE NIGHT TOUR (360) ======== -->
+  <section class="k-scene">
+    <div class="k-panel k-panel-wide">
+      <p class="k-kicker">walk it yourself</p>
+      <h2><span class="k-candle" aria-hidden="true"></span>The night tour</h2>
+      <p class="k-gallery-hint">drag to look around the castle grounds - painted from the real site</p>
+      <div class="k-tour" id="k-tour"></div>
+    </div>
+  </section>
+
+  <!-- ======== SCENE 5: PLAY ======== -->
+  <section class="k-scene">
+    <div class="k-panel k-panel-wide">
+      <p class="k-kicker">the descent</p>
+      <h2><span class="k-candle" aria-hidden="true"></span>Play</h2>
+      <div id="k-play"></div>
+    </div>
+  </section>
+
+  <!-- ======== SCENE 6: THE WAY OUT ======== -->
+  <section class="k-scene k-scene-exit">
+    <a class="k-door" href="index.html">
+      <svg viewBox="0 0 120 190" aria-hidden="true">
+        <rect x="6" y="6" width="108" height="184" rx="8" fill="#0b1122"/>
+        <path d="M18 190 L18 66 a42 42 0 0 1 84 0 L102 190 Z" fill="#f7d9ba"/>
+        <path d="M30 190 L30 70 a30 30 0 0 1 60 0 L90 190 Z" fill="#ffe8c4"/>
+        <circle cx="60" cy="58" r="12" fill="#ffd98a"/>
+        <path d="M20 140 Q 60 120 100 140" stroke="#8fae6d" stroke-width="6" fill="none"/>
+      </svg>
+      <span class="k-door-label">leave before sunrise</span>
+      <span class="k-door-sub">&larr; back to the valley, where it is warm</span>
+    </a>
+  </section>
+
+</main>
+
+<script src="js/demos.js"></script>
+<script src="js/kellie.js"></script>
+</body>
+</html>

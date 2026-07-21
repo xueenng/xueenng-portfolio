@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ng Xue En — XE Studio · Systems by day, worlds by night</title>
+<meta name="description" content="A painted valley of running projects - automation systems you can run, worlds you can play. Scroll until night falls.">
+<link rel="canonical" href="https://xueenng.github.io/xueenng-portfolio/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="XE Studio">
+<meta property="og:title" content="Ng Xue En — Systems by day. Worlds by night.">
+<meta property="og:description" content="A painted valley of running projects - automation systems you can run, worlds you can play. Scroll until night falls.">
+<meta property="og:url" content="https://xueenng.github.io/xueenng-portfolio/">
+<meta property="og:image" content="https://xueenng.github.io/xueenng-portfolio/assets/og-card.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A painted valley at dawn, Kellie's Castle on the hill - Ng Xue En: systems by day, worlds by night">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ng Xue En — Systems by day. Worlds by night.">
+<meta name="twitter:description" content="A painted valley of running projects - automation systems you can run, worlds you can play.">
+<meta name="twitter:image" content="https://xueenng.github.io/xueenng-portfolio/assets/og-card.jpg">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>&#128273;</text></svg>">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Ng Xue En",
+  "jobTitle": "Business System Analyst & Creative Technologist",
+  "worksFor": { "@type": "Organization", "name": "Golden Pet Industries Sdn Bhd" },
+  "address": { "@type": "PostalAddress", "addressLocality": "Ipoh", "addressRegion": "Perak", "addressCountry": "MY" },
+  "email": "mailto:xueenng5678@gmail.com",
+  "url": "https://xueenng.github.io/xueenng-portfolio/",
+  "sameAs": [
+    "https://github.com/xueenng",
+    "https://my.linkedin.com/in/ng-xue-en-5516962b1"
+  ]
+}
+</script>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ======== INTRO (skippable, once per session) ======== -->
+<div class="intro" id="intro" hidden aria-hidden="true">
+  <div class="intro-mark" id="intro-mark">XE</div>
+  <div class="intro-line"></div>
+</div>
+
+<!-- ======== NAV ======== -->
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="nav-brand" href="#top"><span class="nav-mono" data-edit="identity.monogram"></span><span class="nav-name" data-edit="identity.name"></span></a>
+    <nav class="nav-links">
+      <a href="#map">Valley map</a>
+      <a href="#selected">Work</a>
+      <a href="#projects">Projects</a>
+      <a href="#about">About</a>
+      <a href="#journey">Journey</a>
+      <a href="#achievements">Achievements</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="nav-resume" id="nav-resume" href="resume.html" title="View &amp; download my r&eacute;sum&eacute;">R&eacute;sum&eacute;</a>
+      <button class="icon-btn" id="btn-weather" title="Weather over the valley">&#127782;</button>
+      <button class="icon-btn" id="btn-lantern" title="Suu's reading lantern (L)" aria-pressed="false">&#127982;</button>
+      <button class="icon-btn" id="btn-theme" title="Toggle light / dark">&#9681;</button>
+      <button class="icon-btn" id="btn-present" title="Presentation mode (P)">&#9654;</button>
+      <button class="icon-btn" id="btn-edit" title="Edit this site (Ctrl+E)">&#9998;</button>
+    </div>
+  </div>
+</header>
+
+<!-- ======== HERO ======== -->
+<section class="hero" id="top">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <p class="hero-kicker" data-edit="hero.kicker"></p>
+      <h1 class="hero-headline" id="hero-headline" data-edit="hero.headline"></h1>
+      <p class="hero-subline" data-edit="hero.subline"></p>
+      <div class="hero-cta">
+        <a class="btn btn-primary magnetic" href="#selected">See the work</a>
+        <a class="btn btn-ghost magnetic" href="#contact">Get in touch</a>
+      </div>
+      <p class="hero-tour"><button class="tour-link" id="btn-tour">in a hurry? &#8594; take the tour with Suu</button></p>
+    </div>
+    <div class="hero-visual">
+      <div id="hero-photo" class="reveal"></div>
+    </div>
+  </div>
+  <div class="hero-stats" id="hero-stats"></div>
+</section>
+
+<!-- ======== SELECTED WORK (featured exhibits) ======== -->
+<section class="section" id="selected">
+  <div class="section-head reveal">
+    <h2><span class="u-hand" data-edit="sections.selected.heading"></span></h2>
+    <p data-edit="sections.selected.sub"></p>
+  </div>
+  <div class="features" id="features"></div>
+</section>
+
+<!-- ======== ALL PROJECTS (filterable grid) ======== -->
+<section class="section" id="projects">
+  <div class="section-head reveal">
+    <h2><span class="u-hand" data-edit="sections.projects.heading"></span></h2>
+    <p data-edit="sections.projects.sub"></p>
+  </div>
+  <div class="filters" id="filters" role="tablist" aria-label="project categories"></div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<!-- ======== ABOUT ======== -->
+<section class="section about" id="about">
+  <div class="about-inner">
+    <div class="avatar-wrap reveal" id="avatar-wrap"></div>
+    <div class="about-text reveal">
+      <p class="about-summary" data-edit="identity.summary"></p>
+      <div class="now" id="now">
+        <span class="now-label">NOW</span>
+        <ul class="now-list" id="now-list"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== SKILLS ======== -->
+<section class="section" id="skills">
+  <div class="section-head reveal">
+    <h2><span class="u-hand" data-edit="sections.skills.heading"></span></h2>
+    <p data-edit="sections.skills.sub"></p>
+  </div>
+  <div class="skills-grid" id="skills-grid"></div>
+</section>
+
+<!-- ======== JOURNEY ======== -->
+<section class="section" id="journey">
+  <div class="section-head reveal">
+    <h2><span class="u-hand" data-edit="sections.journey.heading"></span></h2>
+    <p data-edit="sections.journey.sub"></p>
+  </div>
+  <div class="filters" id="journey-view" role="tablist" aria-label="journey views"></div>
+  <div class="journey-adventure" id="journey-adventure" hidden></div>
+  <div class="timeline" id="timeline"></div>
+</section>
+
+<!-- ======== ACHIEVEMENTS (Hall of Achievements) ======== -->
+<section class="section" id="achievements">
+  <div class="section-head reveal">
+    <h2><span class="u-hand" data-edit="sections.achievements.heading"></span></h2>
+    <p data-edit="sections.achievements.sub"></p>
+    <p class="ach-tally" id="ach-tally"></p>
+  </div>
+  <div class="ach-hall" id="ach-hall" hidden></div>
+  <div class="filters" id="ach-filters" role="tablist" aria-label="achievement categories"></div>
+  <div class="ach-rail" id="ach-rail"></div>
+</section>
+
+<!-- ======== CONTACT ======== -->
+<section class="section contact" id="contact">
+  <div class="contact-card reveal">
+    <span class="contact-stamp" data-edit="identity.monogram"></span>
+    <h2 class="contact-heading"><span class="u-hand" data-edit="sections.contact.heading"></span></h2>
+    <p data-edit="sections.contact.sub"></p>
+    <p class="contact-message" data-edit="contact.message"></p>
+    <div class="contact-row" id="contact-row"></div>
+  </div>
+</section>
+
+<!-- ======== NIGHT FALLS: KELLIE'S CASTLE (door to the FYP experience) ======== -->
+<section class="castle-scene" id="castle" aria-label="Kellie's Castle - enter the final year project experience">
+  <a class="castle-link" href="kellie.html" title="A light is on in Kellie's Castle - step inside">
+    <svg viewBox="0 0 1200 430" role="img" aria-label="silhouette of Kellie's Castle at night, one window lit">
+      <defs>
+        <radialGradient id="cs-glow" cx=".5" cy=".5" r=".5">
+          <stop offset="0" stop-color="rgba(255,214,130,.55)"/><stop offset="1" stop-color="rgba(255,214,130,0)"/>
+        </radialGradient>
+      </defs>
+      <!-- far ridge -->
+      <path d="M0 330 Q 200 290 420 318 T 800 310 T 1200 322 L 1200 430 L 0 430 Z" fill="#0e1526" opacity=".85"/>
+      <!-- castle hill -->
+      <path d="M0 386 Q 300 330 600 356 Q 900 330 1200 380 L 1200 430 L 0 430 Z" fill="#090e1b"/>
+      <g class="castle-silhouette">
+        <!-- square tower (the icon of Kellie's Castle) -->
+        <rect x="452" y="96" width="86" height="270" fill="#0a101f"/>
+        <path d="M452 96 h86 v-10 h-12 v6 h-14 v-6 h-14 v6 h-14 v-6 h-14 v6 h-12 Z" fill="#0a101f"/>
+        <path d="M466 130 a9 9 0 0 1 18 0 v20 h-18 Z M496 130 a9 9 0 0 1 18 0 v20 h-18 Z" fill="#1a2440"/>
+        <path d="M466 250 a9 9 0 0 1 18 0 v20 h-18 Z M496 250 a9 9 0 0 1 18 0 v20 h-18 Z" fill="#141d36"/>
+        <!-- THE lit window -->
+        <path class="castle-window" d="M494 182 a10 10 0 0 1 20 0 v26 h-20 Z" fill="#ffd57e"/>
+        <circle class="castle-window-glow" cx="504" cy="196" r="46" fill="url(#cs-glow)"/>
+        <!-- main block with the arched verandah -->
+        <rect x="538" y="188" width="250" height="178" fill="#0a101f"/>
+        <path d="M556 214 a11 11 0 0 1 22 0 v26 h-22 Z M598 214 a11 11 0 0 1 22 0 v26 h-22 Z M640 214 a11 11 0 0 1 22 0 v26 h-22 Z M682 214 a11 11 0 0 1 22 0 v26 h-22 Z M724 214 a11 11 0 0 1 22 0 v26 h-22 Z" fill="#151f3a"/>
+        <path d="M556 290 a11 11 0 0 1 22 0 v28 h-22 Z M598 290 a11 11 0 0 1 22 0 v28 h-22 Z M640 290 a11 11 0 0 1 22 0 v28 h-22 Z M682 290 a11 11 0 0 1 22 0 v28 h-22 Z M724 290 a11 11 0 0 1 22 0 v28 h-22 Z" fill="#121a33"/>
+        <!-- round corner tower with its crown -->
+        <rect x="788" y="170" width="58" height="196" fill="#0a101f"/>
+        <path d="M788 170 a29 20 0 0 1 58 0 Z" fill="#0a101f"/>
+        <path d="M800 196 a8 8 0 0 1 16 0 v18 h-16 Z M826 196 a8 8 0 0 1 16 0 v18 h-16 Z" fill="#141d36"/>
+      </g>
+      <!-- trees -->
+      <path d="M330 366 q -4 -50 14 -74 q 18 24 12 74 Z" fill="#0b1120"/>
+      <path d="M912 372 q -6 -60 18 -88 q 22 28 14 88 Z" fill="#0b1120"/>
+      <!-- ground fog -->
+      <rect x="0" y="352" width="1200" height="60" fill="rgba(150,170,210,.08)"/>
+      <rect x="0" y="374" width="1200" height="56" fill="rgba(150,170,210,.1)"/>
+    </svg>
+    <p class="castle-caption">night has fallen - and a light is on in <b>Kellie's Castle</b>
+      <span>my final year project - step inside, if you dare</span></p>
+  </a>
+</section>
+
+<footer class="footer">
+  <div class="footer-mark" data-edit="identity.monogram"></div>
+  <p data-edit="footer"></p>
+</footer>
+
+<!-- ======== EDIT MODE UI ======== -->
+<div class="editbar" id="editbar" hidden>
+  <span class="editbar-label">&#9998; EDIT MODE - click any outlined text to change it</span>
+  <span class="editbar-status" id="edit-status"></span>
+  <div class="editbar-actions">
+    <button class="btn btn-small" id="edit-accent">Accent color</button>
+    <button class="btn btn-small" id="edit-export">Export content.js</button>
+    <button class="btn btn-small" id="edit-import">Import</button>
+    <button class="btn btn-small" id="edit-publish">Publish to GitHub</button>
+    <button class="btn btn-small btn-danger" id="edit-reset">Reset to file</button>
+    <button class="btn btn-small btn-primary" id="edit-done">Done</button>
+  </div>
+  <input type="file" id="edit-import-file" accept=".js,.json" hidden>
+  <input type="color" id="edit-accent-input" hidden>
+</div>
+
+<!-- ======== PRESENTATION MODE ======== -->
+<div class="present" id="present" hidden>
+  <div class="present-stage" id="present-stage"></div>
+  <div class="present-hud">
+    <span id="present-counter"></span>
+    <span class="present-hint">&#8592; &#8594; navigate &nbsp;&middot;&nbsp; Esc exit</span>
+  </div>
+</div>
+
+<!-- ======== EASTER EGG (Konami code) ======== -->
+<div class="egg" id="egg" hidden>
+  <div class="terminal egg-terminal">
+    <div class="terminal-bar"><span></span><span></span><span></span><em>xe-studio : boiler room</em></div>
+    <pre class="terminal-body" id="egg-terminal-body"></pre>
+  </div>
+  <p class="egg-hint">you found the studio's boiler room - the original v1 console. Esc to leave</p>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="js/content.js"></script>
+<script src="js/app.js"></script>
+<script src="js/demos.js"></script>
+<script src="js/exhibits.js"></script>
+<script src="js/world.js"></script>
+<script src="js/worldmap.js"></script>
+<script src="js/motion.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/present.js"></script>
+<script src="js/tour.js"></script>
+</body>
+</html>

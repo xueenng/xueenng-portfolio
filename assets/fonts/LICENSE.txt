@@ -1,0 +1,8 @@
+Vendored webfonts, both licensed under the SIL Open Font License 1.1:
+
+- Fraunces (variable, latin subset) - Copyright 2020 The Fraunces Project Authors
+  https://github.com/undercasetype/Fraunces
+- Space Grotesk (variable, latin subset) - Copyright 2020 Florian Karsten
+  https://github.com/floriankarsten/space-grotesk
+
+Full OFL 1.1 text: https://openfontlicense.org
