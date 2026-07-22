@@ -758,7 +758,7 @@ window.PORTFOLIO_CONTENT = {
       "year": "2023",
       "era": "university",
       "category": "academic",
-      "description": "Named to the President's List two semesters running - the university's highest per-semester academic honour.",
+      "description": "The university's highest per-semester academic honour.",
       "image": ""
     },
     {
@@ -768,7 +768,7 @@ window.PORTFOLIO_CONTENT = {
       "year": "2023 - 2025",
       "era": "university",
       "category": "academic",
-      "description": "Dean's List honours in four further semesters - five award semesters in total.",
+      "description": "Earned for consistently ranking among the top-performing students.",
       "image": ""
     },
     {
