@@ -878,9 +878,9 @@ window.PORTFOLIO_CONTENT = {
   },
   "footer": "Hand-built with plain HTML, CSS and JavaScript - no frameworks, no build step, edited live from the site itself. There is one secret in here for those who remember the code.",
   "resume": {
-    "headline": "Final Year Computer Science Student",
-    "graduation": "Expected Graduation: Feb 2026",
-    "objective": "Aspiring final-year Computer Science student with hands-on experience in requirements documentation (DRD), business process analysis, system testing, and SQL. Seeking a junior Business System Analyst role to support data-driven decision-making, optimise business processes, and develop technical and analytical skills.",
+    "headline": "Business System Analyst | Computer Science Student | Applied AI & Automation",
+    "graduation": "Graduation: Jan 2026",
+    "objective": "Aspiring business system analyst with hands-on experience in requirements documentation (DRD), business process analysis, system testing, and SQL. I design AI-driven document automation and ERP data integrations that turn manual, repetitive work into self-running systems — supporting faster, data-informed decisions across the business.",
     "experience": [
       {
         "role": "Information Technology Intern",
@@ -920,8 +920,8 @@ window.PORTFOLIO_CONTENT = {
       {
         "degree": "Bachelor of Computer Science (Honours)",
         "org": "Universiti Tunku Abdul Rahman",
-        "period": "Jan 2023 - Present",
-        "note": "President's List Award & Dean's List Award"
+        "period": "Jan 2023 - Jan 2026",
+        "note": "President's List Award & Dean's List Award (First Class Honours)"
       },
       {
         "degree": "Foundation in Science",
