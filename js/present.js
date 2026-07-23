@@ -268,6 +268,14 @@
     return s;
   }
 
+  // "back to the site" button for the closing slide - leaves the deck and
+  // returns to the top of index.html. Works on phone and desktop.
+  function backToSiteBtn() {
+    var back = el("button", "btn btn-ghost ps-back", "← Back to the site");
+    back.addEventListener("click", function () { exit(); window.scrollTo(0, 0); });
+    return back;
+  }
+
   function slideClosing() {
     var s = el("div", "present-slide");
     // the site's real airmail letter, cloned - identical by construction
@@ -280,6 +288,7 @@
       clone.classList.add("in");
       wrap.appendChild(clone);
       s.appendChild(wrap);
+      s.appendChild(backToSiteBtn());
       return s;
     }
     // fallback if the page's card is ever missing
@@ -292,6 +301,7 @@
     mail.href = "mailto:" + c.identity.email;
     panel.appendChild(mail);
     s.appendChild(panel);
+    s.appendChild(backToSiteBtn());
     return s;
   }
 

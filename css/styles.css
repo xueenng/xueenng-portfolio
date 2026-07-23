@@ -1877,6 +1877,30 @@ body.presenting #sprite, body.presenting .editbar, body.presenting #lantern-disc
   .ps-stats b { font-size: 1.7rem; }
   .ps-banner svg { width: 92vw; }
 }
+
+/* the closing slide's "back to the site" button, centered under the letter.
+   The closing slide sits over the NIGHT valley, so a ghost button's page-ink
+   text is dark-on-dark - give it a readable cream fill instead. */
+.ps-back {
+  display: block; margin: 1.4rem auto 0;
+  background: color-mix(in srgb, var(--paper-bright) 92%, transparent);
+  color: var(--paper-ink); border: 1.5px solid #5d4a33;
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+}
+.ps-back:hover { border-color: var(--accent); color: var(--paper-ink); }
+
+/* phones: hero stats as a clean 2x2 (18 / 24-7 on top, hours / visitors below)
+   instead of one tall column */
+@media (max-width: 700px) {
+  .hero-stats { grid-template-columns: repeat(2, 1fr); }
+  .stat { padding: 1.1rem .6rem; }
+  /* the DOM-order vertical dividers don't map onto a 2-col grid - replace them
+     with borders that draw the actual 2x2 lines */
+  .stat + .stat::before { display: none; }
+  .stat:nth-child(even) { border-left: 1px solid var(--line); }
+  .stat:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .stat b { font-size: 1.85rem; }
+}
 @media (prefers-reduced-motion: reduce) {
   .present-slide { animation: none; }
   .present-cloud { display: none; }
