@@ -1580,6 +1580,18 @@ a.contact-chip:hover { border-style: solid; border-color: var(--accent); color: 
 @media (max-width: 640px) {
   .contact-stamp { top: .9rem; right: 1rem; width: 2.5rem; height: 3rem; font-size: .95rem; }
 }
+/* phones: shrink the buttons/chips and tighten spacing so the letter isn't a
+   long column of wrapped pills (user: contact section too long) */
+@media (max-width: 700px) {
+  .contact-card { padding: 1.9rem 1.2rem; }
+  .contact-heading { font-size: clamp(1.7rem, 7vw, 2.1rem); }
+  .contact-card > p { font-size: .88rem; margin-top: .4rem; }
+  .contact-message { font-size: .92rem; margin-top: .7rem !important; }
+  .contact-row { gap: .45rem; margin-top: 1.2rem; }
+  .contact-card .btn-primary { padding: .5rem 1.1rem; font-size: .82rem; }
+  .contact-chip { font-size: .74rem; padding: .38rem .7rem; gap: .3rem; }
+  .contact-chip svg { width: 13px; height: 13px; }
+}
 
 .footer { padding: 2.5rem 1.4rem 5.5rem; text-align: center; color: var(--scene-ink-3); font-size: .82rem; }
 .footer-mark { font-family: var(--display); font-weight: 700; font-size: 1.6rem; color: var(--scene-ink); margin-bottom: .4rem; }
