@@ -306,14 +306,16 @@
   function buildDeck() {
     var c = App.content;
     slides = [];
-    function add(station, build) { slides.push({ station: station || null, build: build }); }
+    // center: short "divider" slides (title, chapter banners, closing) sit in
+    // the middle of the stage; content slides stay top-aligned so nothing clips.
+    function add(station, build, center) { slides.push({ station: station || null, build: build, center: !!center }); }
 
-    add("Title", slideTitle);
+    add("Title", slideTitle, true);
     add("Who I am", slideWho);
     ["work", "game", "academic"].forEach(function (cat) {
       var all = c.projects.filter(function (p) { return p.category === cat; });
       if (!all.length) return;
-      add(App.CATEGORY_LABELS[cat] || cat, slideBanner(CHAPTER_TITLES[cat] || cat.toUpperCase(), CHAPTER_LINES[cat] || ""));
+      add(App.CATEGORY_LABELS[cat] || cat, slideBanner(CHAPTER_TITLES[cat] || cat.toUpperCase(), CHAPTER_LINES[cat] || ""), true);
       all.filter(function (p) { return p.featured; }).forEach(function (p) { add(null, slideFeatured(p)); });
       var rest = all.filter(function (p) { return !p.featured; });
       for (var i = 0; i < rest.length; i += 6) {
@@ -324,7 +326,7 @@
     add("Toolbox", slideToolbox);
     add("Journey", slideJourney);
     add("Achievements", slideAchievements);
-    add("Closing", slideClosing);
+    add("Closing", slideClosing, true);
 
     stations = [];
     slides.forEach(function (s, i) { if (s.station) stations.push({ idx: i, label: s.station }); });
@@ -411,6 +413,7 @@
     idx = Math.max(0, Math.min(slides.length - 1, i));
     var sl = slides[idx];
     var stage = $("#present-stage");
+    stage.classList.toggle("centered", !!sl.center);   // divider slides center; content slides top
     stage.innerHTML = "";
     var node = sl.build();
     stage.appendChild(node);

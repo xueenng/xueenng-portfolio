@@ -1864,9 +1864,11 @@ body.presenting #sprite, body.presenting .editbar, body.presenting #lantern-disc
 }
 /* phones: present mode fits + reads (user: top words cut off, stats one-per-row) */
 @media (max-width: 700px) {
-  /* flex-start guarantees the slide starts at the top and scrolls fully - no
-     top clip even where `safe center` isn't honoured */
+  /* content slides start at the top and scroll fully (no top clip); the short
+     divider slides (title, chapter banners, closing) re-center via .centered,
+     with `safe center` so an over-tall one still falls back to top-aligned */
   .present-stage { align-items: flex-start; padding: 1.1rem .9rem 4.9rem; }
+  .present-stage.centered { align-items: safe center; }
   .ps-center { padding: 1.7rem 1.1rem; }
   .ps-panel h1 { font-size: clamp(1.8rem, 8vw, 2.4rem); }
   .ps-panel h2 { font-size: clamp(1.35rem, 6vw, 1.8rem); }
