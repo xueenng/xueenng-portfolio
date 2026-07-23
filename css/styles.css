@@ -1704,7 +1704,11 @@ body.presenting #sprite, body.presenting .editbar, body.presenting #lantern-disc
 }
 .present-cloud.go { animation: psCloud 1.2s ease-out forwards; }
 @keyframes psCloud { 0% { transform: translateX(0); opacity: 0; } 30% { opacity: .75; } 100% { transform: translateX(130vw); opacity: 0; } }
-.present-stage { position: relative; flex: 1; overflow-y: auto; display: flex; align-items: center; justify-content: center; padding: 2.4rem 2rem 5.4rem; }
+/* `safe center` centers a slide that fits but falls back to start-alignment
+   when the slide is TALLER than the stage - otherwise a plain `center` pushes
+   the overflow above the scroll area and the top of the slide is clipped and
+   unreachable (the "words on top are cut off" on phones). */
+.present-stage { position: relative; flex: 1; overflow-y: auto; display: flex; align-items: safe center; justify-content: center; padding: 2.4rem 2rem 5.4rem; }
 .present-slide { max-width: 1100px; width: 100%; animation: psIn .45s ease; }
 @keyframes psIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
@@ -1857,6 +1861,19 @@ body.presenting #sprite, body.presenting .editbar, body.presenting #lantern-disc
   .ps-shelf, .ps-trays { grid-template-columns: 1fr; }
   .ps-panel { padding: 1.2rem 1.1rem; }
   .pr-clock { display: none; }
+}
+/* phones: present mode fits + reads (user: top words cut off, stats one-per-row) */
+@media (max-width: 700px) {
+  /* flex-start guarantees the slide starts at the top and scrolls fully - no
+     top clip even where `safe center` isn't honoured */
+  .present-stage { align-items: flex-start; padding: 1.1rem .9rem 4.9rem; }
+  .ps-center { padding: 1.7rem 1.1rem; }
+  .ps-panel h1 { font-size: clamp(1.8rem, 8vw, 2.4rem); }
+  .ps-panel h2 { font-size: clamp(1.35rem, 6vw, 1.8rem); }
+  /* the who-I-am numbers: two per row, not a single tall column */
+  .ps-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: .8rem 1rem; }
+  .ps-stats b { font-size: 1.7rem; }
+  .ps-banner svg { width: 92vw; }
 }
 @media (prefers-reduced-motion: reduce) {
   .present-slide { animation: none; }
