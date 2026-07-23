@@ -419,7 +419,10 @@ window.PORTFOLIO_CONTENT = {
       ],
       "exhibit": {
         "type": "demo",
-        "demo": "ar-fire-tabs"
+        "demo": "ar-fire-tabs",
+        "video": "assets/ar/ar-fire-demo.mp4",
+        "poster": "assets/ar/ar-fire-demo-poster.jpg",
+        "portrait": true
       },
       "links": []
     },

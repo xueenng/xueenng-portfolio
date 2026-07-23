@@ -224,14 +224,26 @@
      project's own problem/action/result copy still renders above this, so the
      card never looks empty. */
   function renderDesktopOnly(container, ex) {
+    // Some cards bundle a video alongside the game (the AR card is a
+    // "Mini game"/"Video" switcher). Phones still get to watch the video -
+    // only the interactive part is stood down.
+    if (ex.video) {
+      var frame = el("div", "exhibit-frame" + (ex.portrait ? " portrait" : ""));
+      container.appendChild(frame);
+      renderVideo(frame, ex);   // sets preload=none + playsInline
+    }
+
     var note = el("div", "demo-desktop-only");
     note.appendChild(el("span", "ddo-mark", "▶"));
     var body = el("div", "ddo-body");
-    body.appendChild(el("b", null, "Playable on a desktop"));
-    body.appendChild(el("p", null,
-      "This one runs as a live simulation you can click through. Its controls " +
-      "need a cursor and a full-size window, so it sits out on phones - open " +
-      "this page on a computer to run it."));
+    body.appendChild(el("b", null,
+      ex.video ? "The interactive version is on desktop" : "Playable on a desktop"));
+    body.appendChild(el("p", null, ex.video
+      ? "The demo video above plays fine here. The hands-on version needs a cursor " +
+        "and a full-size window, so open this page on a computer to try it."
+      : "This one runs as a live simulation you can click through. Its controls " +
+        "need a cursor and a full-size window, so it sits out on phones - open " +
+        "this page on a computer to run it."));
     note.appendChild(body);
     container.appendChild(note);
     if (ex.images && ex.images.length) renderGallery(container, ex);
