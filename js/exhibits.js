@@ -2,9 +2,6 @@
    exhibits.js - turns a project's `exhibit` data into a live
    display. Types:
      demo    -> one of the six runnable simulations (demos.js)
-     webgl   -> playable game embed (Unity WebGL build), click-
-                to-load so the megabytes only download on demand;
-                falls back to video -> gallery -> styled poster
      video   -> local mp4/webm file or an embed URL
      gallery -> image grid with a lightbox
      none    -> nothing
@@ -24,6 +21,39 @@
   function isEmbedUrl(u) {
     return /youtube\.com|youtu\.be|vimeo\.com/i.test(u || "");
   }
+  /* The FYP shots are 1600px but render as small thumbnails; 800px copies live
+     in assets/fyp/sm/. Only that folder has them, so everything else is left
+     alone. The lightbox always opens the full-res original. */
+  /* Mobile connections drop requests. A gallery fires a dozen image loads at
+     once, so a few failing leaves permanent blank tiles with no way back -
+     the browser does not retry a failed <img> on its own. One delayed retry
+     recovers them without hammering a genuinely dead URL. */
+  function retryOnce(img) {
+    var tried = false;
+    img.addEventListener("error", function () {
+      if (tried) return;
+      tried = true;
+      var url = img.src;
+      setTimeout(function () {
+        img.removeAttribute("srcset");   // retry the plain src, not the set
+        img.src = url + (url.indexOf("?") === -1 ? "?r=1" : "&r=1");
+      }, 700);
+    });
+  }
+
+  function thumb(img, src, sizes) {
+    retryOnce(img);
+    img.src = src;
+    if (src.indexOf("assets/fyp/") === 0 && src.indexOf("/sm/") === -1) {
+      var small = src.replace("assets/fyp/", "assets/fyp/sm/");
+      img.src = small;
+      img.srcset = small + " 800w, " + src + " 1600w";
+      /* Declared below the rendered width on purpose: srcset picks by DEVICE
+         pixels, so an honest vw on a DPR-3 phone tips past 800 and pulls the
+         1600w original for every shot. The lightbox opens full-res anyway. */
+      img.sizes = sizes || "(max-width: 700px) 260px, 420px";
+    }
+  }
 
   /* ---------- video ---------- */
   function renderVideo(frame, ex) {
@@ -40,6 +70,8 @@
       var v = document.createElement("video");
       v.src = ex.video;
       v.controls = true;
+      v.preload = "none";        // 7.1MB AR clip - only fetch on play
+      v.playsInline = true;      // iOS Safari otherwise forces fullscreen
       if (ex.poster) v.poster = ex.poster;
       frame.appendChild(v);
     }
@@ -77,7 +109,7 @@
     var g = el("div", "gallery");
     (ex.images || []).forEach(function (src, i) {
       var img = document.createElement("img");
-      img.src = src;
+      thumb(img, src);
       img.alt = "screenshot " + (i + 1);
       img.loading = "lazy";
       img.addEventListener("click", function () { openLightbox(src, i, (ex.images || []).length); });
@@ -110,7 +142,7 @@
     images.forEach(function (src, i) {
       var frame = el("div", "film-frame");
       var img = document.createElement("img");
-      img.src = src;
+      thumb(img, src);
       img.alt = "screenshot " + (i + 1);
       img.loading = i < 4 ? "eager" : "lazy";
       frame.appendChild(img);
@@ -187,81 +219,53 @@
     close.focus();
   }
 
-  /* ---------- webgl game (with graceful fallback chain) ---------- */
-  function renderWebgl(container, ex, title) {
-    var frame = el("div", "exhibit-frame");
-    container.appendChild(frame);
-
-    var canPlay = ex.src && !isMobile();
-
-    if (canPlay) {
-      var poster = el("div", "exhibit-poster");
-      if (ex.poster) {
-        var pimg = document.createElement("img");
-        pimg.src = ex.poster; pimg.alt = "";
-        poster.appendChild(pimg);
-      }
-      var play = el("button", "play-btn", "▶");
-      play.title = "Load and play in the browser";
-      poster.appendChild(play);
-      poster.appendChild(el("h4", null, title || "Play in the browser"));
-      poster.appendChild(el("p", null, "The game loads only when you press play (it is a real game build - give it a moment)."));
-      frame.appendChild(poster);
-      play.addEventListener("click", function () {
-        poster.innerHTML = "";
-        poster.appendChild(el("p", null, "loading the world..."));
-        var ifr = document.createElement("iframe");
-        ifr.src = ex.src;
-        ifr.allow = "fullscreen; autoplay; pointer-lock";
-        ifr.title = title || "playable game";
-        ifr.addEventListener("load", function () { poster.remove(); });
-        frame.appendChild(ifr);
-      });
-      if (ex.note) {
-        var ctl = el("div", "exhibit-controls");
-        ex.note.split(",").forEach(function (part) {
-          ctl.appendChild(el("span", "keycap", part.trim()));
-        });
-        container.appendChild(ctl);
-      }
-      return;
-    }
-
-    // fallbacks: video -> gallery -> placeholder poster
-    if (ex.video) { renderVideo(frame, ex); return; }
-    if (ex.images && ex.images.length) {
-      frame.remove();
-      renderGallery(container, ex);
-      return;
-    }
-    var ph = el("div", "exhibit-poster");
-    if (ex.poster) {
-      var img = document.createElement("img");
-      img.src = ex.poster; img.alt = "";
-      ph.appendChild(img);
-    }
-    ph.appendChild(el("h4", null, title || "Playable exhibit"));
-    ph.appendChild(el("p", null, isMobile() && ex.src
-      ? "The playable build needs a keyboard - open this site on a computer to play. "
-      : "The playable web build is being prepared. Gameplay video and screenshots land here via edit mode (Ctrl+E)."));
-    frame.appendChild(ph);
+  /* ---------- phones: the runnable demo, stood down ----------
+     Only kellie-fyp carries screenshots, so the rest are note-only. The
+     project's own problem/action/result copy still renders above this, so the
+     card never looks empty. */
+  function renderDesktopOnly(container, ex) {
+    var note = el("div", "demo-desktop-only");
+    note.appendChild(el("span", "ddo-mark", "▶"));
+    var body = el("div", "ddo-body");
+    body.appendChild(el("b", null, "Playable on a desktop"));
+    body.appendChild(el("p", null,
+      "This one runs as a live simulation you can click through. Its controls " +
+      "need a cursor and a full-size window, so it sits out on phones - open " +
+      "this page on a computer to run it."));
+    note.appendChild(body);
+    container.appendChild(note);
+    if (ex.images && ex.images.length) renderGallery(container, ex);
   }
 
   /* ---------- dispatcher ---------- */
   window.PORTFOLIO_EXHIBITS = {
     filmstrip: openFilmstrip,
+    /* kellie.js reuses this for the FYP poster - 720px of poster text is
+       unreadable at phone width without an enlarge path */
+    lightbox: function (src) { openLightbox(src); },
+    /* kellie.js builds its own gallery images but needs the same recovery */
+    retryOnce: retryOnce,
     render: function (container, project) {
       container.innerHTML = "";
       var ex = project.exhibit || { type: "none" };
       try {
-        if (ex.type === "demo" && ex.demo && window.PORTFOLIO_DEMOS) {
+        if (ex.type === "demo" && ex.demo && isMobile()) {
+          // the mini games are built for a cursor and a full-size window; at
+          // phone scale their controls are too small to actually play
+          renderDesktopOnly(container, ex);
+        } else if (ex.type === "demo" && ex.demo) {
           var box = el("div", "demo");
           container.appendChild(box);
-          window.PORTFOLIO_DEMOS.mountInto(box, ex.demo);
           // screenshots do NOT stack under the demo any more - they live in
           // the filmstrip, opened from the button on the project card
-        } else if (ex.type === "webgl") {
-          renderWebgl(container, ex, project.title);
+          if (window.PORTFOLIO_DEMOS) {
+            window.PORTFOLIO_DEMOS.mountInto(box, ex.demo);
+          } else if (window.DEMOS_READY) {
+            // demos.js is loaded async on desktop; mount once it lands
+            window.DEMOS_READY.then(function () {
+              if (window.PORTFOLIO_DEMOS) window.PORTFOLIO_DEMOS.mountInto(box, ex.demo);
+            });
+          }
         } else if (ex.type === "video" && ex.video) {
           var frame = el("div", "exhibit-frame");
           container.appendChild(frame);

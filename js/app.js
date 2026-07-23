@@ -1312,6 +1312,50 @@
       }
     }
   };
+  /* ---------- mobile nav overlay ----------
+     styles.css hides .nav-links below 900px with no replacement, so this is
+     the only section navigation a phone gets. iOS ignores a plain
+     overflow:hidden on <body>, so the lock pins the body with position:fixed
+     and restores the exact scroll position on close. */
+  var navOverlay = (function () {
+    var scrollY = 0;
+
+    function el(id) { return document.getElementById(id); }
+
+    function isOpen() {
+      var o = el("nav-overlay");
+      return !!o && !o.hidden;
+    }
+
+    function open() {
+      var o = el("nav-overlay");
+      if (!o || isOpen()) return;
+      scrollY = window.scrollY;
+      o.hidden = false;
+      o.setAttribute("aria-hidden", "false");
+      el("nav-toggle").setAttribute("aria-expanded", "true");
+      document.body.style.position = "fixed";
+      document.body.style.top = -scrollY + "px";
+      document.body.style.width = "100%";
+    }
+
+    function close() {
+      var o = el("nav-overlay");
+      if (!o || !isOpen()) return;
+      o.hidden = true;
+      o.setAttribute("aria-hidden", "true");
+      el("nav-toggle").setAttribute("aria-expanded", "false");
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      window.scrollTo(0, scrollY);
+    }
+
+    return { open: open, close: close, isOpen: isOpen };
+  })();
+
+  App.navOverlay = navOverlay;
+
   window.PORTFOLIO_APP = App;
 
   /* ---------- boot ---------- */
@@ -1326,6 +1370,25 @@
     $("#btn-theme").addEventListener("click", function () {
       var cur = document.documentElement.getAttribute("data-theme");
       applyTheme(cur === "dark" ? "light" : "dark");
+    });
+
+    /* ---------- mobile nav overlay wiring ---------- */
+    $("#nav-toggle").addEventListener("click", function () {
+      if (navOverlay.isOpen()) { navOverlay.close(); } else { navOverlay.open(); }
+    });
+    $("#nav-overlay-close").addEventListener("click", navOverlay.close);
+    $("#nav-overlay").addEventListener("click", function (ev) {
+      if (ev.target.tagName === "A") navOverlay.close();
+    });
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape" && navOverlay.isOpen()) navOverlay.close();
+    });
+    /* the overlay's tools delegate to the desktop bar's own handlers */
+    $("#ov-theme").addEventListener("click", function () { $("#btn-theme").click(); });
+    $("#ov-weather").addEventListener("click", function () { $("#btn-weather").click(); });
+    $("#ov-present").addEventListener("click", function () {
+      navOverlay.close();
+      $("#btn-present").click();
     });
   });
 })();

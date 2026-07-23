@@ -5,17 +5,16 @@
    passing whispers - no audio files needed; real recordings
    can replace it later), panel reveals, the gallery of echoes,
    the 360 night tour (reuses the kellie-vr360 demo), and the
-   finale:
-     - WEBGL_SRC set   -> the real Unity WebGL build, click-to-load
-     - VIDEO_SRC set   -> gameplay video
-     - neither (today) -> poster + the playable escape-room demo
-   Set the two constants below when the assets land in play/
-   and assets/kellie/.
+   finale, in order: words -> gameplay film -> playable mini
+   escape room -> the FYP poster.
+
+   There is deliberately no browser build. The game is a Meta
+   Quest 2 / OpenXR title whose room-scale interaction does not
+   survive a browser window, so the film stands in for it.
    ============================================================ */
 (function () {
   "use strict";
 
-  var WEBGL_SRC = "";                       // e.g. "play/kellie/index.html"
   var VIDEO_SRC = "assets/kellie/gameplay.mp4";   // the 720p cinematic cut (v3)
 
   var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -168,13 +167,32 @@
     ["assets/fyp/15-l3-numpad.jpg", "level 3 - the year unlocks the way"],
     ["assets/fyp/16-vr360.jpg", "and the castle itself - the 360 view"]
   ];
+  /* The gallery shots are 1600px wide but a grid cell is ~262px on a phone,
+     so the full-res set cost 2.4MB on load. Thumbnails live alongside in
+     assets/fyp/sm/ at 800px; the lightbox still opens the full-res file. */
+  function smSrc(src) { return src.replace("assets/fyp/", "assets/fyp/sm/"); }
+
+  function isSmallScreen() {
+    return window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 700;
+  }
+
   function buildGallery() {
     var g = document.getElementById("k-gallery");
     SHOTS.forEach(function (s) {
       var fig = el("figure", "k-frame");
       var mat = el("div", "k-frame-mat");
       var img = document.createElement("img");
-      img.src = s[0]; img.alt = s[1]; img.loading = "lazy";
+      // a dropped request otherwise leaves a permanently blank tile
+      if (window.PORTFOLIO_EXHIBITS) window.PORTFOLIO_EXHIBITS.retryOnce(img);
+      img.src = smSrc(s[0]);
+      img.srcset = smSrc(s[0]) + " 800w, " + s[0] + " 1600w";
+      /* Deliberately declared BELOW the rendered width. srcset picks by device
+         pixels, so on a DPR-3 phone an honest 75vw (~292px) asks for 877px and
+         jumps to the 1600w original - which is how all 16 full-res shots were
+         still being fetched. 260px keeps the 800w copy, which still lands at
+         3.3x the 244px render on a 360 screen. Full-res is one tap away. */
+      img.sizes = "(max-width: 700px) 260px, 300px";
+      img.alt = s[1]; img.loading = "lazy"; img.decoding = "async";
       mat.appendChild(img);
       fig.appendChild(mat);
       fig.appendChild(el("figcaption", null, s[1]));
@@ -207,49 +225,50 @@
   function buildPlay() {
     var host = document.getElementById("k-play");
 
-    if (WEBGL_SRC) {
-      var wrap = el("div", "k-webgl");
-      var poster = el("div", "k-play-poster");
-      var pimg = document.createElement("img");
-      pimg.src = "assets/fyp/05-start-menu.jpg"; pimg.alt = "";
-      poster.appendChild(pimg);
-      poster.appendChild(el("h3", null, "Descend into the real game"));
-      poster.appendChild(el("p", null, "This is the actual Unity build of my FYP, running in your browser. It is a real game - give it a moment to load. Desktop recommended."));
-      var btn = el("button", "k-btn k-btn-lit", "▶  Load the game");
-      poster.appendChild(btn);
-      host.appendChild(poster);
-      btn.addEventListener("click", function () {
-        var ifr = document.createElement("iframe");
-        ifr.src = WEBGL_SRC;
-        ifr.allow = "fullscreen; autoplay; pointer-lock";
-        ifr.title = "Echoes in Kellie's Castle - playable build";
-        wrap.appendChild(ifr);
-        host.appendChild(wrap);
-        poster.remove();
-      });
-      return;
-    }
+    /* 1 - words: why this one is not playable in a browser */
+    var intro = el("div", "k-play-intro");
+    intro.appendChild(el("h3", null, "Why this one isn't playable here"));
+    intro.appendChild(el("p", null,
+      "Echoes in Kellie's Castle was built for Meta Quest 2 - room-scale " +
+      "teleportation, grabbable objects, haptic feedback and hand tracking through " +
+      "OpenXR. Take the headset away and none of that survives; a flat browser " +
+      "version would be a different, lesser game wearing this one's name."));
+    intro.appendChild(el("p", null,
+      "So watch it instead. The film below is the real thing, recorded in the " +
+      "headset - the escape room played end to end. Under it, a browser-sized " +
+      "version of the same puzzles you can play right now, and the poster this " +
+      "project was presented with."));
+    host.appendChild(intro);
 
-    var poster = el("div", "k-play-poster");
-    var img = document.createElement("img");
-    img.src = "assets/fyp/16-vr360.jpg"; img.alt = "";
-    poster.appendChild(img);
-    poster.appendChild(el("h3", null, "The full game is being prepared for the web"));
-    poster.appendChild(el("p", null, "The complete Unity build (Meta Quest 2 / desktop) is on its way into the browser. Until it arrives, the escape room below is playable right now - the same puzzles, in miniature."));
-    host.appendChild(poster);
-
+    /* 2 - video: the gameplay film */
     if (VIDEO_SRC) {
-      var vf = el("div", "k-webgl");
+      var vf = el("div", "k-film");
       var v = document.createElement("video");
       v.src = VIDEO_SRC; v.controls = true; v.style.width = "100%";
       v.preload = "none";                          // 24MB file - only on play
-      v.poster = "assets/fyp/05-start-menu.jpg";
+      /* the poster frame IS fetched eagerly, so it takes the 800px thumbnail
+         rather than the 1600px original it renders at ~262px wide */
+      v.poster = smSrc("assets/fyp/05-start-menu.jpg");
       v.playsInline = true;
       vf.appendChild(v);
       host.appendChild(vf);
     }
 
-    if (window.PORTFOLIO_DEMOS) {
+    /* 3 - mini game: the browser-sized escape room. Its puzzle controls are
+       too small to play at phone scale, so phones get a note instead. The
+       360 tour above stays - that one is drag-to-pan, which suits touch. */
+    if (isSmallScreen()) {
+      var ddo = el("div", "demo-desktop-only");
+      ddo.appendChild(el("span", "ddo-mark", "▶"));
+      var body = el("div", "ddo-body");
+      body.appendChild(el("b", null, "The escape room is playable on a desktop"));
+      body.appendChild(el("p", null,
+        "A browser-sized version of the same puzzles runs on this page - the " +
+        "diary quiz, the sequence lock, the jigsaw. Its pieces are too small to " +
+        "hit accurately on a phone, so open this page on a computer to play it."));
+      ddo.appendChild(body);
+      host.appendChild(ddo);
+    } else if (window.PORTFOLIO_DEMOS) {
       var dwrap = el("div", "k-play-demo");
       var box = el("div", "demo");
       dwrap.appendChild(box);
@@ -258,6 +277,23 @@
         window.PORTFOLIO_DEMOS.mountInto(box, "kellie-escape");
       } catch (e) { dwrap.remove(); }
     }
+
+    /* 4 - poster: the FYP academic poster. 720px of body text is unreadable at
+       phone width, so tapping it must open the full-size lightbox. */
+    var pwrap = el("div", "k-fyp-poster");
+    var pbtn = el("button", "k-poster-btn");
+    pbtn.setAttribute("aria-label", "Enlarge the project poster");
+    var pimg = document.createElement("img");
+    pimg.src = "assets/fyp/poster.jpg";
+    pimg.alt = "Echoes in Kellie's Castle - final year project poster";
+    pimg.loading = "lazy";
+    pbtn.appendChild(pimg);
+    pwrap.appendChild(pbtn);
+    pwrap.appendChild(el("p", "k-poster-cap", "The project poster - tap to enlarge."));
+    host.appendChild(pwrap);
+    pbtn.addEventListener("click", function () {
+      window.PORTFOLIO_EXHIBITS.lightbox("assets/fyp/poster.jpg");
+    });
   }
 
   /* ---------- boot ---------- */

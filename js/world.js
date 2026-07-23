@@ -242,6 +242,7 @@
   }
 
   function paint(now) {
+    paintCount++;
     var st = sample(tCur);
     syncInk(st.lum);
     // sky
@@ -379,14 +380,26 @@
     document.body.classList.toggle("night", Math.max(tCur, tTarget * 0.999) > 0.78);
   }
 
+  var lastW = 0, tallestH = 0, resizeCount = 0, paintCount = 0;
+
   function resize() {
-    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    /* Phones report DPR 3; 1.5 halves the pixels pushed per repaint and a
+       painted gradient shows no difference. */
+    var coarse = window.matchMedia("(pointer: coarse)").matches;
+    DPR = Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 2);
     W = window.innerWidth; H = window.innerHeight;
+    /* On phones the viewport grows when the URL bar retracts. Since we no
+       longer reallocate on that (see the resize listener), the canvas is sized
+       to the TALLEST height seen - otherwise hiding the bar would expose an
+       unpainted strip along the bottom. */
+    if (coarse) { tallestH = Math.max(tallestH, H); H = tallestH; }
     canvas.width = Math.round(W * DPR);
     canvas.height = Math.round(H * DPR);
     canvas.style.width = W + "px";
     canvas.style.height = H + "px";
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    resizeCount++;
+    lastW = window.innerWidth;
     if (reduced) { tCur = tTarget; paint(0); }
   }
 
@@ -592,7 +605,18 @@
     readScroll();
     tCur = tTarget;   // land on the right time of day - no dawn sweep on load
     syncNight();
-    window.addEventListener("resize", resize);
+    /* Mobile browsers fire resize every time the URL bar collapses mid-scroll,
+       and resize() reallocates the whole canvas - a jank loop that exists only
+       on phones. React to width and orientation changes only; a height-only
+       change is the URL bar and is ignored. */
+    window.addEventListener("resize", function () {
+      if (window.innerWidth === lastW) return;
+      resize();
+    });
+    window.addEventListener("orientationchange", function () {
+      tallestH = 0;          // a new orientation has its own natural height
+      resize();
+    });
 
     if (reduced) {
       var thr = null;
@@ -620,6 +644,8 @@
   window.PORTFOLIO_WORLD = {
     repaint: function () { readScroll(); if (reduced) { tCur = tTarget; paint(performance.now()); } },
     lantern: setLantern,
+    /* probe hook: proves the URL-bar resize loop is gone and the sky still paints */
+    stats: function () { return { dpr: DPR, resizes: resizeCount, paints: paintCount }; },
     /* presentation mode: pin the sky to a time of day (0 dawn .. 1 night);
        the rAF loop eases toward it, so slide changes get a free sky transition */
     holdTime: function (t) {

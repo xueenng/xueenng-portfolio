@@ -143,7 +143,7 @@ body.night .footer .footer-mark { color: #e8e4d8; }
 .wm-bar {
   display: flex; align-items: center; gap: .8rem; padding: .6rem 1rem;
   background: color-mix(in srgb, var(--bg-raise) 88%, transparent);
-  border-bottom: 2px solid var(--ink); backdrop-filter: blur(8px); z-index: 6;
+  border-bottom: 2px solid var(--ink); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); z-index: 6;
 }
 .wm-title { font-family: var(--label); font-size: .8rem; color: var(--ink-2); margin: 0 auto; }
 #wm-svg { flex: 1; width: 100%; touch-action: none; cursor: grab; user-select: none; }
@@ -286,7 +286,7 @@ a.contact-resume:hover { border-style: solid; border-color: var(--accent); color
 .nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;
   background: color-mix(in srgb, var(--bg) 85%, transparent);
-  backdrop-filter: blur(12px); border-bottom: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line);
 }
 .nav-inner {
   max-width: 1200px; margin: 0 auto; padding: .65rem 1.4rem;
@@ -1799,7 +1799,7 @@ body.presenting #sprite, body.presenting .editbar, body.presenting #lantern-disc
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 2;
   display: flex; align-items: center; gap: 1.1rem; padding: .6rem 1.2rem .55rem;
   background: color-mix(in srgb, var(--paper-bright) 90%, transparent);
-  border-top: 2px solid #5d4a33; backdrop-filter: blur(6px);
+  border-top: 2px solid #5d4a33; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   font-family: var(--label); color: var(--paper-ink);
 }
 .pr-hint { font-size: .68rem; opacity: .6; white-space: nowrap; }
@@ -1974,3 +1974,130 @@ body.touring #sprite { display: none; }   /* one Suu at a time */
 }
 .tour-x:hover { opacity: 1; color: var(--bad); }
 .tour-note { font-size: .72rem; opacity: .6; margin: .4rem 0 0; }
+
+/* ---------- touch hardening ----------
+   Transform-based hover lifts stick after a tap on touch devices (there is no
+   pointer-out), so the lift belongs to real hover-capable pointers only. The
+   colour/border hovers are harmless and stay put.
+   These are the ten transform-carrying :hover rules in this file - re-check
+   with: grep ':hover' css/styles.css | grep transform */
+@media (hover: none) {
+  .btn:hover { transform: none; box-shadow: none; }
+  .nav-resume:hover { transform: none; box-shadow: none; }
+  .icon-btn:hover { transform: none; }
+  .hero-polaroid:hover { transform: none; }
+  .grid-card:hover { transform: none; box-shadow: none; }
+  .grid-more:not(.end):hover > svg { transform: none; }
+  /* the base rule centres this with translateX(-50%); only the lift is dropped */
+  .grid-more:not(.end):hover .gm-suu { transform: translateX(-50%); }
+  .demo-run:not(:disabled):hover { transform: none; }
+  .play-btn:hover { transform: none; }
+  .film-frame:hover { transform: none; }
+}
+
+@media (pointer: coarse) {
+  /* Apple HIG and Material both floor tap targets at 44px. */
+  .icon-btn { width: 44px; height: 44px; }
+  a, button, .btn, .icon-btn, .wm-list-item { -webkit-tap-highlight-color: transparent; }
+  /* stop double-tap zoom swallowing the first tap on controls */
+  button, .btn, .icon-btn, .chip { touch-action: manipulation; }
+}
+
+/* ---------- mobile nav overlay ----------
+   The breakpoint is 900px, NOT 700px, because styles.css already hides
+   .nav-links below 900px (see the max-width:900px block above). Using 700 here
+   would leave the 700-900px band with no navigation at all. */
+.nav-toggle { display: none; }
+
+@media (max-width: 900px) {
+  /* the overlay carries weather/theme/present, so the bar copy is redundant
+     and only crowds a phone-width nav */
+  .nav-actions { display: none; }
+  /* without this the name breaks onto one word per line beside the hamburger */
+  .nav-brand { white-space: nowrap; }
+  .nav-inner { gap: .8rem; }
+  .nav-toggle {
+    display: flex; flex-direction: column; justify-content: center; gap: 5px;
+    width: 44px; height: 44px; padding: 0 10px; margin-left: auto;
+    background: none; border: none; cursor: pointer;
+  }
+  .nav-toggle span {
+    display: block; height: 2px; width: 24px; border-radius: 2px;
+    background: var(--ink); transition: transform .25s, opacity .2s;
+  }
+  .nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+  .nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+}
+
+.nav-overlay {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; flex-direction: column; gap: 1.1rem;
+  padding: 1.1rem 1.4rem 2rem;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  animation: navOverlayIn .22s ease;
+}
+.nav-overlay[hidden] { display: none; }
+@keyframes navOverlayIn { from { opacity: 0; transform: translateY(-8px); } }
+
+.nav-overlay-top { display: flex; align-items: center; justify-content: space-between; min-height: 44px; }
+.nav-overlay-name { font-family: var(--display); font-size: 1.1rem; }
+.nav-overlay-close {
+  width: 44px; height: 44px; background: none; border: none;
+  font-size: 1.4rem; color: var(--ink); cursor: pointer;
+}
+
+.nav-overlay-links { display: flex; flex-direction: column; }
+.nav-overlay-links a {
+  display: flex; align-items: center; min-height: 52px;
+  font-family: var(--display); font-size: 1.45rem; color: var(--ink);
+  text-decoration: none; border-bottom: 1px solid var(--line);
+}
+
+.nav-overlay-resume {
+  display: flex; align-items: center; justify-content: center; min-height: 50px;
+  border-radius: 99px; background: var(--accent); color: var(--accent-ink);
+  font-family: var(--label); font-weight: 600; text-decoration: none;
+}
+
+.nav-overlay-tools { display: flex; justify-content: center; gap: 1.1rem; }
+/* Sized here rather than inheriting the @media (pointer: coarse) rule: the
+   overlay is a touch-first surface but also shows on fine-pointer laptops
+   between 700-900px, where that rule never applies. */
+.nav-overlay-tools .icon-btn { width: 44px; height: 44px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-overlay { animation: none; }
+  .nav-toggle span { transition: none; }
+}
+
+/* ---------- phones: a mini game stood down ----------
+   Used by exhibits.js (project demos) and kellie.js (the escape room). Reads
+   as a deliberate note, not a broken panel. */
+.demo-desktop-only {
+  display: flex; gap: .9rem; align-items: flex-start;
+  margin-top: 1.1rem; padding: 1rem 1.1rem;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--bg-raise);
+}
+.demo-desktop-only .ddo-mark {
+  flex: none; width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--accent); font-size: .8rem;
+}
+.demo-desktop-only .ddo-body b {
+  display: block; font-family: var(--label); font-size: .95rem; margin-bottom: .3rem;
+}
+.demo-desktop-only .ddo-body p {
+  font-size: .88rem; line-height: 1.6; color: var(--ink-2);
+}
+
+/* Project-detail gallery stays two-up on phones (user preference) - tap any
+   tile to open it full-size in the lightbox. */
+@media (max-width: 700px) {
+  .gallery { grid-template-columns: repeat(2, 1fr); gap: .6rem; }
+}

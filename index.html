@@ -59,6 +59,10 @@
       <a href="#achievements">Achievements</a>
       <a href="#contact">Contact</a>
     </nav>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Open menu"
+            aria-expanded="false" aria-controls="nav-overlay">
+      <span></span><span></span><span></span>
+    </button>
     <div class="nav-actions">
       <a class="nav-resume" id="nav-resume" href="resume.html" title="View &amp; download my r&eacute;sum&eacute;">R&eacute;sum&eacute;</a>
       <button class="icon-btn" id="btn-weather" title="Weather over the valley">&#127782;</button>
@@ -69,6 +73,31 @@
     </div>
   </div>
 </header>
+
+<!-- ======== MOBILE NAV OVERLAY ========
+     styles.css hides .nav-links below 900px, so without this a phone visitor
+     had no section navigation at all - only scrolling. -->
+<div class="nav-overlay" id="nav-overlay" hidden aria-hidden="true">
+  <div class="nav-overlay-top">
+    <span class="nav-overlay-name" data-edit="identity.name"></span>
+    <button class="nav-overlay-close" id="nav-overlay-close" aria-label="Close menu">&#10005;</button>
+  </div>
+  <nav class="nav-overlay-links">
+    <a href="#map">Valley map</a>
+    <a href="#selected">Work</a>
+    <a href="#projects">Projects</a>
+    <a href="#about">About</a>
+    <a href="#journey">Journey</a>
+    <a href="#achievements">Achievements</a>
+    <a href="#contact">Contact</a>
+  </nav>
+  <a class="nav-overlay-resume" href="resume.html">&#8595;&nbsp; R&eacute;sum&eacute; (PDF)</a>
+  <div class="nav-overlay-tools">
+    <button class="icon-btn" id="ov-weather" title="Weather over the valley">&#127782;</button>
+    <button class="icon-btn" id="ov-theme" title="Toggle light / dark">&#9681;</button>
+    <button class="icon-btn" id="ov-present" title="Presentation mode">&#9654;</button>
+  </div>
+</div>
 
 <!-- ======== HERO ======== -->
 <section class="hero" id="top">
@@ -252,7 +281,22 @@
 
 <script src="js/content.js"></script>
 <script src="js/app.js"></script>
-<script src="js/demos.js"></script>
+<script>
+/* The mini games are stood down on phones (exhibits.js renderDesktopOnly), so
+   a phone has no reason to download the 151KB engine. Desktop still gets it,
+   loaded async - DEMOS_READY lets exhibits.js mount an exhibit opened before
+   the file has landed, instead of rendering an empty panel. */
+(function () {
+  if (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 700) return;
+  var s = document.createElement("script");
+  s.src = "js/demos.js";
+  window.DEMOS_READY = new Promise(function (resolve) {
+    s.onload = resolve;
+    s.onerror = resolve;
+  });
+  document.head.appendChild(s);
+})();
+</script>
 <script src="js/exhibits.js"></script>
 <script src="js/world.js"></script>
 <script src="js/worldmap.js"></script>

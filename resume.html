@@ -16,13 +16,23 @@
 
   .toolbar {
     position:sticky; top:0; z-index:5; display:flex; gap:.7rem; align-items:center; justify-content:center;
-    padding:.7rem 1rem; background:rgba(28,26,21,.92); backdrop-filter:blur(6px);
+    padding:.7rem 1rem; background:rgba(28,26,21,.92); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
   }
   .toolbar a, .toolbar button {
     font-family:inherit; font-size:.85rem; font-weight:600; border-radius:99px; cursor:pointer;
     padding:.5rem 1.2rem; border:1px solid #6b6353; background:transparent; color:#f3ead6; text-decoration:none;
   }
   .toolbar .primary { background:#E8A200; color:#1a1508; border-color:#E8A200; }
+
+  /* Phones: at 360px the three pills exactly filled the bar, so "Download PDF"
+     wrapped to two lines and the controls came out 57/73/54px tall. Let the row
+     wrap and tighten the padding so each label stays on one line.
+     Scoped to `screen` throughout so none of it can reach the printed page or
+     the PDF, which must stay true A4. */
+  @media screen and (max-width: 700px) {
+    .toolbar { flex-wrap:wrap; gap:.5rem; padding:.6rem .8rem; }
+    .toolbar a, .toolbar button { padding:.5rem .9rem; min-height:44px; }
+  }
   .toolbar a:hover, .toolbar button:hover { border-color:#E8A200; }
 
   /* sized in pt/mm so the on-screen sheet is WYSIWYG with the printed A4 -
@@ -53,6 +63,25 @@
   .r-empty { max-width:210mm; margin:3rem auto; text-align:center; color:#6b6353; }
 
   @page { size: A4; margin: 15mm 16mm; }
+  /* Phones: the sheet is a fixed 210mm (~794px) so the browser squeezed it into
+     a 390px screen and every glyph rendered at roughly half size. On screen the
+     A4 geometry buys nothing - the PDF and the print path keep it - so let the
+     sheet be the width of the phone and the pt sizes come out readable. */
+  @media screen and (max-width: 700px) {
+    .sheet {
+      width:auto; min-height:0; margin:.7rem; padding:1.2rem 1.1rem;
+      font-size:11pt; box-shadow:0 4px 18px rgba(40,32,18,.18);
+    }
+    /* role and date sit on one line at A4 width; stacked they stop colliding */
+    .r-row { flex-direction:column; gap:0; }
+    .r-period { white-space:normal; font-size:9pt; }
+    .r-name { font-size:21pt; }
+    /* the label column is 118pt, which swallows a phone row */
+    .r-add { flex-direction:column; margin:5pt 0; }
+    .r-add b { width:auto; margin-bottom:1pt; }
+    ul { margin-left:16pt; }
+  }
+
   @media print {
     :root { --bg:#fff; }
     html, body { background:#fff; }
