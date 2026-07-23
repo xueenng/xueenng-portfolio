@@ -1187,7 +1187,15 @@ body.editing .case-toggle { display: none; }
 }
 .film-wrap.at-end .film-hint { opacity: 1; }
 .film-wrap.at-end .film-close { animation: filmBlink 1.6s ease-in-out infinite; }
-@media (max-width: 700px) { .film-frame { width: 60vw; } }
+@media (max-width: 700px) {
+  /* Phones: hide the arrows (the reel already swipes/drags) and reclaim the
+     back padding so a single screenshot nearly fills the width - the 60vw
+     frames were too small to read a game UI. */
+  .film-back { padding: .55rem; }
+  .film-arrow { display: none; }
+  .film-body { gap: 0; }
+  .film-frame { width: 88vw; }
+}
 @media (prefers-reduced-motion: reduce) {
   .film-btn, .film-wrap.at-end .film-close { animation: none; }
   .film-strip { scroll-behavior: auto; }

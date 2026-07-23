@@ -246,7 +246,9 @@
         "this page on a computer to run it."));
     note.appendChild(body);
     container.appendChild(note);
-    if (ex.images && ex.images.length) renderGallery(container, ex);
+    // NO inline gallery here: when a card has screenshots the project card
+    // already carries a "N screenshots" button (app.js) that opens the
+    // filmstrip, so an inline grid would just duplicate it.
   }
 
   /* ---------- dispatcher ---------- */
