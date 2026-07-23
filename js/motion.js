@@ -9,6 +9,13 @@
   "use strict";
 
   var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /* Hover candy (magnetic buttons, 3D card tilt) is for a mouse. On touch its
+     pointermove handler fires DURING a tap - pointerdown→pointermove→pointerup→
+     click - stamping a 3D perspective/rotate transform onto the card mid-tap,
+     and browsers hit-test 3D-transformed elements unreliably, so the click can
+     fall through and "tapping does nothing". Gate these to hover-capable,
+     fine pointers only. (The CSS :hover equivalents are already guarded.) */
+  var canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
   /* ---------- intro overlay ---------- */
   function intro() {
@@ -50,7 +57,7 @@
 
   /* ---------- magnetic buttons ---------- */
   function wireMagnetic() {
-    if (reduced) return;
+    if (reduced || !canHover) return;
     document.querySelectorAll(".magnetic").forEach(function (btn) {
       if (btn._mag) return;
       btn._mag = true;
@@ -66,7 +73,7 @@
 
   /* ---------- 3D tilt on cards ---------- */
   function wireTilt() {
-    if (reduced) return;
+    if (reduced || !canHover) return;
     document.querySelectorAll(".grid-card").forEach(function (card) {
       if (card._tilt) return;
       card._tilt = true;
