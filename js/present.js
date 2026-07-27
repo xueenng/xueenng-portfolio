@@ -59,10 +59,31 @@
   }
 
   /* ---------- slide builders ---------- */
+  /* the postmark that cancels the title slide's stamp - a letter that has
+     actually travelled. Static part of the slide (so it survives a skip and a
+     walk back to slide 1); origami.js only animates it thunking down. */
+  var MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+  function postmarkEl() {
+    var d = new Date();
+    var n = el("span", "ps-postmark");
+    n.innerHTML = '<svg viewBox="0 0 100 100" aria-hidden="true">' +
+      '<circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="3"/>' +
+      '<circle cx="50" cy="50" r="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 4"/>' +
+      '<path d="M14 40 H86 M14 60 H86" stroke="currentColor" stroke-width="2" opacity=".75"/>' +
+      '<text x="50" y="33" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor" letter-spacing="1">XE STUDIO</text>' +
+      '<text x="50" y="55" text-anchor="middle" font-size="14" font-weight="700" fill="currentColor" letter-spacing="1">' +
+      d.getDate() + " " + MONTHS[d.getMonth()] + "</text>" +
+      '<text x="50" y="76" text-anchor="middle" font-size="10" font-weight="700" fill="currentColor" letter-spacing="1">' +
+      d.getFullYear() + "</text>" +
+      "</svg>";
+    return n;
+  }
+
   function slideTitle() {
     var c = App.content;
     var s = el("div", "present-slide");
     var p = panelEl("ps-center");
+    p.appendChild(postmarkEl());
     var seal = el("div", "ps-seal", c.identity.monogram || "XE");
     p.appendChild(seal);
     p.appendChild(el("p", "ps-kicker", "XE Studio — a portfolio you can walk through"));
@@ -272,7 +293,13 @@
   // returns to the top of index.html. Works on phone and desktop.
   function backToSiteBtn() {
     var back = el("button", "btn btn-ghost ps-back", "← Back to the site");
-    back.addEventListener("click", function () { exit(); window.scrollTo(0, 0); });
+    back.addEventListener("click", function () {
+      var og = origami();
+      var leave = function () { exit(); window.scrollTo(0, 0); };
+      // fold the letter into the crane and fly it off, THEN return to the site
+      if (og && og.flyOff) { back.disabled = true; og.flyOff(leave); }
+      else leave();
+    });
     return back;
   }
 
@@ -418,8 +445,19 @@
     c.textContent = Math.floor(sec / 60) + ":" + ("0" + (sec % 60)).slice(-2);
   }
 
+  /* ---------- the paper crane (js/origami.js) ---------- */
+  var craneDue = false;   // armed by enter(), spent on the first show(0)
+  function origami() { return window.PORTFOLIO_ORIGAMI; }
+  /* any human input mid-flight snaps the letter to its finished state; the
+     input itself is then swallowed, so the FIRST key skips and the second walks */
+  function craneSkip() {
+    var og = origami();
+    return !!(og && og.skip());
+  }
+
   /* ---------- show / enter / exit ---------- */
   function show(i) {
+    if (origami()) origami().stop();
     idx = Math.max(0, Math.min(slides.length - 1, i));
     var sl = slides[idx];
     var stage = $("#present-stage");
@@ -430,6 +468,14 @@
     if (node._after) node._after();
     stage.scrollTop = 0;
     syncHud();
+    if (origami()) {
+      if (idx === 0 && craneDue) {
+        craneDue = false;
+        origami().overture(stage);
+      } else if (idx === slides.length - 1) {
+        origami().finale(stage);
+      }
+    }
     // the sky follows the deck: dawn -> night across the slides
     // (dark theme = the visitor chose night: the deck stays under the stars)
     var darkTheme = document.documentElement.getAttribute("data-theme") === "dark";
@@ -468,7 +514,8 @@
     clockT0 = Date.now();
     tickClock();
     clockIv = setInterval(tickClock, 1000);
-    show(0);
+    craneDue = true;      // the overture belongs to entering the deck, not to
+    show(0);              // every later walk back to slide 1
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(function () {});
     }
@@ -477,6 +524,7 @@
     if (!open) return;
     open = false;
     manual();
+    if (origami()) origami().stop();
     clearInterval(clockIv);
     $("#present").hidden = true;
     document.body.classList.remove("presenting");
@@ -496,9 +544,11 @@
       var dx = ev.changedTouches[0].clientX - x0;
       x0 = null;
       if (Math.abs(dx) < 60) return;
+      if (craneSkip()) return;
       manual();
       show(dx < 0 ? idx + 1 : idx - 1);
     }, { passive: true });
+    stage.addEventListener("click", function () { craneSkip(); });
   }
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -515,9 +565,13 @@
       if (ev.key === "Escape") { exit(); return; }
       if (typing) return;
       if (ev.key === "ArrowRight" || ev.key === "PageDown" || ev.key === " ") {
-        ev.preventDefault(); manual(); show(idx + 1);
+        ev.preventDefault();
+        if (craneSkip()) return;
+        manual(); show(idx + 1);
       } else if (ev.key === "ArrowLeft" || ev.key === "PageUp") {
-        ev.preventDefault(); manual(); show(idx - 1);
+        ev.preventDefault();
+        if (craneSkip()) return;
+        manual(); show(idx - 1);
       } else if (ev.key === "Home") {
         manual(); show(0);
       } else if (/^[1-9]$/.test(ev.key)) {

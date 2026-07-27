@@ -1901,10 +1901,192 @@ body.presenting #sprite, body.presenting .editbar, body.presenting #lantern-disc
   .stat:nth-child(n+3) { border-top: 1px solid var(--line); }
   .stat b { font-size: 1.85rem; }
 }
+/* ---------- the paper crane (js/origami.js) ----------
+   The overture layer floats over the whole deck: envelope, route, shadow,
+   crane and Suu all live here in viewport pixels, so nothing in it can be
+   disturbed by the stage's scrolling or by show() wiping the stage. */
+.og-layer { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
+.og-layer > * { position: absolute; }
+
+/* the title panel waits, invisible but fully laid out - the overture measures
+   its real rect to know where the letter has to end up */
+.ps-panel.og-wait { opacity: 0; }
+body.og-playing .pr-suu { opacity: 0; }
+body.og-playing .pr-dot { background: #cdbfa4; }
+
+/* --- the airmail route --- */
+.og-trail { inset: 0; width: 100%; height: 100%; overflow: visible; }
+.og-trail-line {
+  fill: none; stroke: var(--accent); stroke-width: 2.6;
+  stroke-dasharray: 9 9; stroke-linecap: round; opacity: .75;
+}
+body.night .og-trail-line { opacity: .85; }
+.og-trail.fade { animation: ogTrailOut .8s ease .12s forwards; }
+@keyframes ogTrailOut { to { opacity: 0; } }
+
+/* --- the sealed yellow letter cover, reclined on the valley floor --- */
+/* --og-recl reclines the envelope like a letter lying on a desk (the crane
+   lands on it, then the letter stands up out of it into the panel). It is baked
+   into every keyframe so the in/bump animations keep the tilt. */
+.og-envelope {
+  --og-recl: perspective(760px) rotateX(58deg);
+  width: min(380px, 62vw); opacity: 0;
+  transform: translate(-50%, -50%) var(--og-recl);
+  filter: drop-shadow(0 22px 26px rgba(30, 22, 8, .34));
+}
+.og-envelope svg { display: block; width: 100%; height: auto; }
+.og-envelope.in { animation: ogEnvIn .45s ease forwards; }
+.og-envelope.bump { animation: ogEnvBump .5s ease; }
+@keyframes ogEnvIn {
+  from { opacity: 0; transform: translate(-50%, -42%) scale(.96) perspective(760px) rotateX(58deg); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1) perspective(760px) rotateX(58deg); }
+}
+@keyframes ogEnvBump {
+  0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1) perspective(760px) rotateX(58deg); }
+  34% { opacity: 1; transform: translate(-50%, -47.5%) scale(1.015) perspective(760px) rotateX(58deg); }
+}
+
+/* --- the travelling painted shadow (does more for depth than anything else) --- */
+.og-shadow {
+  left: 0; top: 0; width: 190px; height: 34px; opacity: 0;
+  border-radius: 50%; filter: blur(7px);
+  background: radial-gradient(closest-side, rgba(48, 38, 18, .85), rgba(48, 38, 18, 0));
+}
+
+/* --- the crane: a crisp vector origami crane (js/origami.js craneSVG) --- */
+.og-flier { left: 0; top: 0; width: 200px; height: 200px; }
+.og-flier.gone { animation: ogFade .18s ease forwards; }
+.og-flier.og-perch { opacity: 0; }
+.og-flier.og-perch.in { animation: ogFadeIn .2s ease forwards; }
+.og-flier.settle { transition: transform .8s cubic-bezier(.2, .8, .25, 1); }
+@keyframes ogFade { to { opacity: 0; } }
+@keyframes ogFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.og-crane-svg {
+  display: block; width: 100%; height: 100%;
+  transform: scaleX(-1);            /* source faces right; flip so the head leads left */
+  /* the crane's own gradients are white paper with golden-yellow shadows
+     (recoloured in the inline SVG); here we just cast a soft drop-shadow.
+     The wing groups (.og-wingL/.og-wingR) are rotated from JS. */
+  filter: drop-shadow(0 6px 8px rgba(20, 14, 4, .4));
+}
+
+/* --- the sheet: parked at the panel's real rect, FLIPped onto the crane --- */
+.og-sheet {
+  opacity: 0; border-radius: 18px; border: 2px solid #5d4a33;
+  background: var(--paper-bright); box-shadow: var(--shadow);
+  transform-origin: center; backface-visibility: hidden;
+}
+.og-sheet.in { opacity: 1; transition: opacity .16s ease; }
+.og-sheet.ghost { opacity: 0; background: color-mix(in srgb, var(--paper-bright) 72%, transparent); }
+.og-sheet.ghost.in { opacity: .9; transition: opacity .3s ease; }
+.og-sheet.grow { transition: transform .55s cubic-bezier(.22, .8, .2, 1), opacity .22s ease; }
+/* opacity only - re-declaring `transition` here would drop the transform
+   transition mid-fold and snap the sheet to its end position */
+.og-sheet.out { opacity: 0; }
+.og-creases {
+  position: absolute; inset: 0; border-radius: 16px; opacity: .55;
+  transition: opacity .6s ease;
+  background:
+    linear-gradient(to bottom, transparent calc(33% - 1px), rgba(93, 74, 51, .34) 33%, transparent calc(33% + 1px)),
+    linear-gradient(to bottom, transparent calc(67% - 1px), rgba(93, 74, 51, .34) 67%, transparent calc(67% + 1px)),
+    linear-gradient(to right, transparent calc(50% - 1px), rgba(93, 74, 51, .22) 50%, transparent calc(50% + 1px));
+}
+.og-creases.fade { opacity: 0; }
+
+/* --- Suu: outer node carries X, inner node carries the arc, so a jump
+       reads as a jump instead of a diagonal slide --- */
+.og-suu { left: 0; top: 0; transform: translate(-50%, -50%); }
+/* Suu rides on the crane's back - nestled between the wings, over the body.
+   Tuned in a headless-render harness against the flipped crane art. */
+.og-suu.og-rider { position: absolute; left: 51%; top: 54%; }
+.og-suu.riding { transition: left .55s cubic-bezier(.22, .8, .2, 1), top .55s cubic-bezier(.22, .8, .2, 1); }
+.og-suu.gone { animation: ogFade .2s ease forwards; }
+.og-suu-y { display: block; line-height: 0; }
+.og-suu svg { display: block; width: var(--og-w, 40px); height: var(--og-w, 40px); }
+.og-suu.leaping { animation: ogLeapX var(--og-ms, 620ms) linear forwards; }
+.og-suu.leaping .og-suu-y { animation: ogLeapY var(--og-ms, 620ms) forwards; }
+@keyframes ogLeapX { to { transform: translate(-50%, -50%) translateX(var(--og-dx, 0)); } }
+@keyframes ogLeapY {
+  0% { transform: translateY(0); animation-timing-function: cubic-bezier(.16, .7, .4, 1); }
+  42% { transform: translateY(var(--og-apex, -100px)); animation-timing-function: cubic-bezier(.6, 0, .85, .45); }
+  100% { transform: translateY(var(--og-dy, 0)); }
+}
+
+/* --- landing punctuation --- */
+.og-mote {
+  left: 0; top: 0; width: 7px; height: 9px; border-radius: 2px; opacity: 0;
+  background: #fffdf6; border: 1px solid rgba(93, 74, 51, .5);
+  animation: ogMote .85s ease-out forwards;
+}
+@keyframes ogMote {
+  0% { opacity: .95; transform: translate(0, 0) rotate(0); }
+  100% { opacity: 0; transform: translate(-26px, -34px) rotate(-120deg); }
+}
+.og-dust {
+  left: 0; top: 0; width: 26px; height: 8px; margin: -4px 0 0 -13px;
+  border-radius: 50%; background: rgba(120, 100, 66, .5);
+  animation: ogDust .5s ease-out forwards;
+}
+@keyframes ogDust {
+  0% { opacity: .7; transform: scale(.3); }
+  100% { opacity: 0; transform: scale(2.1); }
+}
+.pr-dot.og-pop { animation: ogDotPop .45s cubic-bezier(.3, 1.5, .5, 1); }
+@keyframes ogDotPop { 0% { transform: scale(1); } 45% { transform: scale(1.9); } 100% { transform: scale(1); } }
+
+/* --- the letter speaks: the settled panel is the DEFAULT, these rules only
+       apply while og-seq is present, so a skip can never strand a half-lit
+       panel - dropping the class leaves everything visible --- */
+.ps-panel.og-seq::before { animation: ogFrame .5s ease .04s backwards; }
+@keyframes ogFrame { from { opacity: 0; transform: scale(.985); } }
+.ps-panel.og-seq .ps-kicker { animation: ogUp .5s ease .10s backwards; }
+.ps-panel.og-seq .ps-sub { animation: ogUp .5s ease .55s backwards; }
+.ps-panel.og-seq .ps-note { animation: ogUp .5s ease .75s backwards; }
+@keyframes ogUp { from { opacity: 0; transform: translateY(9px); } }
+/* the name writes itself, left to right. clip-path inset is used rather than a
+   feathered mask-image gradient because inset() interpolates reliably in every
+   engine - a gradient that refuses to interpolate would snap the name on. */
+.ps-panel.og-seq h1 { animation: ogWrite .72s cubic-bezier(.35, .1, .2, 1) .22s backwards; }
+@keyframes ogWrite {
+  from { clip-path: inset(-20% 100% -20% -6%); }
+  to { clip-path: inset(-20% -6% -20% -6%); }
+}
+.ps-panel.og-seq .ps-seal { animation: ogSeal .5s cubic-bezier(.3, 1.4, .5, 1) .35s backwards; }
+@keyframes ogSeal {
+  from { opacity: 0; transform: translateY(-26px) scale(1.5); }
+  70% { transform: translateY(0) scale(.9); }
+  to { opacity: 1; transform: none; }
+}
+
+/* the postmark that cancels the stamp, like a letter that has actually
+   travelled - static by default, thunks on only during the overture */
+.ps-postmark {
+  position: absolute; top: .5rem; right: .55rem; z-index: 2;
+  width: 4.6rem; height: 4.6rem; pointer-events: none;
+  opacity: .62; transform: rotate(-12deg);
+  color: color-mix(in srgb, var(--paper-ink) 88%, transparent);
+}
+.ps-postmark svg { display: block; width: 100%; height: 100%; }
+.ps-panel.og-seq .ps-postmark { animation: ogThunk .38s cubic-bezier(.2, 1.5, .4, 1) .85s backwards; }
+@keyframes ogThunk {
+  from { opacity: 0; transform: rotate(-30deg) scale(1.9); }
+  to { opacity: .62; transform: rotate(-12deg) scale(1); }
+}
+
+@media (max-width: 700px) {
+  .og-flier { width: 150px; height: 150px; }
+  .ps-postmark { width: 3.4rem; height: 3.4rem; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .present-slide { animation: none; }
   .present-cloud { display: none; }
   .pr-suu { transition: none; }
+  /* the crane never flies here - origami.js returns early, so the panel and
+     Suu are simply where they belong from the first frame */
+  .og-layer { display: none; }
+  .ps-panel.og-wait { opacity: 1; }
 }
 
 /* ---------- toast ---------- */
