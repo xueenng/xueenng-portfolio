@@ -203,9 +203,44 @@
       var fy = -ax.midY * k + ax.funnel[1] * k;
       puff = seq("smoke", fx - o[0] * ss, fy - o[1] * ss, ss, 1.4);
     }
-    return '<g class="wm-train"><image href="assets/world/scenery/steam-train.webp" ' +
+    /* The locomotive already has a headlamp painted on its boiler - measured at
+       these fractions of the sprite, so they hold at any display width. The
+       train runs WEST and the art faces west too, so the beam throws along
+       local -x, which is straight ahead. */
+    var hx = -w / 2 + 0.0645 * w, hy = -ax.midY * k + 0.3894 * h;
+    /* The throw sits BELOW the lamp it comes from. Cast from the lamp's own
+       centre it ran level with the boiler and lit the air over the track; a
+       real headlamp's beam falls onto the rails ahead. The glow stays on the
+       lamp - only the beam drops. */
+    var beam = headlampBeam(hx, hy + 15);
+    var lamp = '<ellipse class="wm-headlamp wm-night-only" cx="' + hx.toFixed(1) +
+      '" cy="' + hy.toFixed(1) + '" rx="26" ry="26" fill="url(#wm-head)" ' +
+      'pointer-events="none"/>';
+    /* Beam BEFORE the engine so the light throws out in front of it; drawn
+       after, it would lie across the boiler and wash the locomotive out. The
+       lamp glow goes last, so the lamp itself reads as the source. */
+    return '<g class="wm-train">' + beam +
+      '<image href="assets/world/scenery/steam-train.webp" ' +
       'x="' + (-w / 2).toFixed(1) + '" y="' + (-ax.midY * k).toFixed(1) + '" ' +
-      'width="' + w + '" height="' + h + '"/>' + puff + '</g>';
+      'width="' + w + '" height="' + h + '"/>' + puff + lamp + '</g>';
+  }
+
+  /* The headlamp's throw: a fan along the track ahead of the engine. It lives
+     INSIDE the train group, so it swings with the tilt as the train follows the
+     rail's slope rather than pointing off into the meadow on the gradients.
+     Flattened to 0.6 so it lies along the line like a lamp's throw on ballast
+     instead of standing up as a searchlight - safe here, unlike the
+     lighthouse, because this fan never rotates within its own group. */
+  function headlampBeam(hx, hy) {
+    var R = 330, half = 13 * Math.PI / 180;
+    // straight ahead is -x, so the wedge spans 180deg +/- half
+    var a1 = Math.PI - half, a2 = Math.PI + half;
+    var x1 = (R * Math.cos(a1)).toFixed(1), y1 = (R * Math.sin(a1)).toFixed(1);
+    var x2 = (R * Math.cos(a2)).toFixed(1), y2 = (R * Math.sin(a2)).toFixed(1);
+    return '<g class="wm-headbeam wm-night-only" pointer-events="none" ' +
+      'transform="translate(' + hx.toFixed(1) + ',' + hy.toFixed(1) + ') scale(1,0.6)">' +
+      '<path d="M0 0 L' + x1 + ' ' + y1 + ' A' + R + ' ' + R + ' 0 0 0 ' +
+      x2 + ' ' + y2 + ' Z" fill="url(#wm-head)"/></g>';
   }
 
   /* World y of the axle line at a world x. Clamped at both ends so a train
@@ -427,18 +462,173 @@
       'x="' + (-Math.round(d[0] / 2)) + '" y="' + (-d[1]) + '" ' +
       'width="' + d[0] + '" height="' + d[1] + '"/>';
   }
-  /* Warm light at night, as a gradient bloom rather than a sprite.
-     ui/house-glow-yellow.webp looks like the obvious asset but is not one: it is
-     a whole painted house WITH a glow, drawn for the kit's normal/hover/selected
-     house states, so layering it over a building stamps a second, different
-     house on top. A radial bloom is what this actually needs.
-     Drawn AFTER the building - underneath it, an opaque building hides the light
-     completely - and sized from the building so it spills past the silhouette. */
-  function nightGlow(kind) {
-    var d = artSize(kind);
-    var rx = Math.round(d[0] * 0.78), ry = Math.round(d[1] * 0.72);
-    return '<ellipse class="wm-night-only wm-glow-e" cx="0" cy="' + Math.round(-d[1] * 0.45) + '" ' +
-      'rx="' + rx + '" ry="' + ry + '" fill="url(#wm-glow)" pointer-events="none"/>';
+  /* Buildings used to carry their own night glow: an ellipse sized from the
+     building and centred ON it, which is the signature of a light SOURCE and
+     read as eighteen radioactive houses. A building is not a lamp. The valley's
+     light now comes from the lamp posts below, and nothing is emitted here. */
+
+  /* Lamp posts - the only light in the valley after dark.
+     A lamp stands BESIDE THE BUILDING IT LIGHTS, a stride from its wall, the way
+     a real house has a light by its door. The first layout put one lamp midway
+     between each pair of buildings, which is where a surveyor would put it and
+     nowhere a villager would: the posts stood alone in open meadow lighting bare
+     grass while the houses beside them stayed dark. Measured afterwards, 15 of
+     the 18 buildings were receiving exactly ZERO light.
+     Wide civic buildings (Town Hall, Fire Station) get a flanking PAIR at the
+     entrance rather than one lamp at a far corner - both because that is what
+     flanks real steps, and because a single pool cannot span 493 units of frontage.
+     Every post is measured: clear of every other post, standing on dry ground
+     (sampled from the plate - an earlier pass put the Mill's lamp in the river),
+     and never overlapping a building it stands BEHIND.
+     Four buildings are NOT here: the Watchtower, Drill Tower, Kellie's Castle
+     and the Train Station light themselves - see SELF_LIT.
+     [x, y, poolRadius, postHeight] */
+  var LAMPS = [
+    [1310, 755, 289, 72],   // Calm Garden - garden lamp
+    [1816, 826, 336, 84],   // Document Mill
+    [2524, 882, 282, 84],   // Post Office
+    [2316, 884, 304, 84],   // Warehouse
+    [1227, 935, 291, 84],   // Sorting Shed
+    [2096, 948, 278, 84],   // Tavern
+    [1896, 1032, 291, 84],  // Exchange House
+    [2691, 1065, 208, 72],  // Number Tent - garden lamp
+    [1685, 1082, 328, 72],  // Fruit Stall - garden lamp over the awning
+    [894,  1149, 269, 72],  // The Sorting Tree - garden lamp
+    [2307, 1219, 297, 84],  // Schoolhouse
+    [2606, 1248, 315, 84],  // Library
+    [1339, 1290, 287, 84],  // Print Shop
+    [2626, 1360, 360, 96],  // Fire Station - west of the doors
+    [2897, 1416, 317, 96],  // Fire Station - east of the doors
+    [2314, 1671, 420, 96],  // Town Hall - west flank
+    [2844, 1671, 420, 96]   // Town Hall - east flank
+  ];
+  /* Post height by role rather than one size for all: civic 96, ordinary 84,
+     garden 72. Three sizes read as a village that grew; one reads as a kit. */
+  var LAMP_H = 84;      // ~55% of a typical house: a post, not a tower
+
+  /* ---------- buildings that carry their own light ----------
+     A lamp post beside a lighthouse is redundant, and it looked it. These four
+     already have a light source PAINTED IN - the watchtower's open gallery, the
+     drill tower's burning brazier, the castle's windows, and the station's own
+     lamp on the platform - so they light themselves and have no post.
+     The old whole-building halo failed because it was sized from the building
+     and centred ON it. These are the opposite: small, and pinned to the spot the
+     light actually comes from, measured off the sprite.
+     [fx, fy, rx, ry, class] - fx/fy are fractions of the art's box (fy from its
+     TOP), rx/ry are fractions of its WIDTH, so anchors survive a resize. */
+  var SELF_LIT = {
+    tower: [                                   // Watchtower - a lighthouse
+      [0.50, 0.17, 0.26, 0.26, "wm-lantern"]   // the lamp burning in its gallery
+    ],                                         // ...its sweep is lighthouseBeam()
+    drill: [                                   // Drill Tower
+      [0.50, 0.15, 0.40, 0.40, "wm-flame"],    // the brazier, measured
+      [0.50, 1.00, 0.80, 0.30, "wm-flame"]     // firelight down the frame
+    ],
+    /* Kellie's Castle: its WINDOWS and nothing else. These ten are measured -
+       connected components of the pale arched glazing against the dark brick.
+       Detecting DARK openings instead found crenellation shadows and hillside
+       foliage and missed every real window, which is what put the first set of
+       glows on bushes. */
+    castle: [
+      [0.283, 0.193, 0.030, 0.040, ""], [0.300, 0.192, 0.030, 0.040, ""],
+      [0.296, 0.349, 0.032, 0.045, ""], [0.397, 0.380, 0.030, 0.042, ""],
+      [0.441, 0.378, 0.032, 0.043, ""], [0.490, 0.378, 0.032, 0.043, ""],
+      [0.539, 0.374, 0.033, 0.043, ""], [0.396, 0.511, 0.030, 0.042, ""],
+      [0.490, 0.514, 0.032, 0.043, ""], [0.541, 0.524, 0.032, 0.038, ""]
+    ],
+    /* Train Station: its own painted platform lamp, and its windows. The lamp
+       anchor is the LANTERN HEAD - the earlier 0.22/0.29 sat on the post's
+       shaft, which is why the glow looked shifted off the lamp. */
+    station: [
+      /* The platform lamp, in two coats: a wide halo and a tight core on the
+         same anchor. Screen-blended they stack, so the lamp burns brighter at
+         its centre than one ellipse can - raising a single one's radius only
+         spreads the same light thinner. */
+      [0.180, 0.268, 0.115, 0.115, ""],        // the lamp it already carries
+      [0.180, 0.268, 0.062, 0.062, ""],        // ...its inner bloom
+      [0.180, 0.268, 0.030, 0.030, ""],        // ...and its hot centre
+      [0.315, 0.369, 0.027, 0.029, ""], [0.375, 0.385, 0.027, 0.029, ""],
+      [0.435, 0.401, 0.027, 0.029, ""], [0.495, 0.417, 0.027, 0.029, ""],
+      [0.560, 0.434, 0.027, 0.029, ""], [0.625, 0.451, 0.027, 0.029, ""],
+      [0.692, 0.474, 0.026, 0.028, ""]         // the ticket window
+    ]
+  };
+
+  /* The Watchtower's sweep. A lighthouse is not a brighter lamp - it is a BEAM
+     that turns, and that motion is the whole read. Two opposed wedges pivot on
+     the lantern and turn about Z - a true circle in the plane of the screen.
+     There is deliberately NO vertical scale here. Earlier versions flattened
+     this group (0.42, then 0.7) to sit the light on the ground plane, but
+     squashing a Z rotation into an ellipse is precisely what makes it read as
+     a tilt about X: the beam foreshortens and stretches through every pass.
+     Unscaled, the beam keeps one length the whole way round, which is what
+     turning about the tower's own axis looks like.
+     Drawn after the buildings so no roof clips it as it comes round. */
+  function lighthouseBeam(cx, cy) {
+    var R = 640, half = 10 * Math.PI / 180;
+    var x1 = (R * Math.cos(-half)).toFixed(1), y1 = (R * Math.sin(-half)).toFixed(1);
+    var x2 = (R * Math.cos(half)).toFixed(1), y2 = (R * Math.sin(half)).toFixed(1);
+    var wedge = '<path d="M0 0 L' + x1 + ' ' + y1 + ' A' + R + ' ' + R +
+                ' 0 0 1 ' + x2 + ' ' + y2 + ' Z" fill="url(#wm-beam)"/>';
+    return '<g class="wm-lighthouse wm-night-only" pointer-events="none" ' +
+      'transform="translate(' + cx + ',' + cy + ')">' +
+      '<g class="wm-beam-spin">' + wedge +
+      '<g transform="rotate(180)">' + wedge + '</g></g></g>';
+  }
+
+  /* Glows for one self-lit building, given where its art sits in the CURRENT
+     coordinate space - buildings are drawn in a translated group (x0 = -w/2,
+     y0 = -h) while the station is placed absolutely, so the box is passed in
+     rather than assumed. */
+  function selfLit(key, x0, y0, w, h) {
+    var pts = SELF_LIT[key];
+    if (!pts) return "";
+    var s = "";
+    for (var i = 0; i < pts.length; i++) {
+      var p = pts[i];
+      s += '<ellipse class="wm-selflit wm-night-only ' + p[4] + '" ' +
+        'cx="' + Math.round(x0 + p[0] * w) + '" cy="' + Math.round(y0 + p[1] * h) + '" ' +
+        'rx="' + Math.round(p[2] * w) + '" ry="' + Math.round(p[3] * w) + '" ' +
+        'fill="url(#wm-pool)" pointer-events="none"/>';
+    }
+    return s;
+  }
+  /* How flat the ground pool lies. At 0.30 the pool was so squashed that a
+     building standing 100 units upslope sat at 2.5x its vertical radius and
+     caught nothing at all - Town Hall's own lamp delivered zero. */
+  var LAMP_POOL_FLATTEN = 0.45;
+
+  /* One lamp: its ground pool, then the post standing in it. The whole group is
+     night-only, so no unlit posts clutter the day map.
+     Called AFTER the buildings are drawn, so the pool falls ACROSS their feet -
+     drawn before them it would light bare meadow and leave the village dark,
+     which is the entire point of the exercise. */
+  function lampNode(lx, ly, rx, i, ph) {
+    var m = window.WORLD_ART && window.WORLD_ART.sprites && window.WORLD_ART.sprites.lamp;
+    if (!m) return "";
+    var h = ph || LAMP_H, k = h / m.h, w = m.w * k;
+    var id = "wm-lampclip-" + i;
+    return '<g class="wm-lamp wm-night-only" style="--ldelay:' + (i * 0.35).toFixed(2) + 's" ' +
+      'pointer-events="none">' +
+      '<ellipse class="wm-lamp-pool" cx="' + lx + '" cy="' + ly + '" rx="' + rx +
+        '" ry="' + Math.round(rx * LAMP_POOL_FLATTEN) + '" fill="url(#wm-pool)"/>' +
+      '<g transform="translate(' + (lx - w / 2).toFixed(1) + ',' + (ly - h) +
+        ') scale(' + k.toFixed(4) + ')">' +
+      '<clipPath id="' + id + '"><rect x="0" y="0" width="' + m.w + '" height="' + m.h + '"/></clipPath>' +
+      /* The post's true footprint, stated so it can be measured. The <image> is
+         the whole 14-frame STRIP and getBoundingClientRect ignores SVG clipping,
+         so measuring the image reports a lamp fourteen frames wide - and its
+         left edge slides as the switch-on plays. This rect is the clip window
+         itself: invisible, inert, and the same box whatever frame is showing. */
+      '<rect class="wm-lamp-post" x="0" y="0" width="' + m.w + '" height="' + m.h + '" fill="none"/>' +
+      '<g clip-path="url(#' + id + ')">' +
+      /* The strip holds frames 1-14 and the CSS holds the LAST one, so the
+         travel stops one frame short of the strip's end - running the full
+         width would hold a blank frame past the final lamp. */
+      '<image class="wm-lamp-img" href="assets/world/sprites/lamp.webp" x="0" y="0" ' +
+      'width="' + (m.w * m.frames) + '" height="' + m.h + '" ' +
+      'style="--travel:' + (-m.w * (m.frames - 1)) + 'px;--steps:' + (m.frames - 1) + '"/>' +
+      "</g></g></g>";
   }
 
   /* Story marks the label-free art dropped. These are not labels - they are the
@@ -546,22 +736,37 @@
 
     var s = '<svg id="wm-svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid meet">';
     s += '<defs>' +
-         // real light: bright warm core, fast falloff (ground pool)
+         /* The pool a lamp throws on the ground. It is now the valley's only
+            light after dark, so it carries the brighter stops the old
+            building bloom used - a warm core with a fast falloff. */
          '<radialGradient id="wm-pool" cx=".5" cy=".5" r=".5">' +
-         '<stop offset="0" stop-color="rgba(255,206,120,.4)"/><stop offset=".5" stop-color="rgba(255,206,120,.16)"/><stop offset="1" stop-color="rgba(255,206,120,0)"/></radialGradient>' +
-         // lamplight spilling out of a lit building: warm core, fast falloff
-         '<radialGradient id="wm-glow" cx=".5" cy=".5" r=".5">' +
          '<stop offset="0" stop-color="rgba(255,224,150,.55)"/><stop offset=".4" stop-color="rgba(255,206,120,.26)"/><stop offset="1" stop-color="rgba(255,196,110,0)"/></radialGradient>' +
+         /* The lighthouse beam. userSpaceOnUse pins the gradient to the beam's
+            PIVOT - left on objectBoundingBox it centres on the wedge's bbox
+            instead, so the bright end would sit halfway down the shaft. */
+         '<radialGradient id="wm-beam" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="640">' +
+         '<stop offset="0" stop-color="rgba(255,242,205,.50)"/><stop offset=".45" stop-color="rgba(255,232,180,.15)"/><stop offset="1" stop-color="rgba(255,226,170,0)"/></radialGradient>' +
+         /* The engine's headlamp. Its own gradient rather than wm-beam's: that
+            one fades over 640 units and the headlamp only throws 330, so
+            borrowing it would leave the beam still bright at its cut end. */
+         '<radialGradient id="wm-head" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="330">' +
+         '<stop offset="0" stop-color="rgba(255,240,196,.62)"/><stop offset=".45" stop-color="rgba(255,230,172,.20)"/><stop offset="1" stop-color="rgba(255,222,160,0)"/></radialGradient>' +
          /* A hard-edged ellipse under a building reads as a sticker's shadow.
             Blurring it turns the contact into a pool the meadow absorbs, which
             is most of what makes a cut-out look like it is standing there. */
          '<filter id="wm-soft" x="-60%" y="-60%" width="220%" height="220%">' +
          '<feGaussianBlur stdDeviation="7"/></filter></defs>';
     s += '<g id="wm-pan">';
-    // the painted valley - one plate, filling the whole clamped world
-    s += '<image href="assets/world/valley.webp" x="0" y="0" ' +
-         'width="' + PLATE.w + '" height="' + PLATE.h + '" ' +
-         'preserveAspectRatio="xMidYMid slice"/>';
+    // The painted valley - one plate, filling the whole clamped world. Night is
+    // the same view repainted, so the two swap rather than one being tinted into
+    // the other: no tint turns a noon sky into a moonlit one with a moon in it.
+    function plateImage(file, cls) {
+      return '<image class="wm-plate ' + cls + '" href="assets/world/' + file + '" x="0" y="0" ' +
+             'width="' + PLATE.w + '" height="' + PLATE.h + '" ' +
+             'preserveAspectRatio="xMidYMid slice"/>';
+    }
+    s += plateImage("valley.webp", "wm-day-only");
+    s += plateImage("valley-night.webp", "wm-night-only");
 
     /* Railway along the southern meadow, station on its eastern end, both from
        the blueprint. Laid before the buildings so the village sits in front. */
@@ -576,6 +781,9 @@
       var sh = nat ? Math.round(o[3] * nat[1] / nat[0]) : 200;
       s += '<g class="wm-b wm-station" data-id="' + STATION_ID + '" tabindex="0" role="button" ' +
         'aria-label="Train Station - open my journey">' + art +
+        // the station's lamp is painted into its own art - light THAT, rather
+        // than standing a second post beside it
+        selfLit("station", o[1], o[2], o[3], sh) +
         '<rect class="wm-hit" x="' + o[1] + '" y="' + o[2] + '" width="' + o[3] +
         '" height="' + sh + '" fill="transparent"/></g>';
     });
@@ -631,13 +839,24 @@
       var d = artSize(pl.L.kind);
       var hw = Math.round(d[0] / 2) + 10, hh = d[1] + 16;
       s += '<g class="wm-b" data-id="' + pl.p.id + '" transform="translate(' + pl.L.x + "," + pl.L.y + ')">' +
-        // at night the lit windows spill a pool of light onto the ground at
-        // the building's feet - light falls DOWN from a source, no halos
-        '<ellipse class="wm-night-only" cx="0" cy="8" rx="' + Math.round(d[0] * 0.42) + '" ry="' + Math.round(d[1] * 0.09) + '" fill="url(#wm-pool)"/>' +
+        // No night light of its own - a building emits nothing. The only lamp
+        // in the valley is a lamp. This is the daytime contact shadow.
         '<ellipse filter="url(#wm-soft)" cx="0" cy="5" rx="' + Math.round(d[0] * 0.44) + '" ry="' + Math.round(d[1] * 0.10) + '" fill="rgba(58,48,28,.20)"/>' + paint(pl.L.kind) +
-        nightGlow(pl.L.kind) + storyMarks(pl.L.kind) +
+        // the four that carry their own light; art spans -w/2..w/2 and -h..0
+        selfLit(pl.L.kind, -d[0] / 2, -d[1], d[0], d[1]) +
+        storyMarks(pl.L.kind) +
         '<rect class="wm-hit" x="' + (-hw) + '" y="' + (-d[1] - 8) + '" width="' + (hw * 2) + '" height="' + hh + '" fill="transparent"/></g>';
     });
+
+    /* Lamps after the buildings, so each pool falls across the feet of the pair
+       it lights rather than behind them. */
+    LAMPS.forEach(function (L, i) { s += lampNode(L[0], L[1], L[2], i, L[3]); });
+
+    // the Watchtower's sweep, pivoting on its lantern gallery
+    (function () {
+      var W = LAYOUT["ssrs-monitor"], d = artSize("tower");
+      if (W) s += lighthouseBeam(W.x, W.y - Math.round(d[1] * 0.83));
+    })();
 
     // labels layer - above every building, never occluded by one
     s += '<g id="wm-labels">';
@@ -658,10 +877,10 @@
       '<circle cx="-4.5" cy="-5" r="3.6" fill="#fffdf4"/><circle cx="4.5" cy="-5" r="3.6" fill="#fffdf4"/>' +
       '<circle cx="-3.8" cy="-4.4" r="1.5" fill="#17130d"/><circle cx="5.2" cy="-4.4" r="1.5" fill="#17130d"/></g>';
 
-    // night: one tinted sheet over the painted world. The old approach rewrote
-    // literal hex colours in the generated SVG, which does nothing to a raster.
-    s += '<rect class="wm-night-only" x="0" y="0" width="' + PLATE.w + '" height="' + PLATE.h +
-         '" fill="#101a30" opacity=".6" style="mix-blend-mode:multiply" pointer-events="none"/>';
+    /* The tinted sheet that used to sit here is gone: it existed to fake night
+       on the DAY plate, and there is a painted night plate now. Left in, it
+       darkened an already-moonlit painting a second time. What still needs
+       grading is the art on top of it - see .wm-night #wm-pan image in the CSS. */
     s += "</g></svg>";
     return s;
   }
@@ -1087,6 +1306,16 @@
       if (s) scale = s;
       tx = x; ty = y;
       applyPan();
+    },
+    /* debug / test hook: park the train at a point in its run, 0..1.
+       The train is integrated per frame, and headless freezes rAF - so without
+       this it sits at u=0 for every screenshot, which is behind the platform.
+       Anything mounted ON the train (its headlamp) is invisible to a shot
+       otherwise. */
+    train: function (u) {
+      if (!TRAIN || !TRAIN.node) return;
+      TRAIN.u = Math.max(0, Math.min(1, u));
+      stepTrain(0);
     }
   };
 })();

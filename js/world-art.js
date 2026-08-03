@@ -461,6 +461,11 @@ window.WORLD_ART = {
       "h": 122,
       "w": 128
     },
+    "lamp": {
+      "frames": 14,
+      "h": 192,
+      "w": 99
+    },
     "smoke": {
       "frames": 27,
       "h": 95,

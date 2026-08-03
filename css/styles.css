@@ -2405,10 +2405,82 @@ body.touring #sprite { display: none; }   /* one Suu at a time */
   .gallery { grid-template-columns: repeat(2, 1fr); gap: .6rem; }
 }
 
-/* the night sheet dims the painted world; lit windows must sit on top of it */
-/* lamplight is light: screen-blend the bloom so it brightens the dusk sheet
+/* Night is a second painted plate, not a tint over the day one, so nothing
+   dims the valley wholesale any more. The plate arrives moonlit; the art laid
+   over it is painted at noon, and left alone it reads as bright cut-outs
+   pasted on a night scene. Grade that art down and cool it toward moonlight -
+   and only that art, which is what excluding .wm-plate is for: running this
+   over the plate would darken a night painting twice. */
+.worldmap.wm-night #wm-pan image:not(.wm-plate) {
+  filter: brightness(.6) saturate(.68);
+}
+/* lamplight is light: screen-blend the pool so it brightens what it falls on
    rather than sitting on it as a flat wash */
-.worldmap.wm-night .wm-b .wm-glow-e { mix-blend-mode: screen; }
+.worldmap.wm-night .wm-lamp-pool { mix-blend-mode: screen; }
+/* A lamp is the light SOURCE. The night grading above dims every sprite laid
+   over the plate, which would put the lamp out - exempt it. */
+.worldmap.wm-night #wm-pan .wm-lamp image { filter: none; }
+/* The switch-on: the 14 shipped frames play ONCE and hold lit, so the lamp
+   never dims back. The travel stops one frame short of the strip's full width
+   because the held end-state must be the last LAMP, not the blank past it. */
+.worldmap.wm-night .wm-lamp-img {
+  animation-name: wm-lamp-on;
+  animation-duration: 1.7s;
+  animation-timing-function: steps(var(--steps, 13));
+  animation-iteration-count: 1;
+  animation-fill-mode: both;
+  animation-delay: var(--ldelay, 0s);
+}
+@keyframes wm-lamp-on { to { transform: translateX(var(--travel)); } }
+/* the pool arrives with the flame, not before it */
+.worldmap.wm-night .wm-lamp-pool {
+  animation: wm-lamp-glow 1.7s ease-out var(--ldelay, 0s) 1 both;
+}
+/* The pools settle at 0.6, not full. At full strength seventeen of them lit the
+   valley evenly and flattened it - the point of night here is contrast, so the
+   posts should pick their buildings out of the dark rather than raise the whole
+   meadow. The self-lit four and the headlamp are deliberately NOT dimmed with
+   them: those are sources you look at, and holding them bright is what keeps
+   the lighthouse, the brazier and the engine reading as the brightest things
+   in the valley. */
+@keyframes wm-lamp-glow { from { opacity: 0; } to { opacity: .6; } }
+
+/* Buildings that carry their own light. Same screen blend as a lamp pool -
+   these are light, not paint. */
+.worldmap.wm-night .wm-selflit { mix-blend-mode: screen; }
+/* A fire is never still. Irregular steps, not a sine: an evenly breathing
+   flame reads as a pulsing lamp, which is what it must NOT look like. */
+@keyframes wm-flame-flicker {
+  0%, 100% { opacity: .93; }
+  13% { opacity: 1; }
+  27% { opacity: .72; }
+  41% { opacity: .98; }
+  56% { opacity: .66; }
+  68% { opacity: .90; }
+  84% { opacity: .78; }
+}
+.worldmap.wm-night .wm-flame { animation: wm-flame-flicker 2.3s ease-in-out infinite; }
+/* The lighthouse. Its lamp burns steady - a lighthouse does not gutter - and
+   the BEAM carries the motion instead. transform-origin must be pinned to 0 0:
+   an SVG group otherwise rotates about its bounding-box centre, which would
+   swing the beams around a point out in the meadow rather than the lantern. */
+.worldmap.wm-night .wm-lantern { opacity: .95; }
+.worldmap.wm-night .wm-lighthouse { mix-blend-mode: screen; }
+/* The engine's headlamp and its throw - light, so screen-blended like the rest.
+   Both live inside .wm-train, so they ride and tilt with the locomotive. */
+.worldmap.wm-night .wm-headbeam,
+.worldmap.wm-night .wm-headlamp { mix-blend-mode: screen; }
+.worldmap.wm-night .wm-beam-spin {
+  transform-origin: 0 0;
+  animation: wm-beam-sweep 9s linear infinite;
+}
+/* A continuous turn about Z - the beams travel a true circle in the plane of
+   the screen, at one constant length, the way a lamp turning on the tower's own
+   axis looks. linear, not ease: a lighthouse turns at a constant rate, and
+   easing would make it appear to pause and lunge.
+   The group this drives must stay UNSCALED (see lighthouseBeam) - a vertical
+   scale turns this circle into an ellipse, which is what read as tilting. */
+@keyframes wm-beam-sweep { to { transform: rotate(360deg); } }
 
 /* ---------- valley ambient sprite loops ---------- */
 .worldmap .wm-seq {
@@ -2455,4 +2527,12 @@ body.touring #sprite { display: none; }   /* one Suu at a time */
 @media (prefers-reduced-motion: reduce) {
   .worldmap .wm-seq,
   .worldmap .wm-fly { animation: none; }
+  /* Killing the lamp's animation would strand it on frame 1 - unlit, leaving
+     the valley pitch dark for exactly the visitors who cannot be shown the
+     switch-on. Jump it to the lit frame instead of animating to it. */
+  .worldmap .wm-lamp-img { animation: none; transform: translateX(var(--travel)); }
+  .worldmap .wm-lamp-pool { animation: none; opacity: .6; }  /* match the keyframe's end */
+  /* the flame stops guttering but must stay LIT; the lighthouse stops turning */
+  .worldmap .wm-flame { animation: none; opacity: .92; }
+  .worldmap .wm-beam-spin { animation: none; }
 }
