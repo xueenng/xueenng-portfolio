@@ -153,8 +153,11 @@ body.night .footer .footer-mark { color: #e8e4d8; }
 #wm-svg:active { cursor: grabbing; }
 .wm-b { cursor: pointer; }
 .wm-b:hover { filter: brightness(1.07) drop-shadow(0 4px 10px rgba(60,50,30,.3)); }
-.wm-b .wm-board { opacity: .95; transition: opacity .2s; }
-.wm-b:hover .wm-board rect { fill: #fff8e2; stroke-width: 2.4; }
+/* labels live in their own layer above the buildings, so they can no longer be
+   styled as descendants of .wm-b - worldmap.js mirrors the hover across by
+   data-id instead */
+.wm-board { opacity: .95; transition: opacity .2s; }
+.wm-board.is-hot rect { fill: #fff8e2; stroke-width: 2.4; }
 .wm-smoke { animation: wmSmoke 3.4s ease-in infinite; }
 .wm-smoke2 { animation-delay: 1.7s; }
 @keyframes wmSmoke { 0% { opacity: .65; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-26px); } }
@@ -316,6 +319,38 @@ a.contact-resume:hover { border-style: solid; border-color: var(--accent); color
 
 /* ---------- hero ---------- */
 .hero { position: relative; padding: 8.5rem 1.4rem 3rem; max-width: 1200px; margin: 0 auto; }
+
+/* ---------- the painted hero plate ----------
+   A real painting rather than code-drawn scenery, which could never carry
+   this much detail. z-index MUST be -1, not 0: the hero's own content is
+   static, and static content paints BEFORE any positioned element no matter
+   how late it sits in the DOM - at 0 the plate covers its own headline. At -1
+   it shares the sky canvas's layer and wins on tree order alone.
+   The gradient layered over the image is a scrim, not decoration: the
+   painting's "XE STUDIO" signpost falls right behind the subline and the
+   buttons, so the text column needs its own wash of light to stay readable.
+   The mask dissolves the plate's bottom edge into the canvas hills below, so
+   the hero does not end on a hard horizontal seam. */
+.hero::before {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 50%;
+  width: 100vw; transform: translateX(-50%);
+  z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(58% 54% at 30% 45%,
+      color-mix(in srgb, var(--bg) 76%, transparent) 0%,
+      color-mix(in srgb, var(--bg) 46%, transparent) 46%,
+      transparent 78%),
+    url("../assets/scenes/valley-hero.webp") center / cover no-repeat;
+  -webkit-mask-image: linear-gradient(to bottom, #000 68%, transparent 99%);
+  mask-image: linear-gradient(to bottom, #000 68%, transparent 99%);
+}
+/* the plate is painted at high noon; dark theme is night down here, so it is
+   graded rather than left glaring against an otherwise dark page */
+html[data-theme="dark"] .hero::before { filter: brightness(.38) saturate(.6) hue-rotate(204deg); }
+/* 100vw counts the scrollbar, so a centred full-bleed layer overhangs by a few
+   px. clip (not hidden) kills the sideways scroll WITHOUT making body a scroll
+   container, which would break position:sticky if anything ever wants it. */
+body { overflow-x: clip; }
 .hero-inner { display: grid; grid-template-columns: 1.15fr 1fr; gap: 3rem; align-items: center; }
 .hero-kicker {
   font-family: var(--label); font-size: .85rem; letter-spacing: .14em; text-transform: uppercase;
@@ -391,6 +426,11 @@ body.editing .hp-card { cursor: pointer; outline: 2px dashed var(--accent); outl
   max-width: 1200px; margin: 3.6rem auto 0;
   display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0;
   border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  /* the painted meadow runs straight through this row, so the labels need
+     their own drift of mist to stay legible over the flowers */
+  background: color-mix(in srgb, var(--scene-paper) 58%, transparent);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  border-radius: 12px;
 }
 .stat { padding: 1.3rem 1rem; text-align: center; position: relative; }
 .stat + .stat::before {
@@ -2363,4 +2403,56 @@ body.touring #sprite { display: none; }   /* one Suu at a time */
    tile to open it full-size in the lightbox. */
 @media (max-width: 700px) {
   .gallery { grid-template-columns: repeat(2, 1fr); gap: .6rem; }
+}
+
+/* the night sheet dims the painted world; lit windows must sit on top of it */
+/* lamplight is light: screen-blend the bloom so it brightens the dusk sheet
+   rather than sitting on it as a flat wash */
+.worldmap.wm-night .wm-b .wm-glow-e { mix-blend-mode: screen; }
+
+/* ---------- valley ambient sprite loops ---------- */
+.worldmap .wm-seq {
+  animation: wm-seq-run var(--dur, 1.4s) steps(var(--frames, 8)) infinite;
+  will-change: transform;
+}
+@keyframes wm-seq-run {
+  to { transform: translateX(calc(var(--fw) * var(--frames) * -1px)); }
+}
+/* Fliers travel the valley rather than flapping on one spot. The fade at both
+   ends hides the restart - a hard reset on a linear translate reads as a glitch
+   rather than as a bird leaving. */
+.worldmap .wm-fly {
+  animation: wm-fly-run var(--fdur, 40s) linear infinite;
+  animation-delay: var(--fdelay, 0s);
+}
+@keyframes wm-fly-run {
+  0%   { transform: translate(0, 0); opacity: 0; }
+  7%   { opacity: 1; }
+  93%  { opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)); opacity: 0; }
+}
+
+/* Buildings are cut-outs laid on a painted plate, so their silhouettes read as
+   pasted on. A short, tight drop shadow hugging the edge does what the blurred
+   contact pool underneath cannot: it softens the CUT itself, so the outline
+   stops looking scissored. Kept subtle - a strong shadow just makes it float. */
+.worldmap .wm-b image { filter: drop-shadow(0 2px 3px rgba(46, 38, 22, .30)); }
+
+/* Flight is integrated per frame in worldmap.js and written to the transform
+   attribute, so there are no flight keyframes here any more - a keyframe path
+   is a closed loop by definition, which is what made the old birds read as
+   flying in a sine. Only the WING is periodic, and that is .wm-seq above.
+   will-change keeps each flier on its own layer, since the attribute is
+   rewritten every frame. */
+.worldmap .wm-flier { will-change: transform; }
+
+/* The train is driven per frame along the measured rail path in worldmap.js,
+   so its motion has no keyframes either - same reason as the fliers above. A
+   straight keyframe translate could not stay on a curved line, which is what
+   kept pulling its height and angle out of true. */
+.worldmap .wm-train { will-change: transform; }
+
+@media (prefers-reduced-motion: reduce) {
+  .worldmap .wm-seq,
+  .worldmap .wm-fly { animation: none; }
 }

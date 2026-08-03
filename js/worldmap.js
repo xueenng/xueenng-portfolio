@@ -18,174 +18,461 @@
 
   var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /* ---------- where everything lives (id -> place) ---------- */
+  /* ---------- where everything lives (id -> place) ----------
+     The stall / exchange house / tavern / warehouse row steps by about
+     (+215, -65) a building, so it reads as ONE line receding up the valley
+     rather than as four places that happen to be near each other.
+     The Document Mill sits 56 higher than its blueprint spot for one reason:
+     at 886 its label lands squarely on the Exchange House's roof. It still
+     stands beside the water, and on firmer ground than before - its footprint
+     straddled the bank. Move it back down and that label collides again. */
   var LAYOUT = {
-    "vr-escape-room":            { x: 1300, y: 240, kind: "castle",  label: "Kellie's Castle" },
-    "do-pipeline":               { x: 300,  y: 490, kind: "mill",    label: "Document Mill" },
-    "forex-sync":                { x: 470,  y: 385, kind: "kiosk",   label: "Exchange House" },
-    "notify-hub":                { x: 205,  y: 650, kind: "post",    label: "Post Office" },
-    "ssrs-monitor":              { x: 165,  y: 335, kind: "tower",   label: "Watchtower" },
-    "ops-portal":                { x: 525,  y: 570, kind: "hall",    label: "Town Hall" },
-    "work-record":               { x: 685,  y: 455, kind: "print",   label: "Print Shop" },
-    "student-routine-organizer": { x: 905,  y: 385, kind: "school",  label: "Schoolhouse" },
-    "mindharmony":               { x: 1065, y: 490, kind: "pavilion",label: "Calm Garden" },
-    "ai-waste-sorting":          { x: 825,  y: 565, kind: "shed",    label: "Sorting Shed" },
-    "ar-fire-extinguisher":      { x: 1200, y: 625, kind: "fire",    label: "Fire Station" },
-    "vr-fire-extinguisher":      { x: 1335, y: 705, kind: "drill",   label: "Drill Tower" },
-    "math-adventure":            { x: 950,  y: 665, kind: "tent",    label: "Number Tent" },
-    "stock-management":          { x: 700,  y: 725, kind: "barn",    label: "Warehouse" },
-    "fruit-stall-inventory":     { x: 520,  y: 785, kind: "stall",   label: "Fruit Stall" },
-    "food-ordering":             { x: 885,  y: 815, kind: "tavern",  label: "Tavern" },
-    "library-student-management":{ x: 1105, y: 785, kind: "library", label: "Library" },
-    "student-record-bst":        { x: 1440, y: 520, kind: "tree",    label: "The Sorting Tree" }
+    "vr-escape-room":             { x: 3068, y: 1055, kind: "castle",  label: "Kellie's Castle" },
+    "do-pipeline":                { x: 1665, y: 830,  kind: "mill",    label: "Document Mill" },
+    "forex-sync":                 { x: 1767, y: 1022,  kind: "kiosk",   label: "Exchange House" },
+    "notify-hub":                 { x: 2649, y: 872,  kind: "post",    label: "Post Office" },
+    "ssrs-monitor":               { x: 932,  y: 890,  kind: "tower",   label: "Watchtower" },
+    "ops-portal":                 { x: 2579, y: 1659, kind: "hall",    label: "Town Hall" },
+    "work-record":                { x: 1212, y: 1280, kind: "print",   label: "Print Shop" },
+    "student-routine-organizer":  { x: 2175, y: 1209, kind: "school",  label: "Schoolhouse" },
+    "mindharmony":                { x: 1438, y: 745,  kind: "pavilion", label: "Calm Garden" },
+    "ai-waste-sorting":           { x: 1098, y: 925,  kind: "shed",    label: "Sorting Shed" },
+    "ar-fire-extinguisher":       { x: 2813, y: 1364, kind: "fire",    label: "Fire Station" },
+    "vr-fire-extinguisher":       { x: 3089, y: 1477, kind: "drill",   label: "Drill Tower" },
+    "math-adventure":             { x: 2600, y: 1055, kind: "tent",    label: "Number Tent" },
+    "stock-management":           { x: 2181, y: 874,  kind: "barn",    label: "Warehouse" },
+    "fruit-stall-inventory":      { x: 1539, y: 1072, kind: "stall",   label: "Fruit Stall" },
+    "food-ordering":              { x: 1973, y: 938,  kind: "tavern",  label: "Tavern" },
+    "library-student-management": { x: 2466, y: 1238, kind: "library", label: "Library" },
+    "student-record-bst":         { x: 1013, y: 1139, kind: "tree",    label: "The Sorting Tree" }
   };
 
-  /* ---------- tiny building painters (inner SVG, ground at y=0) ---------- */
+  /* ---------- free flight ----------
+     Flight used to be three stacked CSS keyframe loops: a traverse, a sine bob,
+     and a bank that followed the bob. That is periodic BY CONSTRUCTION - watch
+     one bird for a minute and the loop shows, which is exactly what reads as
+     "flying in a sine". No arrangement of keyframes fixes it, because a
+     keyframe animation is a closed path by definition.
+
+     So the path is now integrated per frame from a steering model instead. The
+     WING stays a CSS frame loop, because a wingbeat genuinely IS periodic - it
+     is only the PATH that must never repeat. That keeps the two-system split
+     that made this work in the first place: wing animation and flight movement
+     remain independent, they just no longer share a mechanism. */
+  var FLIERS = [];
+  var flyRaf = null, flyLast = 0;
+
+  /* One sprite that the animator drives. The art is drawn from its top-left, so
+     the inner shift puts the sprite's CENTRE on the origin - otherwise every
+     tilt would swing the bird around its own shoulder. */
+  function flierNode(name) {
+    var m = window.WORLD_ART && window.WORLD_ART.sprites[name];
+    if (!m) return "";
+    var id = "wm-clip-" + (seqId++);
+    return '<g class="wm-flier">' +
+      '<g transform="translate(' + (-m.w / 2) + ',' + (-m.h / 2) + ')">' +
+      '<clipPath id="' + id + '"><rect x="0" y="0" width="' + m.w + '" height="' + m.h + '"/></clipPath>' +
+      '<g clip-path="url(#' + id + ')">' +
+      '<image class="wm-wing" href="assets/world/sprites/' + name + '.webp" ' +
+      'x="0" y="0" width="' + (m.w * m.frames) + '" height="' + m.h + '"/>' +
+      "</g></g></g>";
+  }
+
+  /* ---------- wingbeat ----------
+     The strip holds ~4.7 beats, not one, so running it as a single CSS loop in
+     a second flapped at 4.7Hz - sparrow-fast for a bird crossing a valley.
+     Worse, a CSS loop flaps FOREVER at one rate, and that is the tell: a real
+     bird flaps in bursts and then glides on held wings, and beats harder going
+     up than coming down. So the wing is driven here now, beside the flight.
+     It costs one transform write per bird and buys behaviour a keyframe
+     cannot express. */
+  var FRAMES_PER_BEAT = 27 / 4.7;
+  var GLIDE_FRAME = 8;        // measured: the widest, flattest pose in the strip
+
+  function stepWing(f, dt) {
+    var sp = f.sprite;
+    if (!sp) return;
+    if (f.kind === "bfly") {          // butterflies never stop beating
+      f.wf = (f.wf + f.hz * dt) % sp.frames;
+      return;
+    }
+    f.wt -= dt;
+    if (f.mode === "glide") {
+      f.wf = GLIDE_FRAME;             // a glide holds the wings OUT, it is not a paused flap
+      if (f.wt <= 0) { f.mode = "flap"; f.wt = rnd(1.1, 3.0); }
+      return;
+    }
+    // climbing costs effort; descending, the bird eases off
+    var eff = 1 + Math.max(-0.3, Math.min(0.45, -f.a * 1.2));
+    f.wf = (f.wf + f.hz * FRAMES_PER_BEAT * eff * dt) % sp.frames;
+    if (f.wt <= 0) {
+      f.mode = "glide";
+      // little gliding while climbing - you cannot coast uphill
+      f.wt = f.a < -0.12 ? rnd(0.3, 0.8) : rnd(0.9, 2.4);
+    }
+  }
+
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+
+  /* A bird holds a course and wanders off it. `turn` is a DAMPED random walk
+     rather than raw noise, so a turn eases in and eases out the way a real one
+     does; feeding random straight into the angle gives a twitch, not a bank. */
+  function bird(dir, y0, y1) {
+    return {
+      kind: "bird",
+      dir: dir, x: dir > 0 ? rnd(-300, WORLD.x1) : rnd(0, WORLD.x1 + 300),
+      y: rnd(y0, y1), y0: y0, y1: y1,
+      spd: rnd(46, 82), a: rnd(-0.2, 0.2), turn: 0, jit: rnd(0.5, 1.0),
+      s: rnd(0.42, 0.8),
+      hz: rnd(1.5, 2.1), wf: rnd(0, 27), mode: "flap", wt: rnd(0.4, 2.6)
+    };
+  }
+
+  /* A follower keeps station on a leader instead of flying its own course, so
+     the formation bends when the leader turns rather than sliding as a block.
+     The offset is measured BEHIND the leader, so it flips with the leader's
+     direction. `wob` is that member's own drift - without it the formation is
+     rigid, which is the cut-out look this is meant to avoid. */
+  function follower(lead, ox, oy, s) {
+    return {
+      kind: "bird", lead: lead, ox: ox, oy: oy, s: s,
+      x: lead.x, y: lead.y, a: 0, dir: lead.dir,
+      wx: 0, wy: 0, wvx: 0, wvy: 0,
+      hz: rnd(1.5, 2.1), wf: rnd(0, 27), mode: "flap", wt: rnd(0.4, 2.6)
+    };
+  }
+
+  /* Butterflies do not travel - they potter about one patch of meadow. Free 2D
+     heading with a hard pull back when they stray past their home radius, which
+     is what keeps them over grass without scripting a path. */
+  function butterfly(hx, hy, r) {
+    return {
+      kind: "bfly", x: hx, y: hy, hx: hx, hy: hy, r: r,
+      hdg: rnd(0, Math.PI * 2), spd: rnd(16, 30), turn: 0, jit: rnd(3.2, 5.5),
+      s: rnd(0.17, 0.24), hz: rnd(18, 24), wf: rnd(0, 30)
+    };
+  }
+
+  /* ---------- the train ----------
+     The train rides the rail path measured at build time - WORLD_ART.railPath,
+     the midpoint BETWEEN the two rails, which is the axle line. It used to run
+     on a straight CSS translate, and a straight line can only agree with a
+     curved one at two points: seating the train on the rail at one phase left
+     it ~20 units off at another, so its height and angle kept needing another
+     hand-tuned constant. Position AND tilt now come from the measurement, so
+     re-drawing the track re-fits the train instead of starting another round
+     of nudging. */
+  var TRAIN = null;
+  var TRAIN_SECS = 46;
+
+  function trainNode() {
+    var art = window.WORLD_ART;
+    var nat = art && art.scenery && art.scenery["steam-train"];
+    var ax = art && art.trainAxle;
+    if (!nat || !ax) return "";
+    var w = 520, k = w / nat[0], h = Math.round(nat[1] * k);
+    /* Hang the sprite from its MEASURED axle, not its bbox. The train is drawn
+       on a slope, so its bottom edge is a corner - hanging it there put the
+       wheels wherever the corner happened to fall. The origin is the wheel
+       line at the sprite's centre, which is also the right pivot to rotate
+       about. */
+    TRAIN = { u: 0, w: w, h: h, deg: ax.deg, node: null };
+    /* Smoke lives INSIDE the train's group, so it travels and tilts with the
+       engine instead of being left behind on the meadow. It starts at the
+       measured funnel and hangs from its own base, so the plume rises out of
+       the stack rather than through it. */
+    var sm = window.WORLD_ART.sprites.smoke;
+    var puff = "";
+    if (sm) {
+      /* Big enough to read as steam at map zoom. At 0.30 the plume was there
+         but nobody noticed it - a pale wisp on a green meadow needs size to
+         register at all. */
+      var ss = 1.05;
+      /* Anchored on the plume's MEASURED emission point, not the frame's
+         centre-bottom. The puff leaves the frame's lower left and drifts up
+         and right, so centring the frame put the source beside the stack -
+         and scale-dependently, since half the frame width grows with ss. That
+         is what the old hand-tuned nudge was really compensating for; with the
+         emission point anchored, the plume stays on the stack at any size. */
+      var o = sm.origin || [sm.w / 2, sm.h];
+      /* A small lean forward over the stack, by eye. Applied AFTER the anchor
+         so it stays put if the plume is resized - the offset it replaced was
+         folded in before the scale and drifted with it. */
+      var SMOKE_DX = 8;
+      var fx = -w / 2 + ax.funnel[0] * k + SMOKE_DX;
+      var fy = -ax.midY * k + ax.funnel[1] * k;
+      puff = seq("smoke", fx - o[0] * ss, fy - o[1] * ss, ss, 1.4);
+    }
+    return '<g class="wm-train"><image href="assets/world/scenery/steam-train.webp" ' +
+      'x="' + (-w / 2).toFixed(1) + '" y="' + (-ax.midY * k).toFixed(1) + '" ' +
+      'width="' + w + '" height="' + h + '"/>' + puff + '</g>';
+  }
+
+  /* World y of the axle line at a world x. Clamped at both ends so a train
+     nose sampling past the last rail still gets a sane slope. */
+  function railAt(wx) {
+    var art = window.WORLD_ART, p = art && art.railPath;
+    if (!p || p.length < 2) return null;
+    var o = SCENERY[0], k = o[3] / art.scenery.railway[0];
+    var lx = (wx - o[1]) / k;
+    if (lx <= p[0][0]) return o[2] + p[0][1] * k;
+    if (lx >= p[p.length - 1][0]) return o[2] + p[p.length - 1][1] * k;
+    for (var i = 1; i < p.length; i++) {
+      if (p[i][0] >= lx) {
+        var a = p[i - 1], b = p[i];
+        return o[2] + (a[1] + (b[1] - a[1]) * (lx - a[0]) / (b[0] - a[0])) * k;
+      }
+    }
+    return null;
+  }
+
+  function stepTrain(dt) {
+    var t = TRAIN;
+    if (!t || !t.node) return;
+    var art = window.WORLD_ART, p = art && art.railPath;
+    if (!p || p.length < 2) return;
+    var o = SCENERY[0], k = o[3] / art.scenery.railway[0];
+    var x0 = o[1] + p[0][0] * k;
+    /* The run STARTS AT THE STATION, not at the rail's east end: the train is
+       parked behind the platform and pulls out of it. Starting further east
+       had it trundling along open track before reaching the station, which
+       read as passing through rather than departing. */
+    var st = SCENERY[1];
+    var x1 = st[1] + st[3] / 2;
+    t.u += dt / TRAIN_SECS;
+    if (t.u > 1) t.u -= 1;
+    var x = x1 - (x1 - x0) * t.u;
+    var y = railAt(x);
+    if (y === null) return;
+    /* Tilt is the DIFFERENCE between the track's slope and the slope already
+       drawn into the sprite. Rotating by the track's full angle tilts a train
+       that is drawn tilted, which is what every hand-tuned angle here was
+       really fighting. Measured over the train's own length, so it matches
+       what the train spans rather than the slope at one point beneath it. */
+    var hw = t.w / 2;
+    var track = Math.atan2(railAt(x + hw) - railAt(x - hw), t.w) * 180 / Math.PI;
+    var deg = track - t.deg;
+    /* Only the WEST end fades. There is nothing to hide at the start - the
+       train begins hidden behind the platform and slides out from under it,
+       which is a better reveal than a fade, and it means the loop's restart
+       happens out of sight too. */
+    var f = Math.max(0, Math.min((1 - t.u) / 0.08, 1));
+    t.node.setAttribute("transform",
+      "translate(" + x.toFixed(1) + "," + y.toFixed(1) + ") rotate(" + deg.toFixed(2) + ")");
+    t.node.setAttribute("opacity", f.toFixed(3));
+  }
+
+  function stepFlier(f, dt) {
+    if (f.lead) {
+      // station-keeping: offset trails the leader and flexes with its own drift
+      f.dir = f.lead.dir;
+      f.wvx += rnd(-1, 1) * 26 * dt; f.wvx -= f.wvx * 1.4 * dt;
+      f.wvy += rnd(-1, 1) * 20 * dt; f.wvy -= f.wvy * 1.4 * dt;
+      f.wx += f.wvx * dt; f.wy += f.wvy * dt;
+      f.wx -= f.wx * 0.5 * dt; f.wy -= f.wy * 0.5 * dt;
+      var px = f.lead.x - f.lead.dir * f.ox + f.wx;
+      var py = f.lead.y + f.oy + f.wy;
+      f.vx = (px - f.x) / Math.max(dt, 0.001);
+      f.vy = (py - f.y) / Math.max(dt, 0.001);
+      f.x = px; f.y = py;
+      f.a = f.lead.a;
+      stepWing(f, dt);
+      return;
+    }
+
+    if (f.kind === "bfly") {
+      f.turn += rnd(-1, 1) * f.jit * dt;
+      f.turn -= f.turn * 2.6 * dt;
+      f.hdg += f.turn * dt;
+      var dx = f.x - f.hx, dy = f.y - f.hy;
+      if (dx * dx + dy * dy > f.r * f.r) {
+        // steer home by the SHORT way round, so it turns back rather than spins
+        var home = Math.atan2(-dy, -dx);
+        var d = ((home - f.hdg + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+        f.hdg += d * 2.4 * dt;
+      }
+      f.vx = Math.cos(f.hdg) * f.spd;
+      f.vy = Math.sin(f.hdg) * f.spd;
+      f.x += f.vx * dt; f.y += f.vy * dt;
+      stepWing(f, dt);
+      return;
+    }
+
+    f.turn += rnd(-1, 1) * f.jit * dt;
+    f.turn -= f.turn * 2.2 * dt;
+    f.a += f.turn * dt;
+    // hold the altitude band: low in the band means climb, high means descend
+    var mid = (f.y0 + f.y1) / 2, half = Math.max(1, (f.y1 - f.y0) / 2);
+    f.a -= ((f.y - mid) / half) * 0.6 * dt;
+    if (f.a > 0.5) f.a = 0.5;
+    if (f.a < -0.5) f.a = -0.5;
+    f.vx = f.dir * f.spd * Math.cos(f.a);
+    f.vy = f.spd * Math.sin(f.a);
+    f.x += f.vx * dt; f.y += f.vy * dt;
+    // gone past the far edge: come back on the other side, somewhere new
+    if (f.dir > 0 && f.x > WORLD.x1 + 320) { f.x = -320; f.y = rnd(f.y0, f.y1); }
+    if (f.dir < 0 && f.x < -320) { f.x = WORLD.x1 + 320; f.y = rnd(f.y0, f.y1); }
+    stepWing(f, dt);
+  }
+
+  /* The art faces LEFT, so a bird travelling right is mirrored. Mirroring first
+     and tilting second means the tilt is read in the bird's own frame - nose up
+     is nose up whichever way it is facing. Tilt comes from the flight path
+     itself, so a climbing bird noses up because it is climbing. */
+  function drawFlier(f) {
+    if (!f.node) return;
+    var sx = (f.vx > 0 ? -f.s : f.s);
+    var pitch = -(f.kind === "bfly"
+      ? Math.atan2(f.vy, Math.abs(f.vx) + 0.001) * 0.5
+      : f.a) * 180 / Math.PI;
+    f.node.setAttribute("transform",
+      "translate(" + f.x.toFixed(1) + "," + f.y.toFixed(1) + ") " +
+      "scale(" + sx.toFixed(3) + "," + f.s.toFixed(3) + ") " +
+      "rotate(" + pitch.toFixed(1) + ")");
+    if (f.img && f.sprite) {
+      f.img.setAttribute("transform",
+        "translate(" + (-Math.floor(f.wf) * f.sprite.w) + ",0)");
+    }
+  }
+
+  function flyStep(now) {
+    var dt = Math.min(0.05, (now - flyLast) / 1000) || 0.016;
+    flyLast = now;
+    for (var i = 0; i < FLIERS.length; i++) {
+      stepFlier(FLIERS[i], dt);
+      drawFlier(FLIERS[i]);
+    }
+    stepTrain(dt);
+    flyRaf = requestAnimationFrame(flyStep);
+  }
+
+  /* Bind the model to the nodes the render just produced, and settle the flock
+     before the first paint - otherwise every follower starts stacked on its
+     leader and the formation visibly springs apart in the opening second. */
+  function startFlight(svg) {
+    stopFlight();
+    var nodes = svg.querySelectorAll(".wm-flier");
+    var sprites = (window.WORLD_ART && window.WORLD_ART.sprites) || {};
+    for (var i = 0; i < FLIERS.length && i < nodes.length; i++) {
+      FLIERS[i].node = nodes[i];
+      FLIERS[i].img = nodes[i].querySelector("image");
+      FLIERS[i].sprite = sprites[FLIERS[i].kind === "bfly" ? "butterfly" : "bird"];
+      FLIERS[i].vx = FLIERS[i].dir || 1;
+      FLIERS[i].vy = 0;
+    }
+    for (var w = 0; w < 40; w++) {
+      for (var j = 0; j < FLIERS.length; j++) stepFlier(FLIERS[j], 0.05);
+    }
+    FLIERS.forEach(drawFlier);
+    if (TRAIN) { TRAIN.node = svg.querySelector(".wm-train"); stepTrain(0); }
+    if (reduced) return;      // placed, but never animated
+    flyLast = performance.now();
+    flyRaf = requestAnimationFrame(flyStep);
+  }
+
+  function stopFlight() {
+    if (flyRaf) cancelAnimationFrame(flyRaf);
+    flyRaf = null;
+  }
+
+  /* Scenery placed in world space: [slug, x, y, displayWidth]. Framing reads
+     this table too - when only LAYOUT was measured, the station and its line
+     fell outside the opening view entirely. */
+  var STATION_ID = "wm-station-journey";
+  var SCENERY = [
+    ["railway", 786, 1802, 2750],
+    ["station", 3060, 1690, 680]
+  ];
+
+  /* ---------- painted buildings (ground at y=0, as the old painters were) ----------
+     kind -> [art slug, display height]. Natural widths come from world-art.js,
+     so aspect ratios are never hand-maintained. */
   var INK = "#5d4a33";
-  function house(body, roof, prop) {
-    return '<rect x="-45" y="-70" width="90" height="70" rx="3" fill="' + body + '" stroke="' + INK + '" stroke-width="2.5"/>' +
-      '<path d="M-56 -70 L0 -112 L56 -70 Z" fill="' + roof + '" stroke="' + INK + '" stroke-width="2.5" stroke-linejoin="round"/>' +
-      '<rect x="-13" y="-36" width="26" height="36" rx="4" fill="' + INK + '"/>' +
-      '<rect x="-37" y="-58" width="19" height="17" rx="2" fill="#fdf6e0" stroke="' + INK + '" stroke-width="1.6"/>' +
-      '<rect x="18" y="-58" width="19" height="17" rx="2" fill="#fdf6e0" stroke="' + INK + '" stroke-width="1.6"/>' +
-      (prop || "");
-  }
-  function signPost(inner) {
-    return '<g transform="translate(62,0)"><rect x="-2.5" y="-42" width="5" height="42" fill="' + INK + '"/>' +
-      '<rect x="-19" y="-62" width="38" height="26" rx="4" fill="#f2e3bd" stroke="' + INK + '" stroke-width="2"/>' + inner + "</g>";
-  }
-  var PAINTERS = {
-    castle: function () {
-      return '<ellipse cx="0" cy="6" rx="150" ry="26" fill="#a4bf7d"/>' +
-        '<rect x="-95" y="-150" width="54" height="150" fill="#b4573e" stroke="#6e3322" stroke-width="2.5"/>' +
-        '<path d="M-95 -150 h54 v-12 h-11 v7 h-9 v-7 h-9 v7 h-9 v-7 h-11 Z" fill="#b4573e" stroke="#6e3322" stroke-width="2"/>' +
-        '<path d="M-82 -122 a7 7 0 0 1 14 0 v14 h-14 Z M-62 -122 a7 7 0 0 1 14 0 v14 h-14 Z" fill="#fdf1de"/>' +
-        '<path d="M-75 -70 a8 8 0 0 1 16 0 v18 h-16 Z" fill="#fdf1de"/>' +
-        '<rect x="-41" y="-96" width="110" height="96" fill="#c26144" stroke="#6e3322" stroke-width="2.5"/>' +
-        '<path d="M-28 -72 a8 8 0 0 1 16 0 v18 h-16 Z M0 -72 a8 8 0 0 1 16 0 v18 h-16 Z M28 -72 a8 8 0 0 1 16 0 v18 h-16 Z" fill="#fdf1de"/>' +
-        '<path d="M-28 -36 a8 8 0 0 1 16 0 v18 h-16 Z M0 -36 a8 8 0 0 1 16 0 v18 h-16 Z M28 -36 a8 8 0 0 1 16 0 v18 h-16 Z" fill="#f7e3c8"/>' +
-        '<rect x="69" y="-118" width="36" height="118" fill="#b4573e" stroke="#6e3322" stroke-width="2.5"/>' +
-        '<path d="M69 -118 a18 12 0 0 1 36 0 Z" fill="#8f8578" stroke="#6e3322" stroke-width="2"/>' +
-        '<line x1="87" y1="-130" x2="87" y2="-152" stroke="#6e3322" stroke-width="2.5"/>' +
-        '<path d="M87 -152 l22 6 l-22 6 Z" fill="#e8a200"/>';
-    },
-    mill: function () {
-      return house("#d9b98c", "#a8552f",
-        '<g transform="translate(-64,-6)"><circle r="30" fill="none" stroke="' + INK + '" stroke-width="4"/>' +
-        '<path d="M-30 0 H30 M0 -30 V30 M-21 -21 L21 21 M-21 21 L21 -21" stroke="' + INK + '" stroke-width="3.5"/></g>' +
-        '<rect x="20" y="-132" width="14" height="24" fill="#8a6242"/>' +
-        '<circle class="wm-smoke" cx="27" cy="-144" r="7" fill="#fff" opacity=".7"/>' +
-        '<circle class="wm-smoke wm-smoke2" cx="34" cy="-158" r="9" fill="#fff" opacity=".5"/>' +
-        signPost('<rect x="-11" y="-56" width="14" height="16" fill="#fff" stroke="' + INK + '"/><path d="M-8 -51 h8 M-8 -47 h8" stroke="#2273cc" stroke-width="1.6"/>'));
-    },
-    kiosk: function () {
-      return '<rect x="-34" y="-62" width="68" height="62" rx="4" fill="#e8d8b0" stroke="' + INK + '" stroke-width="2.5"/>' +
-        '<path d="M-42 -62 L0 -92 L42 -62 Z" fill="#4d7f68" stroke="' + INK + '" stroke-width="2.5"/>' +
-        '<rect x="-22" y="-50" width="44" height="22" rx="3" fill="#fdf6e0" stroke="' + INK + '" stroke-width="1.6"/>' +
-        signPost('<circle cx="0" cy="-49" r="9" fill="#e8b23a" stroke="' + INK + '" stroke-width="1.8"/><text x="0" y="-45" text-anchor="middle" font-size="11" font-weight="bold" fill="' + INK + '">$</text>');
-    },
-    post: function () {
-      return house("#cfd8e8", "#5a7a9e",
-        signPost('<rect x="-12" y="-55" width="24" height="15" fill="#fff" stroke="' + INK + '" stroke-width="1.6"/><path d="M-12 -55 L0 -46 L12 -55" fill="none" stroke="' + INK + '" stroke-width="1.6"/>') +
-        '<path d="M-70 -96 q 6 -10 14 -2 M-52 -104 q 6 -10 14 -2" stroke="' + INK + '" stroke-width="2" fill="none"/>');
-    },
-    tower: function () {
-      return '<path d="M-26 0 L-18 -120 H18 L26 0 Z" fill="#b0a188" stroke="' + INK + '" stroke-width="2.5"/>' +
-        '<rect x="-26" y="-146" width="52" height="28" rx="4" fill="#8a7a5e" stroke="' + INK + '" stroke-width="2.5"/>' +
-        '<circle class="wm-night-only" cx="0" cy="-132" r="24" fill="url(#wm-lamp)"/>' +
-        '<circle cx="0" cy="-132" r="8" fill="#ffd57e" stroke="' + INK + '" stroke-width="2">' + (reduced ? "" : '<animate attributeName="opacity" values="1;.35;1" dur="2.6s" repeatCount="indefinite"/>') + '</circle>' +
-        '<path d="M-14 -60 a7 7 0 0 1 14 0 v12 h-14 Z" fill="#fdf6e0" transform="translate(7,0)"/>';
-    },
-    hall: function () {
-      return '<rect x="-70" y="-72" width="140" height="72" rx="3" fill="#e3d3ae" stroke="' + INK + '" stroke-width="2.5"/>' +
-        '<path d="M-80 -72 L0 -104 L80 -72 Z" fill="#9e6b46" stroke="' + INK + '" stroke-width="2.5"/>' +
-        '<rect x="-52" y="-58" width="10" height="58" fill="#fdf6e0" stroke="' + INK + '" stroke-width="1.6"/>' +
-        '<rect x="-5" y="-58" width="10" height="58" fill="#fdf6e0" stroke="' + INK + '" stroke-width="1.6"/>' +
-        '<rect x="42" y="-58" width="10" height="58" fill="#fdf6e0" stroke="' + INK + '" stroke-width="1.6"/>' +
-        '<circle cx="0" cy="-86" r="7" fill="#fdf6e0" stroke="' + INK + '" stroke-width="1.6"/>';
-    },
-    print: function () {
-      return house("#d8cbb2", "#6f6353",
-        signPost('<rect x="-10" y="-57" width="16" height="18" fill="#fff" stroke="' + INK + '" stroke-width="1.4"/><rect x="-6" y="-53" width="16" height="18" fill="#fff" stroke="' + INK + '" stroke-width="1.4"/>'));
-    },
-    school: function () {
-      return house("#e8c98f", "#b0563a",
-        '<circle cx="0" cy="-92" r="10" fill="#fdf6e0" stroke="' + INK + '" stroke-width="2"/>' +
-        '<path d="M0 -92 V-98 M0 -92 H5" stroke="' + INK + '" stroke-width="1.8"/>' +
-        signPost('<path d="M-10 -54 h20 M-10 -49 h20 M-10 -44 h13" stroke="' + INK + '" stroke-width="1.8"/>'));
-    },
-    pavilion: function () {
-      return '<path d="M-52 -54 Q 0 -102 52 -54 Z" fill="#7fae6b" stroke="' + INK + '" stroke-width="2.5"/>' +
-        '<rect x="-40" y="-54" width="7" height="54" fill="#8a6844"/><rect x="33" y="-54" width="7" height="54" fill="#8a6844"/>' +
-        '<rect x="-4" y="-54" width="7" height="54" fill="#8a6844"/>' +
-        '<circle cx="-58" cy="-8" r="7" fill="#e58fb1"/><circle cx="-70" cy="-2" r="5" fill="#f2c14e"/><circle cx="60" cy="-6" r="6" fill="#b18fe5"/>' +
-        '<circle cx="0" cy="-70" r="5" fill="#fdf6e0"/>';
-    },
-    shed: function () {
-      return '<path d="M-44 0 V-58 L44 -74 V0 Z" fill="#b8c4a2" stroke="' + INK + '" stroke-width="2.5"/>' +
-        '<rect x="-30" y="-40" width="20" height="40" fill="' + INK + '"/>' +
-        '<rect x="4" y="-30" width="14" height="30" fill="#4d7f68"/><rect x="22" y="-30" width="14" height="30" fill="#2273cc"/>' +
-        '<path d="M11 -34 h0 M29 -34 h0" stroke="none"/>';
-    },
-    fire: function () {
-      return house("#d96a52", "#8f3b2c",
-        '<rect x="-13" y="-36" width="26" height="36" rx="4" fill="#f2c14e"/>' +
-        signPost('<path d="M0 -58 q 6 8 0 14 q -8 -4 -4 -12 q 2 3 4 -2 Z" fill="#e2543e"/>'));
-    },
-    drill: function () {
-      return '<path d="M-30 0 L-20 -110 H20 L30 0 Z" fill="none" stroke="' + INK + '" stroke-width="4"/>' +
-        '<path d="M-26 -30 H26 M-23 -58 H23 M-21 -84 H21" stroke="' + INK + '" stroke-width="3"/>' +
-        '<rect x="-16" y="-130" width="32" height="20" rx="3" fill="#8a7a5e" stroke="' + INK + '" stroke-width="2"/>' +
-        '<path d="M0 -136 q 8 10 0 18 q -10 -5 -5 -15 q 3 4 5 -3 Z" fill="#e8843e"/>';
-    },
-    tent: function () {
-      return '<path d="M-52 0 L0 -84 L52 0 Z" fill="#d96a52" stroke="' + INK + '" stroke-width="2.5"/>' +
-        '<path d="M-26 0 L0 -84 L26 0 Z" fill="#f2e3bd" stroke="' + INK + '" stroke-width="2"/>' +
-        '<path d="M0 -84 V-98" stroke="' + INK + '" stroke-width="2.5"/><path d="M0 -98 l16 4 l-16 5 Z" fill="#2273cc"/>' +
-        '<text x="34" y="-40" font-size="15" font-weight="bold" fill="' + INK + '" transform="rotate(8 34 -40)">1+2</text>';
-    },
-    barn: function () {
-      return '<rect x="-56" y="-66" width="112" height="66" rx="3" fill="#c9a06a" stroke="' + INK + '" stroke-width="2.5"/>' +
-        '<path d="M-64 -66 L0 -100 L64 -66 Z" fill="#7a5c3e" stroke="' + INK + '" stroke-width="2.5"/>' +
-        '<rect x="-22" y="-46" width="44" height="46" fill="' + INK + '"/><path d="M-22 -46 L22 0 M22 -46 L-22 0" stroke="#c9a06a" stroke-width="3"/>' +
-        '<rect x="32" y="-24" width="18" height="24" fill="#a8815a" stroke="' + INK + '" stroke-width="1.6"/>';
-    },
-    stall: function () {
-      return '<rect x="-40" y="-40" width="80" height="40" fill="#e8d8b0" stroke="' + INK + '" stroke-width="2.5"/>' +
-        '<path d="M-48 -40 h96 l-8 -26 h-80 Z" fill="#e2543e" stroke="' + INK + '" stroke-width="2.5"/>' +
-        '<path d="M-48 -40 h96" stroke="#fdf6e0" stroke-width="5" stroke-dasharray="12 12"/>' +
-        '<circle cx="-18" cy="-46" r="0"/>' +
-        '<circle cx="-16" cy="-50" r="7" fill="#e8b23a"/><circle cx="0" cy="-52" r="7" fill="#d95f52"/><circle cx="16" cy="-50" r="7" fill="#7fae6b"/>';
-    },
-    tavern: function () {
-      return house("#d9b98c", "#5f7d4a",
-        signPost('<circle cx="0" cy="-48" r="8" fill="#fdf6e0" stroke="' + INK + '" stroke-width="1.6"/><path d="M-5 -50 q 5 -6 10 0" fill="none" stroke="#c26144" stroke-width="2"/>') +
-        '<path class="wm-smoke" d="M30 -118 q 4 -8 0 -14" stroke="#fff" stroke-width="3" fill="none" opacity=".6"/>' +
-        '<rect x="22" y="-118" width="13" height="14" fill="#8a6242"/>');
-    },
-    library: function () {
-      return house("#cbb9d8", "#6b5a80",
-        signPost('<path d="M-11 -55 q 11 -6 22 0 v14 q -11 -6 -22 0 Z" fill="#fff" stroke="' + INK + '" stroke-width="1.5"/><path d="M0 -55 v13" stroke="' + INK + '" stroke-width="1.4"/>'));
-    },
-    tree: function () {
-      return '<ellipse cx="0" cy="4" rx="90" ry="18" fill="#a4bf7d"/>' +
-        '<rect x="-10" y="-84" width="20" height="84" rx="7" fill="#8a6242" stroke="' + INK + '" stroke-width="2"/>' +
-        '<circle cx="0" cy="-118" r="52" fill="#5d9455"/><circle cx="-48" cy="-92" r="34" fill="#6ca25e"/><circle cx="46" cy="-94" r="32" fill="#549049"/>' +
-        '<g font-size="13" font-weight="bold" text-anchor="middle">' +
-        '<line x1="0" y1="-70" x2="0" y2="-56" stroke="' + INK + '" stroke-width="1.6"/><circle cx="0" cy="-46" r="11" fill="#f2e3bd" stroke="' + INK + '" stroke-width="1.8"/><text x="0" y="-42" fill="' + INK + '">8</text>' +
-        '<line x1="-44" y1="-66" x2="-44" y2="-50" stroke="' + INK + '" stroke-width="1.6"/><circle cx="-44" cy="-40" r="11" fill="#f2e3bd" stroke="' + INK + '" stroke-width="1.8"/><text x="-44" y="-36" fill="' + INK + '">3</text>' +
-        '<line x1="44" y1="-68" x2="44" y2="-52" stroke="' + INK + '" stroke-width="1.6"/><circle cx="44" cy="-42" r="11" fill="#f2e3bd" stroke="' + INK + '" stroke-width="1.8"/><text x="44" y="-38" fill="' + INK + '">13</text>' +
-        "</g>";
-    },
-    generic: function () { return house("#e0d4b6", "#8a6b4a"); }
+  /* Display heights. The six tallest are held where they are - they already set
+     the valley's skyline, and growing them too would just restore the old
+     crowding; everything else is up 18%, which reads as more substantial
+     without pushing any neighbour into its label. */
+  var ART = {
+    castle:    ["kellies-castle", 415],
+    hall:      ["town-hall", 281],       // held
+    drill:     ["drill-tower", 267],     // held
+    tower:     ["watchtower", 236],      // held
+    fire:      ["fire-station", 225],    // held
+    kiosk:     ["exchange-house", 166],
+    post:      ["post-office", 141],     // held
+    stall:     ["fruit-stall", 166],
+    tree:      ["sorting-tree", 166],
+    mill:      ["document-mill", 137],   // held
+    school:    ["schoolhouse", 150],
+    pavilion:  ["calm-garden", 150],
+    library:   ["library", 150],
+    barn:      ["warehouse", 145],
+    shed:      ["sorting-shed", 133],
+    tavern:    ["tavern", 133],
+    print:     ["print-shop", 175],
+    tent:      ["number-tent", 116],
+    generic:   ["schoolhouse", 150]
   };
+  /* [displayWidth, displayHeight, slug] - shared by the building image and the
+     night glow, which has to be sized from the building it is lighting. */
+  function artSize(kind) {
+    var a = ART[kind] || ART.generic;
+    var slug = a[0], h = a[1];
+    var nat = (window.WORLD_ART && window.WORLD_ART.buildings[slug]) || [h, h];
+    return [Math.round(h * (nat[0] / nat[1])), h, slug];
+  }
+  function paint(kind) {
+    var d = artSize(kind);
+    return '<image href="assets/world/buildings/' + d[2] + '.webp" ' +
+      'x="' + (-Math.round(d[0] / 2)) + '" y="' + (-d[1]) + '" ' +
+      'width="' + d[0] + '" height="' + d[1] + '"/>';
+  }
+  /* Warm light at night, as a gradient bloom rather than a sprite.
+     ui/house-glow-yellow.webp looks like the obvious asset but is not one: it is
+     a whole painted house WITH a glow, drawn for the kit's normal/hover/selected
+     house states, so layering it over a building stamps a second, different
+     house on top. A radial bloom is what this actually needs.
+     Drawn AFTER the building - underneath it, an opaque building hides the light
+     completely - and sized from the building so it spills past the silhouette. */
+  function nightGlow(kind) {
+    var d = artSize(kind);
+    var rx = Math.round(d[0] * 0.78), ry = Math.round(d[1] * 0.72);
+    return '<ellipse class="wm-night-only wm-glow-e" cx="0" cy="' + Math.round(-d[1] * 0.45) + '" ' +
+      'rx="' + rx + '" ry="' + ry + '" fill="url(#wm-glow)" pointer-events="none"/>';
+  }
+
+  /* Story marks the label-free art dropped. These are not labels - they are the
+     point of the building that carries them. The tree's 3/8/13 tags were drawn
+     here while the art lacked them; the current tree art has them painted in, so
+     only the tent's sum is still needed - drawing both would stack tags on tags.
+     Sized from the building so it tracks any change to display height, and
+     non-interactive so the click target is unaffected. */
+  function storyMarks(kind) {
+    var d = artSize(kind), w = d[0], h = d[1];
+    if (kind === "tent") {
+      var bw = Math.round(w * 0.34), bh = Math.round(h * 0.17), by = Math.round(-h * 0.56);
+      return '<g pointer-events="none">' +
+        '<rect x="' + (-Math.round(bw / 2)) + '" y="' + by + '" width="' + bw + '" height="' + bh +
+        '" rx="3" fill="#f2e3bd" stroke="' + INK + '" stroke-width="1.8"/>' +
+        '<text x="0" y="' + (by + Math.round(bh * 0.74)) + '" text-anchor="middle" font-size="' +
+        Math.round(bh * 0.66) + '" font-weight="700" fill="' + INK + '">1+2</text></g>';
+    }
+    return "";
+  }
 
   /* ---------- state ---------- */
   var open = false, overlay = null, panG = null, suuG = null, svgEl = null;
   var tx = 0, ty = 0, scale = 1;
-  /* hard edges of the painted world - the camera is clamped inside these, so
-     the plain page background can never peek through */
-  var WORLD = { x0: -1500, y0: -750, x1: 3700, y1: 1650 };
+  /* The world is a FIXED design space; the plate's pixel size is only a quality
+     knob. Deriving world units from plate pixels meant that re-exporting the art
+     at a higher resolution silently moved all 18 buildings - LAYOUT coordinates
+     are world units, and the world would have grown out from under them. Only
+     the plate's ASPECT is read here, so the plate can be re-rendered at any
+     resolution without touching a single placement. */
+  var WORLD_W = 3840;    // world units across; LAYOUT lives in these
+  var PLATE_PX = (window.WORLD_ART && window.WORLD_ART.plate) || [1920, 1060];  // only reached if world-art.js is missing
+  var PLATE = { w: WORLD_W, h: Math.round(WORLD_W * PLATE_PX[1] / PLATE_PX[0]) };
+  var WORLD = { x0: 0, y0: 0, x1: PLATE.w, y1: PLATE.h };
 
   function el(tag, cls, text) {
     var n = document.createElement(tag);
@@ -197,8 +484,58 @@
     return (window.PORTFOLIO_APP && window.PORTFOLIO_APP.content) ? window.PORTFOLIO_APP.content.projects : [];
   }
 
+  /* ---------- ambient sprite loops ----------
+     One strip image inside a clip window, slid one frame at a time by CSS
+     steps(). --fw/--frames drive the keyframe, so one rule animates them all.
+
+     Two nested groups on purpose: the OUTER one carries the base placement as a
+     transform attribute, the INNER one gets the CSS drift animation. A CSS
+     transform would otherwise replace the attribute outright and snap the
+     sprite to the world origin. Passing a drift makes the thing travel instead
+     of flapping on the spot - what "flying freely" needs. */
+  var seqId = 0;
+  function seq(name, x, y, scale, dur, drift) {
+    var m = window.WORLD_ART && window.WORLD_ART.sprites[name];
+    if (!m) return "";
+    var id = "wm-clip-" + (seqId++);
+    var inner = '<g clip-path="url(#' + id + ')">' +
+      '<image class="wm-seq" href="assets/world/sprites/' + name + '.webp" ' +
+      'x="0" y="0" width="' + (m.w * m.frames) + '" height="' + m.h + '" ' +
+      'style="--fw:' + m.w + ';--frames:' + m.frames + ';--dur:' + dur + 's"/></g>';
+    if (drift) {
+      inner = '<g class="wm-fly" style="--dx:' + drift.dx + 'px;--dy:' + drift.dy +
+        'px;--fdur:' + drift.dur + 's">' + inner + "</g>";
+    }
+    return '<g class="wm-seq-holder" transform="translate(' + x + ',' + y + ') scale(' + scale + ')">' +
+      '<clipPath id="' + id + '"><rect x="0" y="0" width="' + m.w + '" height="' + m.h + '"/></clipPath>' +
+      inner + "</g>";
+  }
+
+  /* Single-image world scenery (station, track, train). Sized from world-art.js
+     the same way buildings are, so only a display width is specified here. */
+  function scenery(name, x, y, w) {
+    var nat = window.WORLD_ART && window.WORLD_ART.scenery && window.WORLD_ART.scenery[name];
+    if (!nat) return "";
+    var h = Math.round(w * nat[1] / nat[0]);
+    // the rail art carries its own slope now, so nothing here needs rotating
+    return '<image href="assets/world/scenery/' + name + '.webp" ' +
+      'x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '"/>';
+  }
+
+  /* One label board, tucked tight under its building's base. The board used to
+     hang 14-40 units below, far enough that the Document Mill's reached the
+     Warehouse; 3-25 keeps every label over its own footprint. */
+  function board(id, x, y, text) {
+    var bw = Math.max(58, text.length * 7 + 16);
+    return '<g class="wm-board" data-id="' + id + '" transform="translate(' + x + ',' + y + ')">' +
+      '<rect x="' + (-Math.round(bw / 2)) + '" y="3" width="' + bw + '" height="22" rx="5" ' +
+      'fill="#f7ecd2" stroke="' + INK + '" stroke-width="1.6"/>' +
+      '<text x="0" y="18.5" text-anchor="middle" font-size="13" font-weight="600" fill="' + INK + '">' +
+      text + '</text></g>';
+  }
+
   /* ---------- build the valley SVG (day, or night when the site is dark) ---------- */
-  function valleySvg(night) {
+  function valleySvg() {
     var ps = projects();
     var placed = [], southSeat = 0;
     ps.forEach(function (p) {
@@ -207,247 +544,134 @@
       placed.push({ p: p, L: L });
     });
 
-    // jagged mountain ranges along the whole horizon (snow on the tall peaks)
-    function mountains(baseY, amp, step, color, snowy, phase) {
-      var d = "M" + (WORLD.x0 - 40) + " " + baseY, snow = "";
-      for (var x = WORLD.x0 - 40; x < WORLD.x1 + 40; x += step) {
-        var h = amp * (0.62 + 0.38 * Math.sin(x * 0.013 + phase));
-        var px = x + step / 2, py = Math.round(baseY - h);
-        d += " L" + px + " " + py + " L" + (x + step) + " " + baseY;
-        if (snowy && h > amp * 0.72) {
-          var sw = Math.round(step * 0.09), sy = Math.round(py + h * 0.2);
-          snow += '<path d="M' + (px - sw) + " " + sy + " L" + px + " " + py + " L" + (px + sw) + " " + sy +
-                  " Q " + px + " " + (sy + 9) + " " + (px - sw) + " " + sy + ' Z" fill="#f4f7fb"/>';
-        }
-      }
-      d += " L" + (WORLD.x1 + 40) + " " + (baseY + 400) + " L" + (WORLD.x0 - 40) + " " + (baseY + 400) + " Z";
-      return '<path d="' + d + '" fill="' + color + '"/>' + snow;
-    }
-    function pine(x, y, sc) {
-      return '<g transform="translate(' + x + "," + y + ') scale(' + sc + ')">' +
-        '<rect x="-4" y="-13" width="8" height="13" fill="#7a5a3c"/>' +
-        '<path d="M-22 -10 L0 -44 L22 -10 Z" fill="#4d7f52"/>' +
-        '<path d="M-18 -28 L0 -56 L18 -28 Z" fill="#568a58"/>' +
-        '<path d="M-14 -44 L0 -68 L14 -44 Z" fill="#5f9455"/></g>';
-    }
-
     var s = '<svg id="wm-svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid meet">';
-    s += '<defs><linearGradient id="wm-sky" x1="0" y1="0" x2="0" y2="1">' +
-         '<stop offset="0" stop-color="#8fc3e8"/><stop offset="1" stop-color="#d8ecdf"/></linearGradient>' +
-         '<radialGradient id="wm-sun" cx=".5" cy=".5" r=".5">' +
-         '<stop offset="0" stop-color="rgba(255,238,170,.9)"/><stop offset="1" stop-color="rgba(255,238,170,0)"/></radialGradient>' +
-         // real light: bright warm core, fast falloff (lamp bloom + ground pool)
-         '<radialGradient id="wm-lamp" cx=".5" cy=".5" r=".5">' +
-         '<stop offset="0" stop-color="rgba(255,232,175,.85)"/><stop offset=".45" stop-color="rgba(255,208,125,.28)"/><stop offset="1" stop-color="rgba(255,208,125,0)"/></radialGradient>' +
+    s += '<defs>' +
+         // real light: bright warm core, fast falloff (ground pool)
          '<radialGradient id="wm-pool" cx=".5" cy=".5" r=".5">' +
-         '<stop offset="0" stop-color="rgba(255,206,120,.4)"/><stop offset=".5" stop-color="rgba(255,206,120,.16)"/><stop offset="1" stop-color="rgba(255,206,120,0)"/></radialGradient></defs>';
+         '<stop offset="0" stop-color="rgba(255,206,120,.4)"/><stop offset=".5" stop-color="rgba(255,206,120,.16)"/><stop offset="1" stop-color="rgba(255,206,120,0)"/></radialGradient>' +
+         // lamplight spilling out of a lit building: warm core, fast falloff
+         '<radialGradient id="wm-glow" cx=".5" cy=".5" r=".5">' +
+         '<stop offset="0" stop-color="rgba(255,224,150,.55)"/><stop offset=".4" stop-color="rgba(255,206,120,.26)"/><stop offset="1" stop-color="rgba(255,196,110,0)"/></radialGradient>' +
+         /* A hard-edged ellipse under a building reads as a sticker's shadow.
+            Blurring it turns the contact into a pool the meadow absorbs, which
+            is most of what makes a cut-out look like it is standing there. */
+         '<filter id="wm-soft" x="-60%" y="-60%" width="220%" height="220%">' +
+         '<feGaussianBlur stdDeviation="7"/></filter></defs>';
     s += '<g id="wm-pan">';
-    // ground and sky span the entire clamped world
-    s += '<rect x="' + WORLD.x0 + '" y="' + WORLD.y0 + '" width="' + (WORLD.x1 - WORLD.x0) + '" height="' + (WORLD.y1 - WORLD.y0) + '" fill="#9dbb79"/>';
-    s += '<rect x="' + WORLD.x0 + '" y="' + WORLD.y0 + '" width="' + (WORLD.x1 - WORLD.x0) + '" height="' + (330 - WORLD.y0) + '" fill="url(#wm-sky)"/>';
-    // high sky: sun by day; moon and stars once night falls
-    s += '<g class="wm-day-only"><circle cx="420" cy="-380" r="210" fill="url(#wm-sun)"/><circle cx="420" cy="-380" r="60" fill="#ffeeb0"/></g>';
-    var nightSky = '<g class="wm-night-only">';
-    nightSky += '<circle cx="520" cy="-360" r="78" fill="rgba(233,237,250,.1)"/>' +
-                '<circle cx="520" cy="-360" r="44" fill="#e9edfa"/>' +
-                '<circle cx="504" cy="-372" r="37" fill="#101a30"/>';
-    for (var st2 = 0; st2 < 46; st2++) {
-      var stx = WORLD.x0 + 120 + ((st2 * 883) % (WORLD.x1 - WORLD.x0 - 240));
-      var sty = WORLD.y0 + 40 + ((st2 * 467) % 900);
-      nightSky += '<circle cx="' + stx + '" cy="' + sty + '" r="' + (1 + (st2 % 3) * 0.6) + '" fill="#e8eeff" opacity=".8"/>';
-    }
-    nightSky += "</g>";
-    s += nightSky;
-    s += '<g transform="translate(2350,-300)"><g class="wm-balloon">' +
-         '<path d="M0 -66 C -46 -66 -62 -26 -40 8 C -26 30 26 30 40 8 C 62 -26 46 -66 0 -66 Z" fill="#e2765a"/>' +
-         '<path d="M0 -66 C -17 -66 -23 -24 -14 12 M0 -66 C 17 -66 23 -24 14 12" stroke="#f2e3bd" stroke-width="7" fill="none"/>' +
-         '<path d="M-30 18 L-12 40 M30 18 L12 40" stroke="#6b4f33" stroke-width="2.5"/>' +
-         '<rect x="-15" y="38" width="30" height="21" rx="4" fill="#8a6242" stroke="#5d4a33" stroke-width="2"/></g></g>';
-    var flock = '<path d="M0 0 q 9 -9 18 0 q 9 -9 18 0 M52 -16 q 8 -8 16 0 q 8 -8 16 0 M-40 -24 q 7 -7 14 0 q 7 -7 14 0" stroke="#41506b" stroke-width="3.5" fill="none" stroke-linecap="round"/>';
-    s += '<g class="wm-day-only" transform="translate(900,-160)"><g class="wm-birds">' + flock + "</g></g>";
-    s += '<g class="wm-day-only" transform="translate(2600,-480)"><g class="wm-birds wm-birds2">' + flock + "</g></g>";
-    // the horizon: snowy far range, green foothills, then the soft ridge band
-    s += mountains(318, 215, 470, "#8fa7c0", true, 0);
-    s += mountains(332, 115, 330, "#7d9a6d", false, 2.4);
-    s += '<path d="M' + WORLD.x0 + " 330 Q -700 265 200 300 T 1600 285 T 2800 308 T " + WORLD.x1 + " 295 L " + WORLD.x1 + " 405 Q 1000 435 " + WORLD.x0 + ' 405 Z" fill="#b5cfa0"/>';
-    s += '<ellipse cx="1300" cy="290" rx="330" ry="90" fill="#8db06c"/>';
+    // the painted valley - one plate, filling the whole clamped world
+    s += '<image href="assets/world/valley.webp" x="0" y="0" ' +
+         'width="' + PLATE.w + '" height="' + PLATE.h + '" ' +
+         'preserveAspectRatio="xMidYMid slice"/>';
 
-    // === west of town: waterfall, rainbow, lake with a rowboat, pine shore ===
-    s += '<path d="M-1150 318 q 12 120 -10 182 q -14 58 -6 126" stroke="#cfe6f4" stroke-width="34" fill="none" stroke-linecap="round" opacity=".95"/>';
-    s += '<path class="wm-fall" d="M-1150 318 q 12 120 -10 182 q -14 58 -6 126" stroke="#ffffff" stroke-width="14" fill="none" stroke-linecap="round"/>';
-    s += '<ellipse cx="-950" cy="720" rx="420" ry="160" fill="#7fb5d8"/><ellipse cx="-950" cy="726" rx="356" ry="126" fill="#a9d0e8" opacity=".75"/>';
-    s += '<ellipse cx="-1158" cy="644" rx="48" ry="13" fill="#eaf5fb" opacity=".9"/>';
-    s += '<path d="M-1120 700 q 30 10 60 0 M-960 770 q 34 10 68 0 M-780 690 q 26 9 52 0" stroke="#eaf5fb" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/>';
-    s += '<g class="wm-day-only" fill="none" opacity=".4" stroke-linecap="round">' +
-         '<path d="M-1330 560 A 200 200 0 0 1 -940 505" stroke="#e2543e" stroke-width="7"/>' +
-         '<path d="M-1322 570 A 190 190 0 0 1 -948 517" stroke="#e8b23a" stroke-width="7"/>' +
-         '<path d="M-1314 580 A 180 180 0 0 1 -956 529" stroke="#5d9455" stroke-width="7"/></g>';
-    s += '<g transform="translate(-840,708)"><g class="wm-boat">' +
-         '<path d="M-36 0 Q 0 16 36 0 L 26 -10 L -26 -10 Z" fill="#8a6242" stroke="#5d4a33" stroke-width="2"/>' +
-         '<rect x="-2" y="-36" width="4" height="26" fill="#5d4a33"/><path d="M2 -36 L 24 -16 L 2 -13 Z" fill="#f2e3bd"/></g></g>';
-    [[-1080, 762], [-1028, 792], [-696, 664]].forEach(function (dk) {
-      s += '<g transform="translate(' + dk[0] + "," + dk[1] + ')"><ellipse rx="7" ry="5" fill="#f4efe2"/><circle cx="6" cy="-5" r="3.5" fill="#f4efe2"/><path d="M9 -5 l6 1.5 l-6 2 Z" fill="#e8963a"/></g>';
-    });
-    [[-1350, 570, 1.1], [-1272, 618, 0.9], [-556, 545, 1], [-462, 606, 1.2], [-620, 892, 1.1], [-352, 946, 0.9], [-1244, 950, 1.2], [-1390, 1120, 1]].forEach(function (pp) {
-      s += pine(pp[0], pp[1], pp[2]);
-    });
-    s += '<g transform="translate(-478,772)">' +
-         '<ellipse class="wm-night-only" cx="0" cy="6" rx="46" ry="12" fill="url(#wm-pool)"/>' +
-         '<circle class="wm-night-only" cx="0" cy="-16" r="26" fill="url(#wm-lamp)"/>' +
-         '<rect x="-17" y="-5" width="34" height="6" rx="3" fill="#8a6242" transform="rotate(13)"/>' +
-         '<rect x="-17" y="-5" width="34" height="6" rx="3" fill="#75563a" transform="rotate(-11)"/>' +
-         '<path d="M0 -22 q 9 11 0 18 q -11 -6 -5 -16 q 3 5 5 -2 Z" fill="#e8843e"/>' +
-         '<circle class="wm-smoke" cx="2" cy="-32" r="6" fill="#fff" opacity=".6"/>' +
-         '<circle class="wm-smoke wm-smoke2" cx="8" cy="-46" r="8" fill="#fff" opacity=".45"/></g>';
-
-    // === east of town: wheat, hay, sheep, an orchard, a hilltop shrine ===
-    s += '<ellipse cx="2100" cy="742" rx="292" ry="96" fill="#dcc47e"/>';
-    for (var wi = 0; wi < 24; wi++) {
-      var wx = 1858 + (wi % 8) * 66 + (((wi / 8) | 0) % 2) * 28, wy = 694 + ((wi / 8) | 0) * 44;
-      s += '<path d="M' + wx + " " + wy + " q 2 -14 0 -18 M" + (wx + 6) + " " + (wy + 2) + ' q 2 -12 0 -16" stroke="#b99b50" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
-    }
-    [[1985, 806], [2170, 828], [2312, 770]].forEach(function (hb) {
-      s += '<g transform="translate(' + hb[0] + "," + hb[1] + ')"><circle r="17" fill="#d9b878" stroke="#a8854c" stroke-width="2.2"/><path d="M-9 -4 a 10 10 0 0 1 18 4" stroke="#a8854c" stroke-width="2" fill="none"/></g>';
-    });
-    [[2062, 936, 1], [2152, 976, -1], [2262, 932, 1], [1988, 988, 1]].forEach(function (sh) {
-      s += '<g transform="translate(' + sh[0] + "," + sh[1] + ') scale(' + sh[2] + ',1)">' +
-        '<rect x="-7" y="7" width="4" height="9" fill="#3a332a"/><rect x="4" y="7" width="4" height="9" fill="#3a332a"/>' +
-        '<ellipse rx="17" ry="11" fill="#f4efe2" stroke="#d8d0bd" stroke-width="2"/>' +
-        '<circle cx="15" cy="-5" r="6" fill="#3a332a"/></g>';
-    });
-    for (var oi = 0; oi < 8; oi++) {
-      var ox = 2620 + (oi % 4) * 122 + (oi > 3 ? 58 : 0), oy = 662 + (oi > 3 ? 108 : 0);
-      s += '<g transform="translate(' + ox + "," + oy + ')"><rect x="-4" y="-22" width="8" height="22" fill="#8a6242"/><circle cy="-40" r="24" fill="#5f9455"/><circle cx="-9" cy="-44" r="3.2" fill="#d95f52"/><circle cx="8" cy="-34" r="3.2" fill="#d95f52"/><circle cx="1" cy="-52" r="3.2" fill="#d95f52"/></g>';
-    }
-    s += '<g transform="translate(3170,560)"><ellipse cx="0" cy="8" rx="100" ry="18" fill="#a4bf7d"/>' +
-         '<rect x="-46" y="-80" width="11" height="80" fill="#c25742"/><rect x="35" y="-80" width="11" height="80" fill="#c25742"/>' +
-         '<path d="M-62 -80 Q 0 -98 62 -80 L 62 -70 Q 0 -88 -62 -70 Z" fill="#a83c2c"/>' +
-         '<rect x="-50" y="-62" width="100" height="9" fill="#c25742"/>' +
-         '<g transform="translate(84,-6)"><rect x="-5" y="-26" width="10" height="26" fill="#9aa0a8"/><rect x="-10" y="-36" width="20" height="12" rx="3" fill="#8a9098"/></g></g>';
-    [[3390, 522, 1.1], [3472, 584, 0.9], [3308, 648, 1], [3556, 764, 1.2], [2552, 486, 0.9], [3480, 1060, 1.1]].forEach(function (pp) {
-      s += pine(pp[0], pp[1], pp[2]);
+    /* Railway along the southern meadow, station on its eastern end, both from
+       the blueprint. Laid before the buildings so the village sits in front. */
+    SCENERY.forEach(function (o) {
+      var art = scenery(o[0], o[1], o[2], o[3]);
+      // the train is laid between them, so the platform hides it at rest
+      if (o[0] !== "station") { s += art + (o[0] === "railway" ? trainNode() : ""); return; }
+      /* The station is the one place here that is not a project. It opens the
+         journey - the timeline is literally a line of stations - so the biggest
+         new asset in the valley does something when a visitor tries it. */
+      var nat = window.WORLD_ART && window.WORLD_ART.scenery && window.WORLD_ART.scenery[o[0]];
+      var sh = nat ? Math.round(o[3] * nat[1] / nat[0]) : 200;
+      s += '<g class="wm-b wm-station" data-id="' + STATION_ID + '" tabindex="0" role="button" ' +
+        'aria-label="Train Station - open my journey">' + art +
+        '<rect class="wm-hit" x="' + o[1] + '" y="' + o[2] + '" width="' + o[3] +
+        '" height="' + sh + '" fill="transparent"/></g>';
     });
 
-    // === south meadow: pond, picnic, standing stones, flowers ===
-    s += '<ellipse cx="540" cy="1368" rx="150" ry="50" fill="#7fb5d8"/><ellipse cx="540" cy="1372" rx="118" ry="36" fill="#a9d0e8" opacity=".8"/>';
-    s += '<g transform="translate(1470,1252) rotate(-4)"><rect x="-62" y="-42" width="124" height="84" rx="7" fill="#e2543e"/>' +
-         '<path d="M-62 -14 h124 M-62 14 h124 M-34 -42 v84 M-6 -42 v84 M22 -42 v84 M50 -42 v84" stroke="#fdf6e0" stroke-width="5" opacity=".85"/>' +
-         '<rect x="34" y="-64" width="36" height="26" rx="6" fill="#a8815a" stroke="#5d4a33" stroke-width="2"/>' +
-         '<path d="M40 -64 q 12 -16 24 0" fill="none" stroke="#5d4a33" stroke-width="2.5"/></g>';
-    s += '<g transform="translate(2740,1190)">';
-    for (var st = 0; st < 6; st++) {
-      var an = st * Math.PI / 3;
-      s += '<rect x="' + Math.round(Math.cos(an) * 96 - 9) + '" y="' + Math.round(-Math.sin(an) * 30 - 26) + '" width="18" height="36" rx="6" fill="#9aa0a8" stroke="#6d7278" stroke-width="2"/>';
-    }
-    s += "</g>";
-    var FLC = ["#e58fb1", "#f2c14e", "#b18fe5", "#e2543e", "#8fc3e8"];
-    for (var fi = 0; fi < 46; fi++) {
-      var fx = WORLD.x0 + 260 + ((fi * 977) % (WORLD.x1 - WORLD.x0 - 500));
-      var fy = 1075 + ((fi * 613) % 470);
-      s += '<g transform="translate(' + fx + "," + fy + ')"><circle r="4.5" fill="' + FLC[fi % 5] + '"/><circle r="1.8" fill="#fdf3d8"/></g>';
-    }
-    for (var gi = 0; gi < 30; gi++) {
-      var gx = WORLD.x0 + 160 + ((gi * 1327) % (WORLD.x1 - WORLD.x0 - 300));
-      var gy = 430 + ((gi * 811) % 1120);
-      if (gx > -140 && gx < 1660 && gy < 1010) continue; // keep the town itself tidy
-      s += '<path d="M' + gx + " " + gy + " q 3 -15 0 -20 M" + (gx + 8) + " " + gy + ' q -2 -13 2 -19" stroke="#6f9a55" stroke-width="3" fill="none" stroke-linecap="round"/>';
-    }
+    /* The train runs the line on a long loop. It fades at both ends of the run
+       so the restart is never seen as a jump - a hard reset on a linear
+       translate reads as broken rather than as a timetable. */
+    /* Ambient life. Frame sizes are capped at 128px, so a sprite left at scale 1
+       renders as tall as a house - birds and butterflies need to be small
+       against the buildings, not equal to them. Fliers carry a drift so they
+       cross the valley instead of flapping on one spot. */
+    s += seq("smoke", 1650,  770, 0.30, 1.6);      // Document Mill chimney
+    s += seq("smoke", 1205, 1215, 0.30, 2.1);      // Print Shop chimney
 
-    // river through the town, flowing on toward the hills both ways
-    var riverD = "M-300 980 Q 200 900 420 760 T 760 560 T 1180 430 T 1700 350";
-    s += '<path d="' + riverD + '" fill="none" stroke="#7fb5d8" stroke-width="46" stroke-linecap="round" opacity=".85"/>';
-    s += '<path d="' + riverD + '" fill="none" stroke="#a9d0e8" stroke-width="26" stroke-linecap="round" opacity=".9"/>';
-    s += '<path d="M1700 350 Q 2010 295 2240 262 T 2720 236" fill="none" stroke="#7fb5d8" stroke-width="32" stroke-linecap="round" opacity=".8"/>';
-    s += '<path d="M1700 350 Q 2010 295 2240 262 T 2720 236" fill="none" stroke="#a9d0e8" stroke-width="17" stroke-linecap="round" opacity=".85"/>';
-    s += '<path d="M-300 980 Q -520 1062 -700 1184 T -1074 1408" fill="none" stroke="#7fb5d8" stroke-width="44" stroke-linecap="round" opacity=".82"/>';
-    s += '<path d="M-300 980 Q -520 1062 -700 1184 T -1074 1408" fill="none" stroke="#a9d0e8" stroke-width="24" stroke-linecap="round" opacity=".88"/>';
+    /* Sky traffic. Real sky is a mix - some birds travel alone, some hold a
+       loose group - so it is built as a mix rather than a uniform scatter. Most
+       head left to right; a couple cross the other way, because a sky where
+       everything moves one direction reads as a conveyor belt. */
+    FLIERS = [];
+    FLIERS.push(bird( 1, 120, 300), bird( 1, 200, 420), bird( 1, 300, 520),
+                bird( 1, 150, 360), bird(-1, 240, 460), bird(-1, 130, 330));
 
-    // paths between places
-    var roads = [
-      [300, 500, 520, 580], [520, 580, 700, 735], [520, 580, 685, 465],
-      [685, 465, 905, 385], [905, 385, 1065, 490], [905, 385, 950, 675],
-      [950, 675, 885, 825], [885, 825, 1105, 795], [1065, 500, 1200, 635],
-      [1200, 635, 1335, 715], [470, 395, 300, 500], [165, 345, 300, 500],
-      [205, 660, 300, 500], [1065, 500, 1300, 250], [1300, 250, 1440, 530],
-      [520, 795, 700, 735], [825, 575, 905, 395]
-    ];
-    roads.forEach(function (r) {
-      var mx = (r[0] + r[2]) / 2 + 24, my = (r[1] + r[3]) / 2 - 18;
-      s += '<path d="M' + r[0] + " " + r[1] + " Q " + mx + " " + my + " " + r[2] + " " + r[3] + '" fill="none" stroke="#d9c49a" stroke-width="15" stroke-linecap="round" opacity=".9"/>';
+    /* Two flocks. Members trail their leader and flex around it, so the shape
+       bends through a turn instead of sliding across as one rigid piece. */
+    var lead = bird(1, 170, 340); lead.s = 0.62; lead.spd = 64;
+    FLIERS.push(lead,
+      follower(lead,  62, -28, 0.54), follower(lead,  64,  29, 0.56),
+      follower(lead, 126, -54, 0.47), follower(lead, 129,  56, 0.49));
+
+    var lead2 = bird(1, 90, 210); lead2.s = 0.42; lead2.spd = 44;
+    FLIERS.push(lead2,
+      follower(lead2, 78,  24, 0.37), follower(lead2, 44, -36, 0.39));
+
+    for (var bi = 0; bi < FLIERS.length; bi++) s += flierNode("bird");
+
+    /* Butterflies potter over open meadow, each round its own patch, kept clear
+       of every building so none flits across a roof. */
+    [[1750, 1450, 190], [1900, 1560, 160], [2280, 1560, 200],
+     [2050, 1490, 170], [1640, 1580, 150]].forEach(function (p) {
+      FLIERS.push(butterfly(p[0], p[1], p[2]));
+      s += flierNode("butterfly");
     });
-    // street lanterns along the town roads - plain iron lamps by day,
-    // each one a small bright core with its own pool of light at night
-    function lamp(x, y) {
-      return '<g transform="translate(' + x + "," + y + ')">' +
-        '<ellipse class="wm-night-only" cx="0" cy="4" rx="36" ry="10" fill="url(#wm-pool)"/>' +
-        '<rect x="-2" y="-46" width="4" height="46" rx="1.5" fill="#3f3428"/>' +
-        '<path d="M-7 -46 h14 l-3 -11 h-8 Z" fill="#3f3428"/>' +
-        '<rect x="-4.5" y="-56" width="9" height="10" rx="2" fill="#dfe3e8" stroke="#3f3428" stroke-width="1.5"/>' +
-        '<rect class="wm-night-only" x="-4.5" y="-56" width="9" height="10" rx="2" fill="#ffd98a" stroke="#3f3428" stroke-width="1.5"/>' +
-        '<circle class="wm-night-only" cx="0" cy="-51" r="17" fill="url(#wm-lamp)"/>' +
-        "</g>";
-    }
-    [[395, 545], [612, 522], [795, 432], [1002, 432], [915, 742], [1146, 568], [605, 762], [242, 418]].forEach(function (lp) {
-      s += lamp(lp[0], lp[1]);
-    });
-    // moonlight glinting off the river
-    s += '<g class="wm-night-only" stroke="#d8e6f8" stroke-width="3.5" stroke-linecap="round" opacity=".7">' +
-         '<path d="M846 520 l26 -10 M956 488 l24 -9 M1064 460 l22 -8 M1172 434 l20 -7 M700 592 l24 -11"/></g>';
 
-    // scattered trees & bushes (town and the wider valley)
-    var deco = [[90, 480], [620, 340], [780, 300], [1500, 700], [400, 880], [1250, 880], [60, 800], [1530, 380], [740, 610],
-                [1900, 520], [2360, 560], [-210, 700], [2820, 880], [3360, 1010], [-720, 1108], [2060, 1268], [910, 1452], [-1120, 1360], [1760, 866], [3050, 760], [2480, 1120], [130, 1180]];
-    deco.forEach(function (d) {
-      s += '<g transform="translate(' + d[0] + "," + d[1] + ')"><rect x="-4" y="-26" width="8" height="26" fill="#8a6242"/><circle cx="0" cy="-40" r="22" fill="#6ca25e"/><circle cx="-14" cy="-30" r="14" fill="#5d9455"/></g>';
-    });
-    // clouds, low and high
-    s += '<g class="wm-cloud"><ellipse cx="300" cy="80" rx="90" ry="26" fill="#fff" opacity=".9"/><ellipse cx="370" cy="96" rx="60" ry="20" fill="#fff" opacity=".75"/></g>';
-    s += '<g class="wm-cloud wm-cloud2"><ellipse cx="1100" cy="120" rx="110" ry="30" fill="#fff" opacity=".85"/></g>';
-    s += '<g class="wm-cloud"><ellipse cx="-1050" cy="-420" rx="120" ry="32" fill="#fff" opacity=".85"/><ellipse cx="-960" cy="-400" rx="70" ry="22" fill="#fff" opacity=".7"/></g>';
-    s += '<g class="wm-cloud wm-cloud2"><ellipse cx="1750" cy="-560" rx="150" ry="38" fill="#fff" opacity=".8"/></g>';
-    s += '<g class="wm-cloud"><ellipse cx="3150" cy="-150" rx="100" ry="26" fill="#fff" opacity=".85"/><ellipse cx="3230" cy="-132" rx="60" ry="18" fill="#fff" opacity=".7"/></g>';
-    s += '<g class="wm-cloud wm-cloud2"><ellipse cx="-420" cy="60" rx="90" ry="24" fill="#fff" opacity=".8"/></g>';
+    /* A balloon high over the valley, drifting the long way across. */
+    s += seq("balloon", 900, 250, 0.78, 2.6, { dx: 2400, dy: -110, dur: 150 });
 
-    // the places
+    /* Two passes. Every building is drawn first, then every label on top, so a
+       neighbour can never cover a label - packed blueprint spacing made the
+       Warehouse sit over the Document Mill's board and read as "Document M".
+       The hit rect tracks the building's real size now that heights vary from
+       113 to 234; the old fixed 160x200 was tuned for uniformly larger art. */
     placed.forEach(function (pl) {
-      var paint = (PAINTERS[pl.L.kind] || PAINTERS.generic)();
+      var d = artSize(pl.L.kind);
+      var hw = Math.round(d[0] / 2) + 10, hh = d[1] + 16;
       s += '<g class="wm-b" data-id="' + pl.p.id + '" transform="translate(' + pl.L.x + "," + pl.L.y + ')">' +
         // at night the lit windows spill a pool of light onto the ground at
         // the building's feet - light falls DOWN from a source, no halos
-        '<ellipse class="wm-night-only" cx="0" cy="8" rx="64" ry="14" fill="url(#wm-pool)"/>' +
-        '<ellipse cx="0" cy="4" rx="70" ry="14" fill="rgba(60,50,30,.14)"/>' + paint +
-        '<g class="wm-board"><rect x="-58" y="14" width="116" height="26" rx="6" fill="#f7ecd2" stroke="' + INK + '" stroke-width="1.8"/>' +
-        '<text x="0" y="32" text-anchor="middle" font-size="15" font-weight="600" fill="' + INK + '">' + pl.L.label + "</text></g>" +
-        '<rect class="wm-hit" x="-80" y="-150" width="160" height="200" fill="transparent"/></g>';
+        '<ellipse class="wm-night-only" cx="0" cy="8" rx="' + Math.round(d[0] * 0.42) + '" ry="' + Math.round(d[1] * 0.09) + '" fill="url(#wm-pool)"/>' +
+        '<ellipse filter="url(#wm-soft)" cx="0" cy="5" rx="' + Math.round(d[0] * 0.44) + '" ry="' + Math.round(d[1] * 0.10) + '" fill="rgba(58,48,28,.20)"/>' + paint(pl.L.kind) +
+        nightGlow(pl.L.kind) + storyMarks(pl.L.kind) +
+        '<rect class="wm-hit" x="' + (-hw) + '" y="' + (-d[1] - 8) + '" width="' + (hw * 2) + '" height="' + hh + '" fill="transparent"/></g>';
     });
 
+    // labels layer - above every building, never occluded by one
+    s += '<g id="wm-labels">';
+    (function () {
+      var st = SCENERY[1];   // station
+      var nat = window.WORLD_ART && window.WORLD_ART.scenery && window.WORLD_ART.scenery.station;
+      var base = st[2] + (nat ? Math.round(st[3] * nat[1] / nat[0]) : 269);
+      // sit the label on the platform, not across the rails below it
+      s += board(STATION_ID, st[1] + Math.round(st[3] / 2), base - 52, "Train Station");
+    })();
+    placed.forEach(function (pl) { s += board(pl.p.id, pl.L.x, pl.L.y, pl.L.label); });
+    s += "</g>";
+
     // Suu wanders the map too
-    s += '<g id="wm-suu" transform="translate(760,600)">' +
+    s += '<g id="wm-suu" transform="translate(1050,890)">' +
       '<ellipse cx="0" cy="12" rx="14" ry="4" fill="rgba(60,50,30,.2)"/>' +
       '<path d="M0 -18 C-11 -18 -14 -8 -13 -1 C-12 8 -7 11 0 11 C7 11 12 8 13 -1 C14 -8 11 -18 0 -18 Z" fill="#2a251d"/>' +
       '<circle cx="-4.5" cy="-5" r="3.6" fill="#fffdf4"/><circle cx="4.5" cy="-5" r="3.6" fill="#fffdf4"/>' +
       '<circle cx="-3.8" cy="-4.4" r="1.5" fill="#17130d"/><circle cx="5.2" cy="-4.4" r="1.5" fill="#17130d"/></g>';
 
+    // night: one tinted sheet over the painted world. The old approach rewrote
+    // literal hex colours in the generated SVG, which does nothing to a raster.
+    s += '<rect class="wm-night-only" x="0" y="0" width="' + PLATE.w + '" height="' + PLATE.h +
+         '" fill="#101a30" opacity=".6" style="mix-blend-mode:multiply" pointer-events="none"/>';
     s += "</g></svg>";
-    if (night) {
-      // moonlight palette: every scenery pigment shifts toward indigo dusk,
-      // while building windows / signboards keep their day colors - a village
-      // of lit lanterns under the stars
-      var NIGHT = {
-        "8fc3e8": "101a30", "d8ecdf": "2c3a5c", "9dbb79": "37473d", "b5cfa0": "41544a",
-        "8db06c": "3d5244", "8fa7c0": "232f4a", "f4f7fb": "93a4c4", "7d9a6d": "2e4038",
-        "7fb5d8": "38567c", "a9d0e8": "557a9e", "d9c49a": "6e6350", "6ca25e": "2f4f3a",
-        "5d9455": "2a4834", "549049": "264430", "4d7f52": "26422f", "568a58": "2a4a33",
-        "5f9455": "2d4d36", "8a6242": "4f3b2c", "7a5a3c": "453325", "a4bf7d": "465a42",
-        "dcc47e": "6b5c38", "b99b50": "57472e", "d9b878": "65563a", "a8854c": "57452c",
-        "eaf5fb": "9db8cc", "cfe6f4": "7d99b5", "6f9a55": "39543a", "9aa0a8": "6a7280",
-        "6d7278": "4a5058", "c25742": "7a3a2e", "a83c2c": "5f2a20", "e2543e": "8a3a2c",
-        "e2765a": "8a4a3a", "e58fb1": "7a5468", "f2c14e": "8a7434", "b18fe5": "615080"
-      };
-      Object.keys(NIGHT).forEach(function (k) { s = s.split("#" + k).join("#" + NIGHT[k]); });
-      s = s.split('fill="#fff"').join('fill="#5a6884"');   // clouds & smoke go dusky
-    }
     return s;
+  }
+
+  /* The station leaves the valley for the journey timeline - the one place on
+     the map that is a section rather than a project. */
+  function enterJourney() {
+    closeMap();
+    var el = document.getElementById("journey");
+    if (el) el.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
   }
 
   /* ---------- detail panel (same data, in-map) ---------- */
@@ -508,6 +732,45 @@
     return { x: 800 + (clientX - (r.left + r.width / 2)) / m,
              y: 500 + (clientY - (r.top + r.height / 2)) / m };
   }
+  /* Open on the village rather than on the world's top-left corner. At scale 1
+     that corner is mostly sky and distant hills, so the arrival - the whole
+     point of the valley - was landing on empty air with a couple of buildings
+     clipped at the bottom edge. Frames the bounding box of every placed
+     building, so it stays right whenever LAYOUT moves. Buildings are drawn
+     upward from their base, hence the asymmetric vertical padding. */
+  function frameBuildings() {
+    if (!svgEl) return;
+    var keys = Object.keys(LAYOUT);
+    if (!keys.length) return;
+    /* Measure each building's real extent rather than padding by a guess: the
+       castle is twice the width of the fruit stall, so a single margin either
+       clips the widest or wastes space around the rest. */
+    var x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    keys.forEach(function (k) {
+      var L = LAYOUT[k], d = artSize(L.kind), hw = d[0] / 2;
+      if (L.x - hw < x0) x0 = L.x - hw;
+      if (L.x + hw > x1) x1 = L.x + hw;
+      if (L.y - d[1] < y0) y0 = L.y - d[1];
+      if (L.y + 46 > y1) y1 = L.y + 46;        // label board bottom edge
+    });
+    SCENERY.forEach(function (o) {
+      var nat = window.WORLD_ART && window.WORLD_ART.scenery && window.WORLD_ART.scenery[o[0]];
+      if (!nat) return;
+      var sh = o[3] * nat[1] / nat[0];
+      if (o[1] < x0) x0 = o[1];
+      if (o[1] + o[3] > x1) x1 = o[1] + o[3];
+      if (o[2] < y0) y0 = o[2];
+      if (o[2] + sh > y1) y1 = o[2] + sh;
+    });
+    var m = 260;                                // breathing room around the lot
+    x0 -= m; x1 += m; y0 -= m; y1 += m;
+    var v = viewRect(svgEl);
+    scale = Math.min(v.w / (x1 - x0), v.h / (y1 - y0));
+    tx = v.x + (v.w - (x1 - x0) * scale) / 2 - x0 * scale;
+    ty = v.y + (v.h - (y1 - y0) * scale) / 2 - y0 * scale;
+    applyPan();
+  }
+
   function applyPan() {
     if (svgEl) {
       var v = viewRect(svgEl);
@@ -577,6 +840,7 @@
                 (downTarget && downTarget.closest && downTarget.closest(".wm-b"));
       if (!src) return;
       var id = src.getAttribute("data-id");
+      if (id === STATION_ID) { enterJourney(); return; }
       var p = null;
       projects().forEach(function (x) { if (x.id === id) p = x; });
       if (!p) return;
@@ -590,7 +854,7 @@
   }
 
   /* ---------- Suu: walks to what you click, and by WASD / arrows ---------- */
-  var suuAnim = null, suuX = 760, suuY = 600, suuFace = 1;
+  var suuAnim = null, suuX = 1050, suuY = 890, suuFace = 1;
   var keys = { up: 0, down: 0, left: 0, right: 0 }, kbRaf = null, kbLast = 0;
   var KEYMAP = { w: "up", arrowup: "up", s: "down", arrowdown: "down",
                  a: "left", arrowleft: "left", d: "right", arrowright: "right" };
@@ -637,7 +901,11 @@
     kbLast = now;
     var inv = 1 / Math.hypot(dx, dy);
     suuX = Math.max(WORLD.x0 + 70, Math.min(WORLD.x1 - 70, suuX + dx * inv * 320 * dt));
-    suuY = Math.max(350, Math.min(WORLD.y1 - 60, suuY + dy * inv * 320 * dt)); // stays on the ground
+    // 720 = the painted horizon: measured on valley.webp, the lowest point at
+    // which every column has turned to solid ground (grass/forest/rock). Above
+    // it some columns are still sky or hazy far mountain, so that is as far
+    // north as Suu can walk and still have ground under her feet.
+    suuY = Math.max(720, Math.min(WORLD.y1 - 60, suuY + dy * inv * 320 * dt)); // stays on the ground
     if (dx) suuFace = dx > 0 ? 1 : -1;
     renderSuu(reduced ? 0 : Math.abs(Math.sin(now / 110)) * 7);
     followSuu();
@@ -678,19 +946,42 @@
   }
 
   /* ---------- open / close ---------- */
+  /* Hovering a building brightens its label. They are separate groups now, so
+     the link is made by data-id rather than by CSS descent. Delegated, so it
+     costs two listeners rather than one per building. */
+  function wireLabelHover(svg) {
+    function mark(ev, on) {
+      var b = ev.target.closest && ev.target.closest(".wm-b");
+      if (!b) return;
+      var lab = svg.querySelector('#wm-labels .wm-board[data-id="' + b.getAttribute("data-id") + '"]');
+      if (lab) lab.classList.toggle("is-hot", on);
+    }
+    svg.addEventListener("keydown", function (ev) {
+      if (ev.key !== "Enter" && ev.key !== " ") return;
+      var b = ev.target.closest && ev.target.closest(".wm-station");
+      if (!b) return;
+      ev.preventDefault();
+      enterJourney();
+    });
+    svg.addEventListener("mouseover", function (ev) { mark(ev, true); });
+    svg.addEventListener("mouseout", function (ev) { mark(ev, false); });
+  }
+
   function renderValley() {
     // paints (or repaints, on theme flip) the valley to match the site theme
     var night = document.documentElement.getAttribute("data-theme") === "dark";
     overlay.classList.toggle("wm-night", night);
     var old = document.getElementById("wm-svg");
     if (old) old.remove();
-    overlay.insertAdjacentHTML("beforeend", valleySvg(night));
+    overlay.insertAdjacentHTML("beforeend", valleySvg());
     panG = document.getElementById("wm-pan");
     suuG = document.getElementById("wm-suu");
     svgEl = document.getElementById("wm-svg");
     renderSuu(0);
     applyPan();
     wirePanZoom(svgEl);
+    wireLabelHover(svgEl);
+    startFlight(svgEl);
   }
   function openMap() {
     if (open) return;
@@ -709,9 +1000,16 @@
     document.body.appendChild(overlay);
     document.body.style.overflow = "hidden";
     tx = 0; ty = 0; scale = 1;
-    suuX = 760; suuY = 600; suuFace = 1;
+    suuX = 1050; suuY = 890; suuFace = 1;
     keys.up = keys.down = keys.left = keys.right = 0;
     renderValley();
+    // Framing needs the svg's real size, but clientWidth is still 0 in the tick
+    // it is inserted, so viewRect falls back to assumed dimensions and the fit
+    // comes out slightly off. Frame once now (so nothing flashes at the wrong
+    // zoom) and again once layout is real. Nobody can have panned within 0ms,
+    // so the second pass cannot fight the user.
+    frameBuildings();
+    setTimeout(frameBuildings, 0);
     if (!reduced) {
       overlay.classList.add("wm-wipe");
       setTimeout(function () { overlay.classList.remove("wm-wipe"); }, 900);
@@ -721,6 +1019,7 @@
   function closeMap() {
     if (!open) return;
     open = false;
+    stopFlight();          // nothing animates behind a closed map
     overlay.remove();
     overlay = null;
     panG = suuG = svgEl = null;
