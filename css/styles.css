@@ -40,8 +40,7 @@
   --mono: "Cascadia Code", "Consolas", "SF Mono", monospace;
   --radius: 14px;
 
-  /* scene-adaptive ink: world.js re-mixes these as the painted sky darkens,
-     so text sitting directly on the canvas stays readable at dusk and night */
+  /* Reading defaults; reading-palette.css pins ink to each painted surface. */
   --scene-ink: var(--ink);
   --scene-ink-2: var(--ink-2);
   --scene-ink-3: var(--ink-3);
@@ -90,12 +89,17 @@ html[data-theme="dark"] {
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 [hidden] { display: none !important; }
-html { scroll-behavior: smooth; }
+/* cqw is the root content box, unlike scrollbar-inclusive vw. Full-bleed
+   painted layers below use it so scenery ends at the actual scroll viewport. */
+html { scroll-behavior: smooth; container-type: inline-size; }
 body {
   background: var(--bg); color: var(--ink);
   font-family: var(--sans); line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   transition: background .35s, color .35s;
+  /* Keep negative painted layers above the page paint after the root became
+     a query container (and therefore its own stacking context). */
+  isolation: isolate;
 }
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; }
@@ -135,14 +139,20 @@ body.night .footer .footer-mark { color: #e8e4d8; }
      can never read as a flat green hole */
   background: linear-gradient(#8fc3e8, #9dbb79);
 }
+/* z-index:70 is a leftover from when .worldmap was its own full-screen
+   destination. worldmap.js's mountMap() already overrides `position` to
+   absolute for the mounted case (js/worldmap.js has the comment), but not
+   z-index - and .pj-stage has no z-index of its own, so 70 escapes it and
+   paints over the shell's now-floating .pj-bar/.pj-tabs (z-index 6). Task 11
+   surfaced this: the old shell never overlapped the map, so the mismatch was
+   invisible until the chrome started floating on top of it. */
+.pj-stage .worldmap { z-index: auto; }
 /* dark site theme = night over the valley: worldmap.js repaints the pigments
    and these rules swap sun/birds/rainbow for moon, stars and window glows */
 .worldmap.wm-night { background: linear-gradient(#101a30, #37473d); }
 .worldmap .wm-night-only { display: none; }
 .worldmap.wm-night .wm-night-only { display: block; }
 .worldmap.wm-night .wm-day-only { display: none; }
-.worldmap.wm-wipe { animation: wmWipe .9s ease both; }
-@keyframes wmWipe { from { clip-path: circle(0% at 22% 28%); } to { clip-path: circle(145% at 22% 28%); } }
 .wm-bar {
   display: flex; align-items: center; gap: .8rem; padding: .6rem 1rem;
   background: color-mix(in srgb, var(--bg-raise) 88%, transparent);
@@ -174,36 +184,7 @@ body.night .footer .footer-mark { color: #e8e4d8; }
 .wm-boat { animation: wmBoat 5.5s ease-in-out infinite alternate; }
 @keyframes wmBoat { from { transform: rotate(-2.4deg); } to { transform: rotate(2.4deg); } }
 
-.wm-detail {
-  position: absolute; top: 62px; right: 14px; bottom: 14px; width: min(440px, 94vw);
-  background: var(--bg-raise); border: 2px solid var(--ink); border-radius: var(--radius);
-  box-shadow: var(--shadow); padding: 1.3rem 1.4rem; overflow-y: auto; z-index: 8;
-  animation: detailIn .3s ease;
-}
-.wm-x {
-  position: absolute; top: .5rem; right: .8rem; border: none; background: none;
-  font-size: 1.4rem; color: var(--ink-3); line-height: 1; cursor: pointer;
-}
-.wm-x:hover { color: var(--bad); }
-.wm-d-cat {
-  font-family: var(--label); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--accent); font-weight: 700; margin-bottom: .2rem;
-}
-.wm-detail h3 { font-family: var(--display); font-weight: 600; font-size: 1.45rem; line-height: 1.15; margin-bottom: .3rem; }
-.wm-d-sub { color: var(--ink-2); font-size: .92rem; margin-bottom: .9rem; }
-.wm-d-case { font-size: .88rem; color: var(--ink-2); margin-bottom: .7rem; }
-.wm-d-case b {
-  display: block; font-family: var(--label); font-size: .7rem; letter-spacing: .12em; color: var(--ink);
-}
-.wm-detail .feature-exhibit { margin-top: 1.1rem; }
-.wm-list-ul { list-style: none; margin: .3rem 0 .9rem; }
-.wm-list-item {
-  background: none; border: none; font-family: var(--sans); font-size: .95rem; color: var(--ink);
-  padding: .3rem 0; cursor: pointer; text-align: left;
-}
-.wm-list-item:hover { color: var(--accent); }
 @media (max-width: 700px) {
-  .wm-detail { top: 56px; left: 8px; right: 8px; width: auto; }
   .wm-title { display: none; }
 }
 
@@ -333,10 +314,10 @@ a.contact-resume:hover { border-style: solid; border-color: var(--accent); color
    the hero does not end on a hard horizontal seam. */
 .hero::before {
   content: ""; position: absolute; top: 0; bottom: 0; left: 50%;
-  width: 100vw; transform: translateX(-50%);
+  width: 100cqw; transform: translateX(-50%);
   z-index: -1; pointer-events: none;
   background:
-    radial-gradient(58% 54% at 30% 45%,
+    radial-gradient(60% 66% at 30% 40%,
       color-mix(in srgb, var(--bg) 76%, transparent) 0%,
       color-mix(in srgb, var(--bg) 46%, transparent) 46%,
       transparent 78%),
@@ -347,10 +328,86 @@ a.contact-resume:hover { border-style: solid; border-color: var(--accent); color
 /* the plate is painted at high noon; dark theme is night down here, so it is
    graded rather than left glaring against an otherwise dark page */
 html[data-theme="dark"] .hero::before { filter: brightness(.38) saturate(.6) hue-rotate(204deg); }
-/* 100vw counts the scrollbar, so a centred full-bleed layer overhangs by a few
-   px. clip (not hidden) kills the sideways scroll WITHOUT making body a scroll
-   container, which would break position:sticky if anything ever wants it. */
-body { overflow-x: clip; }
+
+/* A portrait phone crops a 1.59:1 plate to a narrow vertical strip - centred,
+   that strip is almost entirely sky, and the whole painting is wasted. Aiming
+   it at 76% puts the mountain, the village and the meadow in the strip
+   instead. A proper portrait plate would be better; this is the cheap fix. */
+@media (max-width: 700px) {
+  .hero::before { background-position: 76% center, 76% center; }
+}
+
+/* ---------- painted section plates: Journey & Hall of Achievement ----------
+   Same mechanics as the hero plate. z-index MUST be -1, never 0: section
+   content is static, and static content paints BEFORE positioned elements
+   regardless of DOM order, so a 0 plate covers its own heading. Suu stays at
+   55 and keeps walking in front. journey-adventure and ach-hall are NOT
+   touched - the paint goes strictly behind them.
+   Both plates happen to match their hour in the scroll day-cycle: #journey
+   sits at 0.63-0.82 (golden) under a golden-hour valley, #achievements at
+   0.82-0.92 (dusk) under a dusk hill. */
+#journey, #achievements { position: relative; }
+#journey::before, #achievements::before {
+  content: ""; position: absolute; top: 0; bottom: 0;
+  /* Full-bleed WITHOUT a transform. The usual left:50% + translateX(-50%)
+     trick silently breaks background-attachment:fixed - a transformed element
+     becomes the containing block for its own fixed background, so the image
+     re-anchors to the element and the pinning does nothing. Measured: the
+     plate still moved 59/255 with the transform in place. */
+  left: calc(50% - 50cqw); width: 100cqw;
+  z-index: -1; pointer-events: none;
+}
+/* MEASURED, not guessed: #journey is 1277px tall against a 1.78:1 plate, so
+   `cover` would scale by height and throw away 42% of the painting's width -
+   both flanking trees included. Fitted to width instead, then dissolved
+   before the timeline gets dense, letting the canvas valley take over. */
+/* PINNED TO THE VIEWPORT, not to the section. #journey is 1277px tall but the
+   plate fitted to width is only 900px, so 377px had no painting and the last
+   timeline entries fell onto bare canvas. Sizing the background to the SCREEN
+   instead makes section height irrelevant: the valley holds still and the
+   career scrolls across it, and editing the timeline later can never re-break
+   the fit. Both layers are fixed - a scrim that scrolled while the painting
+   stayed would drift off the very text it exists to protect. */
+#journey::before {
+  /* No scrim. The wash that used to sit here existed only to keep the plain
+     timeline's text legible over the valley - and this section no longer shows
+     that timeline. The chapter words are on signboards and in a modal now, so
+     the painting is left completely unobstructed. */
+  /* Scrolls WITH the section, exactly like #achievements below - no
+     background-attachment:fixed. That pairing was the actual cause of the
+     painting fading in and out under you: the plate was anchored to the
+     VIEWPORT while the mask was anchored to the ELEMENT, so the gradient swept
+     across a stationary image as the page moved. With both element-anchored
+     the fade sits still relative to the art and only softens the section's
+     own edges. The section is short enough now (~640px, down from 1277) that
+     `cover` no longer throws away most of the painting. */
+  /* Anchored to the BOTTOM, not centred. MEASURED: the rails sit at 88.3% of
+     the section, and `cover` crops 262px off a 1600x900 render - centred, the
+     visible band stopped at source y804 and the painting's foreground meadow
+     (y820-870) was cropped away, leaving the train floating over distant
+     hills. Bottom-anchored, the rail line lands on source y~863, which is
+     foreground grass. */
+  background: url("../assets/scenes/journey-orchard-v1.webp") center bottom / cover no-repeat;
+  /* The bottom fade starts at 95%, NOT the old 86%: the rails sit at 88.3%,
+     so an 86% fade dissolved the ground out from under the train. 95% is
+     below the track entirely, so it only softens the join into #achievements
+     and never touches the grass the train is standing on. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 7%, #000 95%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 7%, #000 95%, transparent 100%);
+}
+/* #achievements is 676px against 1.88:1 - `cover` crops only 177px, so the
+   painting survives nearly whole and can fill the section. */
+#achievements::before {
+  background: url("../assets/scenes/hall-dusk.webp") center / cover no-repeat;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 8% 86%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 8% 86%, transparent 100%);
+}
+/* Dark theme is night everywhere, and the Journey plate is painted at golden
+   hour - left alone it glares out of an otherwise dark page. The Hall plate is
+   already dusk, so it only needs taking down a little. */
+html[data-theme="dark"] #journey::before { filter: brightness(.42) saturate(.64) hue-rotate(200deg); }
+html[data-theme="dark"] #achievements::before { filter: brightness(.72) saturate(.9); }
+
 .hero-inner { display: grid; grid-template-columns: 1.15fr 1fr; gap: 3rem; align-items: center; }
 .hero-kicker {
   font-family: var(--label); font-size: .85rem; letter-spacing: .14em; text-transform: uppercase;
@@ -361,8 +418,33 @@ body { overflow-x: clip; }
   font-family: var(--display); font-weight: 600; font-size: clamp(2.6rem, 6.5vw, 4.8rem);
   line-height: 1.04; letter-spacing: -.025em; white-space: pre-line; color: var(--scene-ink);
 }
-.hero-subline { font-size: 1.12rem; color: var(--scene-ink-2); max-width: 33rem; margin-top: 1.3rem; }
-.hero-cta { display: flex; gap: .9rem; margin-top: 2rem; flex-wrap: wrap; }
+/* the plain-language job, directly under the poetry */
+.hero-role {
+  font-family: var(--label); font-size: .95rem; font-weight: 500;
+  letter-spacing: .02em; color: var(--scene-ink-2); margin-top: 1.1rem;
+  display: flex; align-items: center; gap: .7rem;
+}
+.hero-role::before {
+  content: ""; width: 26px; height: 2px; background: var(--accent); flex: none;
+}
+.hero-subline { font-size: 1.12rem; color: var(--scene-ink-2); max-width: 33rem; margin-top: 1rem; }
+.hero-cta { display: flex; gap: .9rem; margin-top: 2rem; flex-wrap: wrap; align-items: center; }
+
+/* ONE primary action. There were four competing calls above the fold - two
+   pills here, the map pill worldmap.js appends into this same row, and the
+   tour link below. Demoting the ghosts to quiet text links is done in CSS on
+   purpose: worldmap.js keeps appending its own <a class="btn btn-ghost">, so
+   styling the row rather than the markup means the map button is demoted too
+   without touching that file. Nothing is removed - every action still works. */
+.hero-cta .btn-ghost {
+  border-color: transparent; background: transparent; padding: .7rem .2rem;
+  font-weight: 500; color: var(--scene-ink-2); border-radius: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--scene-ink-3) 55%, transparent);
+}
+.hero-cta .btn-ghost:hover {
+  transform: none; box-shadow: none;
+  color: var(--scene-ink); border-bottom-color: var(--accent);
+}
 
 .hero-visual { display: flex; justify-content: center; position: relative; }
 /* painted hero vignette (SVG injected by world.js) */
@@ -480,6 +562,201 @@ body.editing .hp-card { cursor: pointer; outline: 2px dashed var(--accent); outl
 }
 .feature-stack { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1.2rem; }
 .feature-exhibit { min-width: 0; }
+
+/* ---------- selected work: playable storybook theatre ----------
+   Everything in this block is EXTERIOR. The stone, the wood, the desk clutter
+   and the HUD furniture sit outside the live exhibit: every decorative layer
+   carries pointer-events: none, and .feature-exhibit keeps the top z-index so
+   the real demo DOM is never covered or intercepted. js/demos.js and
+   js/exhibits.js are untouched by this pass.
+
+   Ink is PINNED, not themed. --accent (#E8A200) sits a hair from the paper's
+   own tone on photographed parchment and reads as blur; --paper-ink flips pale
+   in dark mode while the parchment stays light. Same reasoning as .pjs-* and
+   .ja-panel (see knowledge/wiki/projects.md). */
+#selected {
+  --ft-ink: #3a3021;
+  --ft-ink-2: #5f5039;
+  --ft-label: #8a4a08;
+  --ft-rule: rgba(94, 74, 43, .34);
+  position: relative;
+  isolation: isolate;
+}
+/* One painted backdrop per adventure. Both paintings are ~2:1 and each carries
+   its own landmark near an edge - the castle at the left, the mill house at the
+   right. Stretching one of them over the WHOLE section (roughly 3:4) makes
+   `cover` scale by height and crop to the middle ~38%, which throws away both
+   landmarks. So each backdrop is scoped to its own scene, where the box is
+   close to 2:1 and the painting survives intact. */
+#selected .section-head { position: relative; z-index: 1; }
+/* The heading now sits on painted foliage, which the site's standard
+   --scene-halo is too light to carry. A stronger HALO, not a panel - a filled
+   block behind a section title was tried on All Projects and rejected. */
+#selected .section-head h2,
+#selected .section-head p {
+  text-shadow: 0 1px 2px rgba(255, 252, 244, .95), 0 0 10px rgba(255, 252, 244, .9),
+               0 0 24px rgba(255, 252, 244, .7);
+}
+/* --scene-ink-2 is a mid grey tuned for the pale page plate; on painted
+   foliage no halo rescues it, so the subtitle takes the panel ink instead.
+   (The backdrop crops HORIZONTALLY here - the box is taller than 2:1 - so
+   background-position Y cannot move the canopy off the title.) */
+#selected .section-head p { color: #33291a; font-weight: 500; }
+#selected .section-head h2 { display: inline-block; position: relative; }
+/* one master sprig, mirrored for the right-hand side */
+#selected .section-head h2::before,
+#selected .section-head h2::after {
+  content: ""; position: absolute; top: 50%; width: 4.4rem; aspect-ratio: 240 / 126;
+  background: url("../assets/selected/web/sprig.webp") center / contain no-repeat;
+  pointer-events: none;
+}
+#selected .section-head h2::before { right: calc(100% + 1.1rem); transform: translateY(-58%) scaleX(-1); }
+#selected .section-head h2::after { left: calc(100% + 1.1rem); transform: translateY(-58%); }
+
+.features { gap: clamp(4rem, 8vw, 7rem); }
+.ft-scene--castle::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  top: clamp(-15rem, -16vw, -10rem); bottom: clamp(-8rem, -8vw, -5rem);
+  left: 50%; width: 100cqw; transform: translateX(-50%);
+  background: url("../assets/selected/web/bg-castle.webp") 48% center / cover no-repeat;
+  /* the painting meets the hero plate on a hard line otherwise */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 5rem);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 5rem);
+}
+.ft-scene {
+  display: grid; grid-template-columns: minmax(17rem, .66fr) minmax(0, 1.5fr);
+  gap: clamp(1.4rem, 3vw, 3rem); align-items: center; position: relative;
+  isolation: isolate;
+}
+.ft-scene--mill { grid-template-columns: minmax(0, 1.5fr) minmax(17rem, .66fr); }
+.ft-scene--mill .ft-brief { order: 2; }
+.ft-scene--mill::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  top: clamp(-15rem, -16vw, -10rem); bottom: clamp(-4rem, -4vw, -2rem);
+  /* Root-container width avoids the scrollbar assumption in `100vw`. */
+  left: 50%; width: 100cqw; transform: translateX(-50%);
+  background: url("../assets/selected/web/bg-mill.webp") 66% center / cover no-repeat;
+}
+
+/* ---- the quest brief ---- */
+.ft-brief {
+  position: relative; z-index: 2; color: var(--ft-ink); text-align: center;
+  padding: clamp(2.2rem, 4vw, 3.4rem) clamp(1.9rem, 3.2vw, 2.8rem);
+  background: transparent; border: 0; box-shadow: none;
+}
+.ft-brief::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  inset: -.9rem -1.15rem;
+  background: url("../assets/selected/web/parchment.webp") center / 100% 100% no-repeat;
+  filter: drop-shadow(0 15px 20px rgba(54, 39, 16, .26));
+}
+.ft-brief .f-cat { display: none; }
+.ft-brief h3 {
+  font-family: var(--display); font-weight: 700; font-size: clamp(1.5rem, 2.5vw, 2.05rem);
+  letter-spacing: -.01em; line-height: 1.12; margin: 0 0 .7rem; color: var(--ft-ink);
+}
+/* the status pill replaces the themed .badge on parchment */
+.ft-brief .badge { display: none; }
+.ft-status {
+  display: inline-flex; align-items: center; gap: .42rem;
+  font-family: var(--label); font-size: .78rem; font-weight: 700; color: var(--ft-ink);
+  padding: .3rem .95rem; border-radius: 99px;
+  background: rgba(255, 250, 236, .72); border: 1px solid var(--ft-rule);
+}
+.ft-status i { width: .5rem; height: .5rem; border-radius: 50%; background: #2f9e4f; }
+.ft-brief .f-sub {
+  margin: .95rem 0 0; color: var(--ft-ink-2); font-weight: 500;
+  font-size: .95rem; line-height: 1.5;
+}
+.ft-facts {
+  display: grid; gap: 0; margin: 1.25rem 0 0; padding: 0; list-style: none;
+  border-top: 1px solid var(--ft-rule); text-align: left;
+}
+.ft-facts li {
+  display: flex; align-items: center; gap: .7rem; padding: .62rem .2rem;
+  font-size: .88rem; font-weight: 600; color: var(--ft-ink);
+  border-bottom: 1px solid var(--ft-rule);
+}
+.ft-facts li::before {
+  content: ""; flex: 0 0 auto; width: 1.45rem; height: 1.45rem;
+  background: center / contain no-repeat; opacity: .92;
+}
+.ft-scene--castle .ft-facts li:nth-child(1)::before { background-image: url("../assets/selected/web/icon-key.webp"); }
+.ft-scene--castle .ft-facts li:nth-child(2)::before { background-image: url("../assets/selected/web/icon-lantern.webp"); }
+.ft-scene--castle .ft-facts li:nth-child(3)::before { background-image: url("../assets/selected/web/icon-shield.webp"); }
+.ft-scene--mill .ft-facts li:nth-child(1)::before { background-image: url("../assets/selected/web/icon-document.webp"); }
+.ft-scene--mill .ft-facts li:nth-child(2)::before { background-image: url("../assets/selected/web/icon-target.webp"); }
+.ft-scene--mill .ft-facts li:nth-child(3)::before { background-image: url("../assets/selected/web/icon-chart.webp"); }
+.ft-brief .feature-stack { margin-top: .9rem; justify-content: center; }
+.ft-story {
+  margin-top: 1.3rem; width: 100%; appearance: none; cursor: pointer;
+  font-family: var(--display); font-size: 1rem; font-weight: 600; color: #fbf1dc;
+  background: linear-gradient(#9a3f31, #7d2f22); border: 1px solid #5d2117;
+  padding: .72rem 1rem; border-radius: 5px;
+  box-shadow: inset 0 1px rgba(255, 225, 190, .28), 0 3px 7px rgba(42, 25, 10, .3);
+  transition: filter .18s ease, transform .18s ease;
+}
+.ft-scene--mill .ft-story { background: linear-gradient(#2e7a4f, #1f5a38); border-color: #164229; }
+.ft-story:hover { filter: brightness(1.09); transform: translateY(-1px); }
+.ft-story:focus-visible { outline: 2px solid var(--ft-label); outline-offset: 3px; }
+
+/* ---- the stage: art around a live exhibit ---- */
+.ft-stage {
+  position: relative; min-width: 0; display: grid; place-items: center;
+  overflow: visible; isolation: isolate;
+}
+.ft-stage--castle { padding: clamp(2.4rem, 4.4vw, 3.8rem) clamp(2rem, 4vw, 3.4rem) clamp(4.6rem, 7.5vw, 6.6rem); }
+.ft-stage--mill { padding: clamp(2.6rem, 4.4vw, 3.8rem) clamp(2.8rem, 5.2vw, 4.6rem) clamp(4.6rem, 7.5vw, 6.6rem); }
+/* the live demo always sits on top of every painted layer */
+.ft-stage .feature-exhibit { position: relative; z-index: 5; width: min(100%, 52rem); min-width: 0; }
+.ft-stage .feature-exhibit .demo { margin: 0; }
+.ft-scenery {
+  position: absolute; z-index: 0; inset: 0; pointer-events: none;
+  background-repeat: no-repeat; background-position: center; background-size: cover;
+}
+/* both stages sit straight on their scene backdrop now */
+.ft-scenery { display: none; }
+/* the frame itself - stone arch / workbench */
+/* The frames are painted 3:2. Stretched to a near-square stage box, the stone
+   was squeezed to 72% of its true width. The box cannot simply BE 3:2 - the
+   live exhibit sets the height and must not be resized - so the frame takes
+   its height from the box and DERIVES its width from the art's own ratio.
+   A fixed percentage bleed cannot do this: the two stages differ in height,
+   so one value fixed the castle and over-stretched the mill the other way. */
+.ft-stage::before {
+  content: ""; position: absolute; z-index: 4;
+  top: 0; bottom: 0; left: 50%; transform: translateX(-50%);
+  aspect-ratio: 1150 / 767; width: auto;
+  pointer-events: none; background: center / 100% 100% no-repeat;
+  filter: drop-shadow(0 16px 20px rgba(27, 18, 10, .3));
+}
+.ft-stage--castle::before { display: none; }
+.ft-stage--mill::before { background-image: url("../assets/selected/web/workbench.webp"); }
+@media (max-width: 760px) {
+  .features { gap: 4rem; }
+  .ft-scene, .ft-scene--mill { grid-template-columns: 1fr; gap: 1.1rem; }
+  .ft-scene--mill .ft-brief { order: 0; }
+  .ft-stage--castle, .ft-stage--mill { padding: 2.2rem 1rem 3rem; }
+  .ft-stage .feature-exhibit { width: 100%; }
+  .ft-brief { padding: 2.1rem 1.6rem; }
+  .ft-brief::before { inset: -.65rem -.85rem; }
+  /* the title ran into the parchment's torn edge at 390 */
+  .ft-brief h3 { font-size: 1.42rem; }
+  .ft-facts li { font-size: .84rem; }
+  /* the painted HUD is scenery, and at phone width it only crowds the demo */
+  /* A 3:2 frame around a tall narrow phone stage derives a width WIDER than the
+     viewport - measured 61px of horizontal overflow at 360. There is no
+     undistorted fit at this shape, so the phone takes the stretched frame and
+     the page keeps its no-overflow contract. */
+  .ft-stage::before {
+    inset: 0; width: auto; transform: none; aspect-ratio: auto;
+    left: auto; top: auto; bottom: auto;
+  }
+  #selected .section-head h2::before, #selected .section-head h2::after { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ft-scenery, .ft-stage::before { animation: none !important; transition: none !important; }
+}
 
 .badge {
   font-family: var(--label); font-size: .68rem; font-weight: 700; letter-spacing: .09em;
@@ -854,6 +1131,58 @@ html[data-theme="dark"] {
 @keyframes keiMist { from { transform: translateX(-26px); } to { transform: translateX(30px); } }
 .kei-window, .kei-glow { animation: candleFlick 4.6s linear infinite; }
 .ke-intro:hover .kei-dot { filter: drop-shadow(0 0 6px #6fc4ff); }
+
+/* FYP bedroom prologue: the mini game begins where the full VR story begins. */
+.ke-prologue {
+  position: absolute; inset: 0; z-index: 5; overflow: hidden; isolation: isolate;
+  color: #f8e9bf;
+  background: linear-gradient(90deg, rgba(4, 8, 16, .34), transparent 52%, rgba(4, 8, 16, .17)),
+    url("../assets/selected/fyp-bedroom-prologue-v1.webp") center / cover no-repeat;
+}
+.ke-prologue[hidden] { display: none; }
+.ke-prologue::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  inset: auto 2% -2% 2%; height: 31%;
+  background: url("../assets/selected/kellie-hud-rail-v1.webp") center bottom / contain no-repeat;
+  filter: drop-shadow(0 8px 11px rgba(0, 0, 0, .48));
+}
+.kep-copy {
+  position: absolute; top: 5%; left: 4%; width: min(17.5rem, 47%); padding: .56rem .68rem;
+  border: 1px solid rgba(238, 196, 100, .45); border-radius: .55rem;
+  background: rgba(8, 13, 25, .66); box-shadow: 0 4px 16px rgba(0, 0, 0, .35);
+}
+.kep-kicker { display: block; font: 800 .64rem/1.2 var(--label); letter-spacing: .13em; color: #f1ca72; }
+.kep-copy p { margin: .25rem 0 0; font: 600 clamp(.68rem, 1.3vw, .83rem)/1.38 var(--body); color: #fff2cd; }
+.kep-hotspot {
+  position: absolute; z-index: 1; border: 1px solid #d8ac50; border-radius: .42rem;
+  padding: .45rem .7rem; color: #fff1bd; background: linear-gradient(180deg, #7c552b, #3a281b);
+  box-shadow: 0 0 0 2px rgba(38, 22, 12, .76), 0 3px 9px rgba(0, 0, 0, .55); cursor: pointer;
+  font: 800 clamp(.64rem, 1.25vw, .77rem)/1 var(--label); letter-spacing: .035em;
+}
+.kep-hotspot:hover, .kep-hotspot:focus-visible { filter: brightness(1.18); outline: 2px solid #f7da84; outline-offset: 3px; }
+.kep-diary { left: 7%; bottom: 12%; }
+.kep-exit { right: 6%; bottom: 11%; background: linear-gradient(180deg, #345778, #1a3048); }
+.kep-panel {
+  position: absolute; z-index: 3; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(25rem, 78%); padding: 1rem 1.1rem .9rem; color: #3e2a17;
+  background: linear-gradient(145deg, #f4e6be, #d7bc7d); border: 3px solid #7d542a; border-radius: .65rem;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .62), inset 0 0 0 2px rgba(255, 245, 207, .45);
+}
+.kep-panel h5 { margin: 0 0 .38rem; font: 800 clamp(.84rem, 1.9vw, 1.08rem)/1.12 Georgia, serif; }
+.kep-panel p { margin: 0; font-size: clamp(.7rem, 1.35vw, .83rem); line-height: 1.42; }
+.kep-answers { display: flex; gap: .45rem; flex-wrap: wrap; margin-top: .72rem; }
+.kep-key {
+  position: absolute; z-index: 2; left: 42%; bottom: 12%; width: clamp(4.25rem, 9vw, 6.4rem); aspect-ratio: 1.1;
+  border: 0; background: url("../assets/selected/fyp-key-reward-v1.webp") center / contain no-repeat; cursor: pointer;
+  filter: drop-shadow(0 0 8px rgba(120, 190, 255, .78)); animation: kepKeyGlow 1.35s ease-in-out infinite alternate;
+}
+.kep-key:focus-visible { outline: 2px solid #fff0a6; outline-offset: 3px; }
+@keyframes kepKeyGlow { from { transform: translateY(0) scale(.96); } to { transform: translateY(-5px) scale(1.04); } }
+@media (max-width: 640px) {
+  .kep-copy { top: 3%; left: 3%; width: 56%; padding: .38rem .45rem; }
+  .kep-diary { left: 4%; bottom: 13%; } .kep-exit { right: 4%; bottom: 13%; }
+  .kep-panel { width: 85%; padding: .8rem; } .kep-key { left: 40%; bottom: 15%; }
+}
 .ke-panelhost {
   position: absolute; inset: 0; z-index: 2; display: flex;
   align-items: center; justify-content: center; pointer-events: none;
@@ -1295,82 +1624,408 @@ body.editing .case-toggle { display: none; }
 .now-list li::before { content: "\2192 "; color: var(--accent); }
 
 /* ---------- skills ---------- */
-.skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1.1rem; margin-top: 2.2rem; }
-/* four toolboxes per row on desktop */
-@media (min-width: 880px) { .skills-grid { grid-template-columns: repeat(4, 1fr); } }
-.skill-group { background: var(--bg-raise); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.2rem 1.4rem; }
-.skill-group h3 {
-  font-family: var(--label); font-size: .78rem; font-weight: 700; color: var(--ink);
-  letter-spacing: .12em; text-transform: uppercase; margin-bottom: .8rem;
+/* ---------- Toolbox: the workshop ----------
+   A FIXED-ASPECT stage whose background is `100% 100%`, never `cover`. The
+   Hall facade broke because a `cover` plate and a positioned overlay drift
+   apart at every viewport; nothing here is cropped, so a percentage means the
+   same thing at every width and the chests never float off the bench.
+   Tune the layout from these three tokens and nowhere else. */
+.tb-stage {
+  /* New counter uses the original centered footprint and toolbox row.
+     Bottom offset compensates its different transparent margins. */
+  --bench-w: 97.438%;
+  --bench-b: -18.12%;
+  --deck: 22.2881%;
+  position: relative; margin-top: 1.2rem;
+  /* Full-bleed and edge-masked, so the workshop melts into the page the way
+     the Journey and Hall plates do - but still `100% 100%` on a fixed-aspect
+     box, NEVER `cover`. That is what keeps the bench and chests registered;
+     the Hall broke precisely because a cropped plate drifted from its overlay. */
+  left: calc(50% - 50cqw); width: 100cqw; max-width: none;
+  aspect-ratio: 1500 / 844;
+  background: url("../assets/toolbox/bg.webp") center / 100% 100% no-repeat;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 9%, #000 90%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 9%, #000 90%, transparent 100%);
 }
-.skill-group h3::before { content: "\25C6 "; color: var(--accent); }
-.skill-group ul { list-style: none; display: flex; flex-wrap: wrap; gap: .4rem; }
+.tb-bench {
+  position: absolute; left: 50%; bottom: var(--bench-b);
+  width: var(--bench-w); transform: translateX(-50%);
+  pointer-events: none; user-select: none;
+}
+.tb-bench-guide {
+ position:absolute; z-index:2; left:50%; top:calc(100% - var(--deck) + 2.3%);
+ transform:translateX(-50%); margin:0; width:clamp(220px,25%,340px); aspect-ratio:4/1;
+ padding:16px 18px 6px; display:flex; flex-direction:column; justify-content:center;
+ background:url('../assets/toolbox/guide-sign-v1.webp') center/100% 100% no-repeat;
+ border:0; border-radius:0; color:#3c4b30; text-align:center;
+ filter:drop-shadow(0 3px 4px #30261944);
+ font:400 clamp(.68rem,.9vw,.88rem)/1.3 var(--display); pointer-events:none;
+}
+.tb-bench-guide strong,.tb-bench-guide span { display:block; }
+.tb-bench-guide strong { font-weight:600; }
+.tb-bench-guide span { margin-top:3px; font-size:.92em; }
+/* The title lives IN the scene, on a paper wash. The board is a ::before that
+   spills WELL past the text and is feathered to nothing at its edges, so it
+   reads as light falling on the wall rather than a card pasted over it.
+   It is NOT `z-index: -1`: a negative child of a non-stacking parent slips
+   behind the stage's own background - the same trap that hid the hero
+   headline. The text is lifted to z-index 1 instead. */
+.tb-head {
+  position: absolute; isolation: isolate;
+  left: var(--head-x, 6.6%); top: var(--head-y, 13.5%); width: var(--head-w, 21%);
+}
+.tb-head::before {
+  content: ""; position: absolute; inset: -62% -46% -52% -48%; z-index: 0;
+  background: url("../assets/toolbox/note.webp") center / cover no-repeat;
+  -webkit-mask-image: radial-gradient(ellipse 52% 50% at 50% 50%, #000 32%, rgba(0, 0, 0, .45) 62%, transparent 89%);
+  mask-image: radial-gradient(ellipse 52% 50% at 50% 50%, #000 32%, rgba(0, 0, 0, .45) 62%, transparent 89%);
+  opacity: .92;
+}
+.tb-head h2, .tb-head p { position: relative; z-index: 1; }
+.tb-head h2 {
+  font-family: var(--display); font-size: clamp(1.4rem, 3.1vw, 3rem); line-height: 1;
+  color: #2b2318; margin: 0 0 .5rem;
+}
+.tb-head p {
+  /* narrow enough to break into the reference's three short lines - full width
+     it sits on one line and runs straight off the paper onto the sky */
+  margin: 0; max-width: 76%; font-size: clamp(.66rem, 1.02vw, .98rem); line-height: 1.5;
+  color: #4a3c28;
+}
+#skills.tb-scene > .section-head { display: none; }   /* the scene carries it */
 
-/* ---------- toolboxes: skill groups behind wooden lids ---------- */
-.toolbox-all {
-  grid-column: 1 / -1; justify-self: end;
-  font-family: var(--label); font-size: .74rem; font-weight: 700; letter-spacing: .08em;
-  color: var(--scene-ink-2); background: none; border: 1.5px dashed color-mix(in srgb, var(--scene-ink) 40%, transparent);
-  border-radius: 99px; padding: .4rem .95rem; cursor: pointer;
+/* Suu stands ON the plank, left of the first chest. She is a dark sprite, so
+   the lit bench top is the only place in this scene she reads against - at
+   5.4% she sat on the shadowed left wall and only her eyes showed. */
+.tb-suu { position: absolute; left: var(--suu-x, 8.2%); bottom: var(--deck); width: var(--suu-w, 4.2%); }
+.tb-suu svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 3px 4px rgba(50, 40, 20, .4)); }
+
+/* symmetric bounds + equal flex basis = the six sit centred on the bench with
+   even gaps. It used to be 15.5%/2.5%, shoved right to clear Suu; she moves
+   instead, because an off-centre row reads as a mistake. */
+.tb-stations {
+  position: absolute; left: var(--row-x0, 13%); right: var(--row-x1, 13%); bottom: var(--deck);
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 1%;
 }
-.toolbox-all:hover { border-color: var(--accent); color: var(--accent); }
-.skill-group.toolbox { padding: 0; background: none; border: none; position: relative; }
-.tb-art { display: block; cursor: pointer; position: relative; }
-.tb-art svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 6px 12px rgba(60, 50, 30, .16)); }
-/* the whole lid lifts straight up, like a real toolbox lid sitting ajar */
-.tb-lid { transition: transform .3s cubic-bezier(.34, 1.4, .5, 1); }
-.toolbox.open .tb-lid, body.editing .toolbox .tb-lid { transform: translateY(-12px); }
-.toolbox h3 {
-  /* dead centre of the label plate: plate centre y=115 in a viewBox spanning
-     -18..158, so 75.6% from the top; translate(-50%,-50%) centres both axes */
-  position: absolute; margin: 0; padding: 0;
-  top: 75.6%; left: 50%; transform: translate(-50%, -50%);
-  width: 54%; text-align: center; line-height: 1.15;
-  color: #4a3f2e !important; font-size: .7rem;
-  cursor: pointer; user-select: none;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+/* a DIV holding two real buttons - see buildWorkshop for why */
+.tb-station {
+  position: relative; flex: 1 1 0; min-width: 0;
+  display: flex; flex-direction: column; align-items: center;
+  transition: transform .25s cubic-bezier(.34, 1.3, .5, 1), filter .25s ease;
 }
-.toolbox h3::before { content: none; }
-.toolbox h3::after { content: none; }
-.toolbox ul {
-  max-height: 0; opacity: 0; margin: -6px 8px 0; padding: 0 1rem;
-  background: var(--paper); border: 2px solid transparent; border-radius: 10px;
-  transition: max-height .45s ease, opacity .3s ease, padding .3s ease, border-color .3s ease;
-  overflow: hidden;
+.tb-open {
+  display: block; width: 100%; background: none; border: 0; padding: 0;
+  cursor: pointer;
 }
-.toolbox.open ul, body.editing .toolbox ul {
-  max-height: 420px; opacity: 1; padding: 1rem 1.1rem 1.1rem;
-  border-color: color-mix(in srgb, var(--ink) 45%, var(--line));
+.tb-chest { display: block; width: 100%; height: auto; max-width: var(--chest-max, 108px); margin: 0 auto; }
+.tb-station:hover, .tb-station:focus-within {
+  transform: translateY(-6px);
+  filter: drop-shadow(0 10px 16px rgba(255, 206, 120, .45));
 }
-.toolbox li { transform: translateY(7px) scale(.9); opacity: 0; transition: transform .3s ease, opacity .3s ease; }
-.toolbox.open li, body.editing .toolbox li { transform: none; opacity: 1; }
+.tb-open:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+/* the open station paints ABOVE its neighbours - stations are siblings, so
+   without this a flown card slides behind the next chest along */
+.tb-station.open {
+  z-index: 5; transform: translateY(-10px);
+  filter: drop-shadow(0 12px 20px rgba(255, 206, 120, .6));
+}
+
+/* the front row, parked inside the chest until it opens */
+.tb-fly { position: absolute; left: 50%; bottom: 42%; width: 0; height: 0; pointer-events: none; }
+.tb-flycard {
+  position: absolute; left: 0; bottom: 0; width: 70px; height: auto;
+  transform: translate(-50%, 0) scale(.35); opacity: 0;
+  filter: drop-shadow(0 6px 10px rgba(50, 35, 10, .45));
+  transition: transform .5s cubic-bezier(.2, .9, .3, 1.2), opacity .35s ease;
+}
+.tb-station.open .tb-flycard {
+  opacity: 1;
+  transform: translate(calc(-50% + var(--fx)), var(--fy)) rotate(var(--fr)) scale(1);
+}
+/* OUT OF FLOW. In flow it sat below the chest and pushed it upward - and
+   because its px sizing does not scale with the stage, the chests drifted off
+   the plank as the viewport narrowed (measured 49.5% of bench height at 1280,
+   46.5% at 820). Absolute keeps the chest's foot on --deck at every width. */
+.tb-chip {
+  position: absolute; top: 100%; left: 50%; white-space: nowrap; cursor: pointer;
+  font-family: var(--label); font-size: .68rem; font-weight: 700;
+  color: #4a3a26; background: rgba(255, 248, 226, .9);
+  border: 1px solid rgba(93, 74, 51, .45); border-radius: 99px; padding: .2rem .6rem;
+  opacity: 0; transform: translate(-50%, 0); transition: opacity .25s ease, transform .25s ease;
+  /* invisible must also mean unclickable: it sits BELOW the closed chest, so
+     without this a click on empty bench opened the parchment */
+  pointer-events: none;
+}
+.tb-station.open .tb-chip { opacity: 1; transform: translate(-50%, 6px); pointer-events: auto; }
+.tb-chip:hover { background: #fff; border-color: var(--accent); }
+
+/* ---------- the parchment panel ---------- */
+.tb-scrim {
+  position: fixed; inset: 0; z-index: 90; display: grid; place-items: center;
+  background: rgba(30, 24, 14, .55); padding: 1.2rem;
+  opacity: 0; transition: opacity .25s ease;
+}
+.tb-scrim.in { opacity: 1; }
+body.tb-card-open { overflow: hidden; }
+.tb-panel {
+  position: relative; width: min(920px, 100%); max-height: 86vh; overflow-y: auto;
+  padding: 2rem 2.2rem 1.6rem;
+  border-style: solid; border-width: 46px;
+  /* the Journey's parchment, reused - one panel look across the site */
+  border-image: url("../assets/journey/panel.webp") 235 fill / 46px / 0 stretch;
+  color: #2c2216;
+}
+.tb-close {
+  position: absolute; top: 8px; right: 14px; z-index: 2;
+  background: none; border: 0; font-size: 1.6rem; line-height: 1; cursor: pointer; color: #6b4a24;
+}
+.tb-close:hover { color: #a8431d; }
+/* identity on the left, a two-column tool grid on the right, divided */
+.tb-panel-body { display: grid; grid-template-columns: minmax(190px, 27%) 1fr; gap: 1.6rem; }
+.tb-side {
+  text-align: center; align-self: center;
+  border-right: 1px solid rgba(93, 74, 51, .28); padding-right: 1.4rem;
+}
+.tb-side-icon { width: 118px; height: auto; margin: 0 auto .4rem; display: block; }
+.tb-side h3 {
+  font-family: var(--display); font-size: 1.3rem; letter-spacing: .06em;
+  text-transform: uppercase; color: #4c3316; margin: 0 0 .45rem;
+}
+.tb-side p { margin: 0; font-size: .85rem; line-height: 1.45; color: #6b5636; }
+.tb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.6rem; align-content: start; }
+.tb-page-label {
+  grid-column: 1 / -1; margin: 0 0 .2rem;
+  font-family: var(--label); font-size: .68rem; font-weight: 700;
+  letter-spacing: .13em; text-transform: uppercase; color: #8a7550;
+}
+.tb-row {
+  display: flex; align-items: center; gap: .8rem; padding: .62rem 0;
+  border-bottom: 1px solid rgba(93, 74, 51, .18);
+}
+/* the last row of each column carries no rule, like the blueprint */
+.tb-row:nth-last-child(-n+2) { border-bottom: 0; }
+.tb-row img { width: 42px; height: auto; flex: none; }
+.tb-row b { display: block; font-size: .95rem; color: #2c2216; }
+.tb-row span { display: block; font-size: .77rem; color: #7b6647; }
+.tb-foot { display: flex; flex-direction: column; align-items: center; gap: .6rem; margin-top: 1.2rem; }
+.tb-dots { display: flex; gap: .4rem; }
+.tb-dot {
+  width: 9px; height: 9px; border-radius: 50%; cursor: pointer; padding: 0;
+  border: 1px solid rgba(93, 74, 51, .5); background: transparent;
+}
+.tb-dot.on { background: #a8854c; border-color: #7b5a2c; }
+.tb-back {
+  display: block; cursor: pointer;
+  font-family: var(--label); font-size: .78rem; font-weight: 700;
+  color: #4a3a26; background: rgba(255, 248, 226, .9);
+  border: 1.5px solid rgba(93, 74, 51, .5); border-radius: 99px; padding: .4rem 1.1rem;
+}
+.tb-back:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- the list: mobile and edit mode ---------- */
+.tb-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.1rem; margin-top: 2.2rem; }
+.tb-li { background: var(--bg-raise); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.1rem 1.2rem; }
+.tb-li h3 {
+  font-family: var(--label); font-size: .78rem; font-weight: 700; color: var(--ink);
+  letter-spacing: .12em; text-transform: uppercase; margin-bottom: .3rem;
+}
+.tb-li h3::before { content: "\25C6 "; color: var(--accent); }
+.tb-li-blurb { font-size: .82rem; color: var(--ink-2); margin-bottom: .7rem; }
+.tb-li .tag { display: inline-block; margin: 0 .3rem .3rem 0; }
+.tb-li .tag-dim { opacity: .68; }
+.tb-more {
+  display: block; margin-top: .7rem; cursor: pointer;
+  font-family: var(--label); font-size: .72rem; font-weight: 700;
+  color: var(--scene-ink-2); background: none;
+  border: 1.5px dashed color-mix(in srgb, var(--scene-ink) 40%, transparent);
+  border-radius: 99px; padding: .3rem .8rem;
+}
+.tb-more:hover { border-color: var(--accent); color: var(--accent); }
+
+/* the panel stacks before it squeezes */
+@media (max-width: 720px) {
+  .tb-panel-body { grid-template-columns: 1fr; gap: 1rem; }
+  .tb-side { border-right: 0; padding-right: 0; border-bottom: 1px solid rgba(93, 74, 51, .28); padding-bottom: 1rem; }
+  .tb-side-icon { width: 84px; }
+  .tb-grid { grid-template-columns: 1fr; }
+  .tb-row:nth-last-child(-n+2) { border-bottom: 1px solid rgba(93, 74, 51, .18); }
+  .tb-row:last-child { border-bottom: 0; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .toolbox ul, .toolbox li, .toolbox h3::after { transition: none; }
+  .tb-station, .tb-flycard, .tb-chip, .tb-scrim { transition: none; }
 }
 
 /* ---------- journey: the adventure map (side-scrolling journey) ----------
    The road is longer than the frame, so walking moves the WORLD: the track
    slides past Suu while painted hills drift slower behind her. No panel -
    the layers sit straight on the valley. */
-.journey-adventure { margin-top: 1.6rem; }
+/* tight to the ticket rack above it - the actions belong WITH the tickets,
+   not adrift halfway down the scene */
+.journey-adventure { position: relative; margin-top: .45rem; }
 .ja-controls { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin-bottom: .6rem; }
 .ja-progress {
   font-family: var(--label); font-size: .78rem; font-weight: 700; letter-spacing: .08em;
   color: var(--accent); margin-left: .2rem;
 }
+#journey .ja-progress { color:#694624; text-shadow:0 1px #fff4d570; }
 .ja-stage { position: relative; width: 100%; overflow: hidden; }
 .ja-layer { position: absolute; left: 0; top: 0; height: 100%; will-change: transform; }
 .ja-layer svg { display: block; }
-.ja-far, .ja-mid { pointer-events: none; }
+.ja-mid { pointer-events: none; }
 /* NEVER put a CSS transform on .ja-post: it overrides the SVG translate()
    attribute, so the post teleports to the origin on hover, un-hovers and
    snaps back - a flicker loop. Hover is opacity + glow only. */
 .ja-post { cursor: pointer; opacity: .58; transition: opacity .35s ease, filter .2s ease; }
 .ja-post.lit { opacity: 1; }
 .ja-post:hover { opacity: 1; filter: drop-shadow(0 0 7px var(--accent)); }
-.ja-post.lit .ja-pin { filter: drop-shadow(0 0 5px var(--accent)); }
-.ja-suu { position: absolute; width: 42px; pointer-events: none; }
-.ja-suu svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 3px 3px rgba(60,50,30,.3)); }
+/* the semaphore reads "line clear" once its chapter has been reached */
+.ja-signal { transform-box: fill-box; transform-origin: 50% 100%; transition: filter .35s ease; }
+.ja-post.lit .ja-signal { filter: drop-shadow(0 0 6px rgba(232,178,58,.75)); }
+/* "line clear" before departure. A glow, NOT a rotation: the comment above
+   warns that a CSS transform on .ja-post overrides the SVG translate() that
+   positions it, and green is what actually means proceed on a railway. */
+.ja-post.clearing .ja-signal {
+  filter: drop-shadow(0 0 11px rgba(116, 226, 138, .95)) brightness(1.22);
+}
+
+/* Only the LOCOMOTIVE pivots when the train reverses - mirroring the whole
+   consist would flip carriage order and break the carriage-to-chapter map.
+   Suu turns with the engine she is riding, which is as it should be. */
+.ja-power { display: flex; align-items: flex-end; }
+.ja-tender, .ja-engine { position: relative; flex: none; }
+
+/* THE WHOLE TRAIN TURNS - by REORDERING, not mirroring.
+   Turning a train around does not mirror its vehicles: you see the same
+   carriages the same way round, just in the opposite order along the track.
+   Mirroring the consist instead would flip the painted "XE RAILWAY" on the
+   tender AND on all five carriages into backwards lettering.
+   So every row reverses (engine to the head, carriages trailing in reverse
+   order) and only the ENGINE is mirrored, because it is the one asymmetric
+   vehicle with a real front and back. The footprint on the track is unchanged. */
+.ja-train.rev { flex-direction: row-reverse; }
+.ja-train.rev .ja-cars { flex-direction: row-reverse; }
+.ja-train.rev .ja-power { flex-direction: row-reverse; }
+/* No transition on the engine: it must flip in the same instant as the
+   reorder, hidden at the edge-on midpoint of the turn. Easing it separately is
+   what made the head twist before the tail. */
+.ja-engine { transform-origin: 50% 62%; }
+.ja-train.rev .ja-engine { transform: scaleX(-1); }
+/* The whole train swings about the ENGINE, which is parked at the platform -
+   so the pivot point stays put and the train turns on the spot like a
+   turntable. The origin follows the engine's end as .rev flips at the
+   midpoint. */
+@keyframes jaTurn {
+  0%   { transform: scaleX(1); }
+  46%  { transform: scaleX(.05); }
+  54%  { transform: scaleX(.05); }
+  100% { transform: scaleX(1); }
+}
+.ja-train.turning { animation: jaTurn .52s ease-in-out both; transform-origin: 100% 100%; }
+.ja-train.turning.rev { transform-origin: 0% 100%; }
+@media (prefers-reduced-motion: reduce) { .ja-train.turning { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .ja-engine { transition: none; } }
+/* roadside dressing sits behind the rail and slightly hazed, so the stops and
+   the train stay the things the eye lands on */
+.ja-scene { opacity: .88; }
+.ja-mid .ja-scene { opacity: .62; }
+
+/* The consist: locomotive plus one carriage per chapter. pointer-events are
+   re-enabled on the carriages only, so the train stays click-through except
+   where it is actually a control. */
+/* NO transform on the consist - the anchor lives in `left` (see paint()). */
+.ja-train { position: absolute; pointer-events: none; display: flex; align-items: flex-end; }
+.ja-cars { display: flex; align-items: flex-end; }
+.ja-loco { position: relative; flex: none; }
+.ja-train img {
+  height: 100%; display: block;
+  filter: drop-shadow(0 4px 4px rgba(60,50,30,.28));
+}
+/* a carriage is a chapter: dim until its station is reached, lit after */
+.ja-car {
+  position: relative; flex: none; padding: 0; border: 0; background: none;
+  margin-right: -1px; margin-left: -1px; line-height: 0; pointer-events: auto; cursor: pointer;
+  filter: saturate(.55) brightness(.82);
+  transition: filter .35s ease, transform .18s ease;
+}
+.ja-car.lit { filter: none; }
+.ja-car:hover, .ja-car:focus-visible { transform: translateY(-4px); outline: none; }
+.ja-carglow {
+  position: absolute; left: 14%; right: 13%; top: 30%; height: 19%;
+  pointer-events: none; border-radius: 4px; opacity: 0;
+  background: radial-gradient(ellipse at center, rgba(255,206,110,.6), rgba(255,206,110,0) 70%);
+  transition: opacity .35s ease;
+}
+.ja-car.lit .ja-carglow { opacity: .75; }
+.ja-car:hover .ja-carglow { opacity: 1; }
+
+/* Station signboards, in HTML inside the track layer so the camera carries
+   them and the text can wrap. Dim until the train has been there. */
+.ja-sign {
+  position: absolute; transform: translateX(-50%); width: 132px;
+  background: url("../assets/journey/sign.webp") center / 100% 100% no-repeat;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  /* px, NOT %. Percentage padding resolves against the CONTAINING BLOCK's
+     width - and the containing block here is the track layer, which is
+     thousands of px wide, so 11% became ~220px and smeared every sign into
+     one giant band across the scene. */
+  gap: 1px; text-align: center; line-height: 1.18; padding: 15px 17px;
+  min-height: 40px; cursor: pointer; opacity: .62;
+  transition: opacity .35s ease, transform .18s ease;
+}
+.ja-sign.lit { opacity: 1; }
+.ja-sign:hover { transform: translateX(-50%) translateY(-3px); }
+.ja-sign b { font-family: var(--display); font-weight: 700; font-size: .72rem; color: #4a3a26; }
+.ja-sign span { font-family: var(--label); font-weight: 600; font-size: .58rem; color: #6b5636; }
+/* Suu rides a carriage roof. Sized off the train's HEIGHT, not its width - the
+   train is several carriages long, so a width-relative rider grows into a
+   passenger bigger than the locomotive. bottom:58% is the measured roofline
+   (the carriage tops sit 42% down the sprite). */
+/* Suu sits on the coal. Measured off the tender slice: the heap tops out
+   around 29% down its frame, so 66% up from the foot puts her on it. */
+.ja-rider { position: absolute; left: 50%; bottom: 66%; height: 27%; transform: translateX(-50%); }
+.ja-rider svg { height: 100%; width: auto; display: block; }
+
+/* steam from the funnel - a strip of frames stepped through, clipped to one */
+.ja-smoke { position: absolute; overflow: hidden; pointer-events: none; }
+.ja-smoke img {
+  display: block; height: 100%;
+  animation: jaPuff 2.2s steps(var(--frames, 27)) infinite;
+}
+@keyframes jaPuff { to { transform: translateX(var(--travel)); } }
+.ja-train.moving .ja-smoke img { animation-duration: 1.1s; }
+
+/* After dark the carriages and the headlamp light up. Screen-blended so they
+   read as light rather than paint, and so the night grading on the sprite
+   underneath does not put them out. Positions are MEASURED off the art. */
+.ja-win, .ja-lamp {
+  position: absolute; transform: translate(-50%, -50%); pointer-events: none;
+  border-radius: 50%; display: none; mix-blend-mode: screen;
+}
+/* Scoped through .ja-train, not bare .ja-beam: the layer already carries
+   `.ja-layer svg { display: block }` for its own track/scenery SVGs, and that
+   outranks a lone class - so an unscoped rule leaves the beam lit by day. */
+.ja-train .ja-beam { position: absolute; display: none; pointer-events: none; overflow: visible; }
+body.night .ja-win, body.night .ja-lamp { display: block; }
+body.night .ja-train .ja-beam { display: block; mix-blend-mode: screen; }
+/* Lamplight through a carriage window, not a floodlight - the glow only has
+   to say "someone is aboard" over art that is already painted lit. */
+.ja-win { background: radial-gradient(circle, rgba(255,203,116,.42), rgba(255,188,88,0) 68%); }
+.ja-lamp { background: radial-gradient(circle, rgba(255,241,190,.8), rgba(255,222,140,0) 62%); }
+
+/* The railway pack is painted in full daylight. Under the dusk-to-night sky
+   the page scrolls into, ungraded art glows like noon - the same problem the
+   valley map hit, solved the same way. Only the ART is graded: the cream
+   number and place plates are <rect>/<text>, so they stay legible. */
+body.night .ja-mid image,
+body.night .ja-track image,
+body.night .ja-railband { filter: brightness(.6) saturate(.68); }
+body.night .ja-train img {
+  filter: brightness(.6) saturate(.68) drop-shadow(0 4px 4px rgba(0,0,0,.45));
+}
+/* a cleared signal still reads as lit after dark - dimmer than day, but lit */
+body.night .ja-post.lit .ja-signal {
+  filter: brightness(.74) saturate(.76) drop-shadow(0 0 7px rgba(232,178,58,.85));
+}
 .ja-spark {
   position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; pointer-events: none;
   border-radius: 50%; border: 3px solid var(--accent); animation: jaSpark .85s ease-out forwards;
@@ -1386,7 +2041,16 @@ body.editing .case-toggle { display: none; }
   100% { transform: translateY(300px) translateX(44px) rotate(420deg); opacity: 0; }
 }
 /* nav: prev - station dots - next */
-.ja-nav { display: flex; align-items: center; justify-content: center; gap: .8rem; margin-top: .8rem; }
+/* Lifted INTO the stage rather than sitting under it: every px of nav below
+   the scene is a px of section the painted plate has to stretch to cover. */
+/* Lifted out of flow onto the stage. It used to hang on a -2.9rem margin,
+   which made the ride 14px shorter than its own [row + stage] and left the
+   overview unable to match it at any width. Absolute keeps it exactly where
+   it was painted while letting both views measure the same. */
+.ja-nav {
+  display: flex; align-items: center; justify-content: center; gap: .8rem;
+  position: absolute; left: 0; right: 0; bottom: .9rem; z-index: 4;
+}
 .ja-arrow {
   width: 2rem; height: 2rem; border-radius: 50%; cursor: pointer; line-height: 1;
   background: none; color: var(--scene-ink-2); font-size: .8rem;
@@ -1402,12 +2066,74 @@ body.editing .case-toggle { display: none; }
 }
 .ja-dot-btn.seen { background: color-mix(in srgb, var(--accent) 55%, transparent); border-color: var(--accent); }
 .ja-dot-btn.on { background: var(--accent); border-color: var(--accent); transform: scale(1.35); }
-/* the chapter Suu is standing in */
+/* The chapter, popped IN FRONT rather than tucked underneath. It used to be a
+   card below the scene, which read as an afterthought bolted under the
+   picture. position:fixed also means it can never affect section height. */
 .ja-card {
-  max-width: 46rem; margin: 1.1rem auto 0; min-height: 9rem;
-  opacity: 0; transform: translateY(10px); transition: opacity .4s ease, transform .4s ease;
+  position: fixed; inset: 0; z-index: 120;
+  display: flex; align-items: center; justify-content: center; padding: 1.2rem;
+  background: rgba(24, 18, 8, .58);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  opacity: 0; transition: opacity .25s ease;
 }
-.ja-card.in { opacity: 1; transform: none; }
+.ja-card.in { opacity: 1; }
+/* A painted parchment sheet, not a CSS box. border-image is what makes it work
+   with 2-5 bullets: the corner studs stay fixed, the torn edges stretch, and
+   `fill` stretches the paper across the middle. A plain background-image would
+   squash the studs into ovals as the panel changed shape.
+   The ink is PINNED dark rather than using --paper-ink: the parchment is a
+   photograph and cannot follow the theme, so in dark mode a themed ink would
+   turn pale and vanish into the paper. */
+.ja-panel {
+  /* overflow is NOT set here on purpose: the close button straddles the corner
+     and would be clipped, and inside a scroll box it would slide away with the
+     text. The inner .ja-body scrolls instead. */
+  position: relative; width: min(34rem, 100%);
+  color: #4a3a26; background: none;
+  border: 42px solid transparent;
+  border-image: url("../assets/journey/panel.webp") 235 fill / 42px / 0 stretch;
+  padding: .2rem .5rem 1rem; margin: 0 -6px;
+  filter: drop-shadow(0 22px 46px rgba(20, 14, 4, .5));
+  transform: translateY(12px) scale(.97); transition: transform .28s cubic-bezier(.2,.8,.3,1);
+}
+/* Four DISTINCT steps, not four browns. The previous set gave .ja-org and
+   .ja-points the identical value and put everything else within a few points
+   of it, so the panel read as one undifferentiated block. Hierarchy now comes
+   from hue as well as size: rust for the chapter number, olive for the
+   metadata line (which also ties to the vine sprig on the paper), near-black
+   for the role, and a clearly lighter warm grey for the organisation. */
+.ja-panel .ja-num { color: #a8431d; }        /* rust - the loudest thing */
+.ja-panel .ja-place { color: #64712f; }      /* olive, echoes the vine */
+.ja-panel .ja-role { color: #2c2216; }       /* near-black, the headline */
+.ja-panel .ja-org { color: #7b6647; }        /* clearly secondary */
+.ja-panel .ja-points li { color: #453726; }  /* comfortable reading brown */
+.ja-panel .ja-points li::marker { color: #a8431d; }
+.ja-card.in .ja-panel { transform: none; }
+.ja-body { max-height: min(68vh, 32rem); overflow-y: auto; padding-right: 2px; }
+
+/* The painted close button, straddling the top-right corner: pushed outward so
+   it lies half on the torn edge and covers the brass corner stud rather than
+   sitting beside it and reading as two competing discs. The old text glyph was
+   too dim to notice. */
+.ja-close {
+  position: absolute; top: -35px; right: -35px; z-index: 2;
+  width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%;
+  background: url("../assets/journey/close.webp") center / contain no-repeat;
+  font-size: 0; cursor: pointer;
+  filter: drop-shadow(0 3px 5px rgba(30, 16, 6, .45));
+  transition: transform .16s ease, filter .16s ease;
+}
+.ja-close:hover, .ja-close:focus-visible {
+  transform: scale(1.12) rotate(6deg); outline: none;
+  filter: drop-shadow(0 5px 9px rgba(30, 16, 6, .55)) brightness(1.08);
+}
+@media (max-width: 700px) { .ja-close { top: -28px; right: -24px; width: 38px; height: 38px; } }
+@media (prefers-reduced-motion: reduce) { .ja-close { transition: none; } }
+/* the page behind must not scroll while the chapter is open */
+body.ja-modal-open { overflow: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  .ja-card, .ja-panel { transition: none; }
+}
 .ja-head { display: flex; align-items: flex-start; gap: .7rem; }
 .ja-num {
   font-family: var(--display); font-weight: 800; font-size: 2.4rem; line-height: .95;
@@ -1420,7 +2146,109 @@ body.editing .case-toggle { display: none; }
 .ja-points li { font-size: .9rem; line-height: 1.5; color: var(--scene-ink-2); padding-left: 1.1rem; position: relative; margin-top: .22rem; }
 .ja-points li::before { content: "→"; position: absolute; left: 0; color: var(--accent); }
 @media (max-width: 760px) { .ja-card { min-height: 0; } .ja-num { font-size: 1.9rem; } }
-@media (prefers-reduced-motion: reduce) { .ja-leaf, .ja-spark { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .ja-leaf, .ja-spark { display: none; }
+  /* hold the plume on one frame rather than stepping through it */
+  .ja-smoke img { animation: none; }
+}
+
+/* ---------- journey OVERVIEW: the same train, parked ----------
+   The scannable counterpart to the ride - every chapter at once, no travelling.
+   Sized in JS so the whole consist fits, which is the entire point. */
+/* Same box as the ride's .ja-stage, from the same JS numbers, so one painted
+   plate fits both views and #journey never changes height when you switch. */
+.ov { position: relative; height: var(--ja-stage-h, 300px); }
+/* the scroller owns the vertical placement - it is the full-height box, and it
+   parks the consist on the ride's ground line. The consist itself stays
+   content-sized so the signs above the carriages have somewhere to hang. */
+.ov-scroll {
+  height: 100%; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin;
+  display: flex; align-items: flex-end; padding-bottom: var(--ja-ground, 74px);
+}
+.ov-consist { display: flex; align-items: flex-end; width: max-content; margin: 0 auto; padding: 0 1.2rem; }
+.ov-consist > img { display: block; flex: none; }
+.ov-car {
+  position: relative; flex: none; padding: 0; border: 0; background: none;
+  margin-left: -2px; cursor: pointer; line-height: 0; transition: transform .18s ease;
+}
+.ov-car img { display: block; }
+.ov-car:hover, .ov-car:focus-visible { transform: translateY(-6px); outline: none; }
+.ov-glow {
+  position: absolute; left: 14%; right: 13%; top: 30%; height: 19%;
+  pointer-events: none; border-radius: 4px; opacity: .5;
+  background: radial-gradient(ellipse at center, rgba(255,206,110,.55), rgba(255,206,110,0) 70%);
+  transition: opacity .22s ease;
+}
+.ov-car:hover .ov-glow { opacity: 1; }
+body.night .ov-glow { opacity: .85; }
+/* the signboard sits above its carriage; content-sized, because roles run from
+   "IT Intern" to "SPM - Malaysian Certificate of Education" */
+.ov-sign {
+  position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(100% + 6px);
+  min-height: 38px; background: url("../assets/journey/sign.webp") center / 100% 100% no-repeat;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1px; text-align: center; line-height: 1.18; padding: 14px 15px;
+}
+.ov-sign b { font-family: var(--display); font-weight: 700; color: #4a3a26; font-size: clamp(.56rem,.72vw,.78rem); }
+.ov-sign span { font-family: var(--label); font-weight: 600; color: #6b5636; font-size: clamp(.53rem,.62vw,.66rem); }
+/* rides in the control row, where the ride's buttons are */
+.ov-hint { margin: 0; font-family: var(--label); font-size: .76rem; color: var(--scene-ink-3); }
+@media (prefers-reduced-motion: reduce) { .ov-car, .ov-glow { transition: none; } }
+
+/* ---------- journey controls: the ticket rack ----------
+   The two view switches ARE printed tickets - the lettering, the locomotive
+   and the map are painted into the art, so the button is the image and
+   nothing is drawn over it. The label text stays in the DOM (transparent, so
+   screen readers and edit mode still find it) but is never painted.
+   Scoped to #journey-view / .ja-controls because .chip is shared with the
+   Projects and Achievements filter bars, which must not change. */
+#journey-view { display: inline-flex; gap: 12px; align-items: flex-end; margin-bottom: 0; }
+
+#journey-view .chip {
+  border: 0; border-radius: 0; padding: 0;
+  height: 46px; width: 185px; flex: none;   /* both tickets are 430x107 */
+  background: center / contain no-repeat;
+  font-size: 0; color: transparent; text-shadow: none;   /* the art carries the words */
+  /* an unchosen ticket is one that has not been punched: paler, sitting flat */
+  filter: saturate(.62) brightness(1.02); opacity: .82; transform: translateY(2px);
+  transition: filter .2s ease, opacity .2s ease, transform .2s ease;
+}
+#journey-view .chip:nth-child(1) { background-image: url("../assets/journey/tk-ticket-train.webp"); }
+#journey-view .chip:nth-child(2) { background-image: url("../assets/journey/tk-ticket-all.webp"); }
+#journey-view .chip:hover { opacity: .88; transform: translateY(1px); }
+#journey-view .chip.on {
+  opacity: 1; transform: translateY(-2px);
+  filter: drop-shadow(0 4px 6px rgba(70,45,15,.3));
+}
+
+/* the actions are pressed discs, never tickets - so an action can never read
+   as a view you could switch to */
+/* One reserved row, the same height in both views - the overview fills it with
+   its hint instead of buttons, so switching view never resizes #journey.
+   Narrow reserves two lines because the ride's row wraps there. */
+.ja-controls { display: flex; align-items: center; gap: 1.1rem; flex-wrap: wrap; margin-bottom: .6rem; min-height: 34px; }
+@media (max-width: 760px) { .ja-controls { min-height: 72px; } }
+.ja-btn {
+  display: inline-flex; align-items: center; gap: .5rem;
+  border: 0; background: none; padding: 0;
+  font-family: var(--label); font-weight: 600; font-size: .78rem;
+  color: var(--scene-ink-2); text-shadow: 0 1px 2px var(--scene-halo);
+  transition: color .16s ease;
+}
+.ja-btn::before {
+  content: ""; width: 34px; height: 34px; flex: none;
+  background: center / contain no-repeat;
+  filter: drop-shadow(0 2px 3px rgba(60,40,12,.35));
+  transition: transform .16s ease, filter .16s ease;
+}
+.ja-btn-go::before  { background-image: url("../assets/journey/tk-go.webp"); }
+.ja-btn-off::before { background-image: url("../assets/journey/tk-reset.webp"); }
+.ja-btn:hover { color: var(--scene-ink); }
+.ja-btn:hover::before { transform: translateY(-2px) scale(1.06); filter: drop-shadow(0 4px 6px rgba(60,40,12,.45)); }
+.ja-btn:active::before { transform: translateY(1px) scale(.97); }
+@media (prefers-reduced-motion: reduce) {
+  #journey-view .chip, .ja-btn, .ja-btn::before { transition: none; }
+}
 
 /* ---------- timeline ---------- */
 .timeline { margin-top: 2.4rem; border-left: 2px solid color-mix(in srgb, var(--scene-ink) 25%, transparent); padding-left: 1.8rem; display: flex; flex-direction: column; gap: 2rem; max-width: 46rem; }
@@ -1440,12 +2268,25 @@ body.editing .case-toggle { display: none; }
 #achievements.hall-closed #ach-filters,
 #achievements.hall-closed #ach-rail,
 #achievements.hall-closed .ach-tally { display: none; }
+/* Full-bleed, and sized by ASPECT rather than by its contents. The scene is
+   registered to the painted plate by viewBox (hallFrame() in app.js), so the
+   box has to be settled before the SVG can be drawn - an SVG that sized the
+   box would make that circular. The 1718:616 band is the painting from just
+   above the pediment down to its foot. */
 .ach-hall {
-  position: relative; margin: 2.2rem auto 0; max-width: 46rem;
-  border-radius: 12px;
+  position: relative; margin: 2.2rem 0 2.6rem;
+  left: calc(50% - 50cqw); width: 100cqw; max-width: none;
+  aspect-ratio: 1718 / 616;
 }
+/* out of flow, so the hall box stays exactly the painted band - Suu and the
+   frame are both measured against it, and a caption inside would shift both.
+   The reserved space below the band is therefore the ONLY thing holding the
+   caption inside the section: at 400px it wraps to two lines (47.5px) against
+   a 2.6rem margin, and was measured escaping #achievements by 1.1px. */
+.hall-caption { position: absolute; left: 0; right: 0; top: 100%; }
+@media (max-width: 620px) { .ach-hall { margin-bottom: 4rem; } }
 .ach-hall:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
-.hall-svg { width: 100%; height: auto; display: block; }
+.hall-svg { width: 100%; height: 100%; display: block; }
 /* only Suu and the doors are the button */
 .hall-door-l, .hall-door-r, .hall-doorway, .hall-seam, .hall-hit, .hall-suu { cursor: pointer; }
 /* dark mode: moonlight dims the painted scene while the lamp comes alight */
@@ -1454,8 +2295,12 @@ html[data-theme="dark"] .hall-day { filter: brightness(.66) saturate(.75); }
 .hall-lamp-glow, .hall-spill, .hall-mote { pointer-events: none; }
 .hall-lamp-glow { opacity: 0; transition: opacity .6s ease; }
 html[data-theme="dark"] .hall-lamp-glow { opacity: 1; }
-.hall-lamp-glass { transition: fill .6s ease; }
-html[data-theme="dark"] .hall-lamp-glass { fill: #ffd57e; }
+/* two paintings of the same post, cross-faded - the lit one carries its own
+   halo, so no drawn glow sits on top of it */
+.hall-lamp-off, .hall-lamp-on { transition: opacity .6s ease; }
+.hall-lamp-on { opacity: 0; pointer-events: none; }
+html[data-theme="dark"] .hall-lamp-off { opacity: 0; }
+html[data-theme="dark"] .hall-lamp-on { opacity: 1; }
 .hall-banner { transform-box: fill-box; transform-origin: center top; animation: hallSway 5s ease-in-out infinite alternate; }
 @keyframes hallSway { from { transform: rotate(-1.4deg); } to { transform: rotate(1.6deg); } }
 /* doors fold on their outer hinges - NEVER perspective()+rotateY on SVG rects */
@@ -1492,7 +2337,11 @@ html[data-theme="dark"] .hall-lamp-glass { fill: #ffd57e; }
 .ach-hall.seen:not(.opening) .hall-suu { animation: hallBob 1.5s ease-in-out 1.8s infinite; }
 @keyframes hallBob { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(0) translateY(-6px); } }
 .ach-hall.leaving { opacity: 0; transform: scale(1.03); transition: opacity .5s ease, transform .5s ease; }
-.hall-caption { text-align: center; font-family: var(--label); font-size: .9rem; color: var(--scene-ink-2); margin-top: .7rem; }
+/* it reads over painted grass now, not over the page - it needs the halo */
+.hall-caption {
+  text-align: center; font-family: var(--label); font-size: .9rem;
+  color: var(--scene-ink-2); margin-top: .7rem; text-shadow: 0 1px 3px var(--scene-halo);
+}
 .hall-caption b { color: var(--accent); }
 .burst-in { animation: burstIn .5s cubic-bezier(.2, .7, .3, 1) backwards; }
 @keyframes burstIn { from { opacity: 0; transform: translateY(22px) scale(.97); } }
@@ -1562,6 +2411,234 @@ html[data-theme="dark"] .hall-lamp-glass { fill: #ffd57e; }
 }
 .ach-photo.empty:hover { border-color: var(--accent); color: var(--paper-ink); }
 body.editing .ach-photo { cursor: pointer; }
+
+/* ---------- the hall interior: shelves on the ivy wall ----------
+   Laid out by buildRoom() in js/app.js from the measurements in
+   js/achievement-art.js - every position here is a percentage of the wall, so
+   the room scales without a media query and re-fits if the art is re-cropped. */
+/* The room is a full-screen destination, the way the valley map is. */
+.hall-overlay { position: fixed; inset: 0; z-index: 190; background: #120e08; }
+.hall-bar {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 3;
+  display: flex; align-items: center; gap: .8rem; padding: .7rem 1rem;
+  background: linear-gradient(rgba(12, 9, 4, .55), rgba(12, 9, 4, 0));
+}
+.hall-bar .btn {
+  background: rgba(24, 18, 10, .72); border-color: rgba(240, 226, 198, .5);
+  color: #f3e8d2; -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+}
+.hall-bar .btn:hover { border-color: var(--accent); color: var(--accent); }
+/* positioned, because .ach-panel is absolute against it. The panel is a child
+   of the STAGE and not the wall on purpose: a filter on an ancestor applies to
+   every descendant, so a panel inside .ach-wall would be dimmed by the night
+   pass no matter what it declares for itself. */
+.hall-stage { position: absolute; inset: 0; overflow: hidden; }
+.hall-wipe { animation: hallWipe .9s ease-out; }
+@keyframes hallWipe { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+/* The room box is the VIEWPORT, and the painting is drawn behind it by CSS:
+   cover, anchored to the bottom so the floor, the sideboard and Suu survive
+   while the ceiling beam is what gets cropped. Children therefore lay out
+   against what you can SEE, which is what makes a saved layout look the same
+   at any window aspect. */
+.ach-wall {
+  position: absolute; inset: 0;
+  background: url("../assets/hall/wall.webp") center bottom / cover no-repeat;
+}
+
+/* the heading board and the filter plates, hung inside the room */
+.hall-sign {
+  position: absolute; transform: translateX(-50%); box-sizing: border-box;
+  /* lit from the window on the LEFT, so the board throws right and down */
+  filter: drop-shadow(3px 7px 12px rgba(46, 30, 12, .5));
+}
+/* the writable parchment, measured by the builder - 03_Sign_Crest_Diamond
+   gives its top third to the crest, so centring on the whole board would run
+   the heading under it */
+.hall-sign-in {
+  position: absolute; display: flex; align-items: center; justify-content: center;
+  text-align: center;
+}
+.hall-sign-title {
+  font-family: var(--display); font-weight: 700; color: #43331c;
+  font-size: var(--sign-fs, clamp(1rem, 2.2vw, 2rem));
+  line-height: 1.04; letter-spacing: -.01em;
+  white-space: nowrap;
+}
+/* Five hanging signs down the right-hand wall, each carrying its own rope and
+   bar in the art, so they need vertical air between them to read as hanging. */
+.hall-tags {
+  position: absolute; transform: translateX(-50%); z-index: 2;
+  display: flex; flex-direction: column; align-items: stretch;
+}
+.hall-tag {
+  position: relative; width: 100%; height: 0;   /* padding-bottom holds the aspect */
+  background: transparent;
+  background-image: url("../assets/hall/tag.webp");
+  background-size: 100% 100%; background-repeat: no-repeat;
+  border: 0; padding: 0; cursor: pointer;
+  filter: drop-shadow(2px 5px 7px rgba(46, 30, 12, .45));
+  transition: transform .16s ease, filter .16s ease;
+}
+.hall-tag:hover {
+  transform: translateY(-2px);
+  filter: drop-shadow(3px 8px 11px rgba(46, 30, 12, .5)) brightness(1.06);
+}
+.hall-tag:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+/* active by WARMTH, not a different sign - the column stays a matched set */
+.hall-tag.on { filter: drop-shadow(2px 5px 7px rgba(46, 30, 12, .45)) brightness(1.14) saturate(1.15); }
+.hall-tag-in {
+  position: absolute; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: .15em; text-align: center;
+  font-family: var(--label); font-weight: 700; color: #4a3a22;
+  font-size: var(--tag-fs, .78rem); line-height: 1.15;
+}
+.hall-tag-in .n { opacity: .7; font-weight: 500; font-size: .85em; }
+.hall-tag.on .hall-tag-in { color: #3a2a12; }
+.ach-shelf { position: absolute; }
+/* fills the shelf box, which buildRoom sizes - so a squeezed shelf
+   squeezes its plank with it */
+/* the shelf throws its own shadow onto the plaster, down and to the right -
+   without it the shelf reads as painted ONTO the wall rather than fixed TO it */
+.ach-plank {
+  display: block; width: 100%; height: 100%;
+  filter: drop-shadow(4px 8px 9px rgba(46, 30, 12, .42));
+}
+/* the era's name on a small brass plate, riding the left end of the plank */
+.ach-plate {
+  position: absolute; left: 9%; transform: translateY(50%);
+  font-family: var(--label); font-size: .68rem; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; white-space: nowrap;
+  color: #3f3018; padding: .18rem .6rem; border-radius: 3px;
+  background: linear-gradient(#e6c98a, #c9a55f);
+  border: 1px solid #8f6f38; box-shadow: 0 2px 5px rgba(40, 30, 10, .4);
+}
+.ach-plate.cont { opacity: .55; }
+
+.ach-cert {
+  position: absolute; transform: translateX(-50%); container-type: inline-size;
+  background: center / 100% 100% no-repeat; border: 0; padding: 0;
+  cursor: pointer; transform-origin: bottom center;
+  transition: transform .22s ease, filter .22s ease, opacity .3s ease;
+  /* TWO shadows, not one. A single soft blur is the signature of floating; a
+     thing that RESTS on something has a tight dark shadow at the contact line
+     and a soft one beyond it. Both throw right, because the window is left,
+     and both are mixed from the room's own wood (#3c240c) rather than black -
+     neutral shadow is what makes an object look pasted on. */
+  filter: drop-shadow(1px 2px 2px rgba(38, 24, 10, .55))
+          drop-shadow(4px 9px 13px rgba(38, 24, 10, .34));
+}
+/* the entrance, and only the entrance - see buildRoom */
+.ach-cert.burst { animation: certIn .5s cubic-bezier(.2, .9, .3, 1.2) backwards; }
+.ach-cert:hover, .ach-cert:focus-visible {
+  /* lifted off the shelf: the contact shadow softens and travels */
+  transform: translateX(-50%) translateY(-4px) scale(1.05);
+  filter: drop-shadow(2px 5px 5px rgba(38, 24, 10, .45))
+          drop-shadow(7px 15px 20px rgba(38, 24, 10, .38)) brightness(1.06);
+}
+.ach-cert:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+/* filtered OUT, not filtered away: the room must not reflow as you filter, or
+   it stops reading as a place and starts reading as a list again */
+.ach-cert.dim { opacity: .3; filter: grayscale(.75) drop-shadow(2px 4px 5px rgba(38, 24, 10, .3)); }
+.ach-cert.dim:hover { transform: translateX(-50%); }
+@keyframes certIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(14px) scale(.9); }
+}
+
+/* the text block sits inside the frame's MEASURED opening */
+.ach-cert-in {
+  position: absolute; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: .12em;
+  padding: 4% 6%; text-align: center; overflow: hidden;
+}
+/* Type scales with the CERTIFICATE, not the viewport: cqw keeps a title the
+   same relative size whether the room is 900px or 1500px wide. --fs is set per
+   certificate from the title's length (buildRoom), because "Dean's List" and
+   "Student Helper - Orientation & Registration" cannot share one size. */
+.ach-cert-title {
+  font-family: var(--display); font-weight: 600;
+  color: #4a3a24; line-height: 1.15;
+  font-size: calc(9.2cqw * var(--fs, 1));
+  /* flex:none - a shrinkable title gets squeezed by the flex column and then
+     silently clamped, which is how three clipped titles passed a naive check */
+  flex: none;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5;
+  overflow: hidden;   /* clamped WITH an ellipsis - never cut mid-word in silence */
+}
+.ach-cert-year {
+  font-family: var(--label); font-size: calc(6.2cqw * var(--fs, 1));
+  letter-spacing: .06em; color: #7a6034; flex: none;
+}
+
+/* Suu walks in when the doors open, then stays by the shelves.
+   suuWalkIn owns `left` and the hop; suuIdle is delayed past it so the two
+   never fight over transform. Her resting left matches the walk's end frame,
+   so nothing has to be pinned with animation-fill-mode. */
+.ach-suu {
+  position: absolute; left: var(--suu-left, 7.5%); bottom: 3%; width: 5.4%;
+  pointer-events: none; animation: suuIdle 1.9s ease-in-out infinite;
+}
+.ach-suu svg { width: 100%; height: auto; display: block;
+  filter: drop-shadow(0 3px 4px rgba(40, 30, 12, .5)); }
+.ach-suu.walk-in { animation: suuWalkIn 2.4s ease-out, suuIdle 1.9s ease-in-out 2.4s infinite; }
+.ach-suu.react { animation: suuCheer .6s ease-out; }
+@keyframes suuIdle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6%); }
+}
+@keyframes suuWalkIn {
+  0%   { left: -9%; transform: translateY(0); }
+  12%  { transform: translateY(-11%); }
+  25%  { transform: translateY(0); }
+  37%  { transform: translateY(-11%); }
+  50%  { transform: translateY(0); }
+  62%  { transform: translateY(-11%); }
+  75%  { transform: translateY(0); }
+  88%  { transform: translateY(-7%); }
+  100% { left: var(--suu-left, 7.5%); transform: translateY(0); }
+}
+@keyframes suuCheer {
+  0% { transform: translateY(0) scale(1); }
+  35% { transform: translateY(-16px) scale(1.12); }
+  60% { transform: translateY(-4px) scale(.98); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+/* the detail panel: OPAQUE, because the ivy wall cannot be read through */
+.ach-panel {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(30rem, 78%); background: var(--paper-bright);
+  color: var(--paper-ink); border: 2px solid #8f6f38;
+  border-radius: 10px; padding: 1.3rem 1.5rem;
+  box-shadow: 0 26px 70px rgba(30, 22, 8, .6);
+  animation: certIn .28s ease backwards;
+}
+.ach-panel-x {
+  position: absolute; top: .5rem; right: .6rem; width: 28px; height: 28px;
+  border: 1px solid color-mix(in srgb, var(--paper-ink) 30%, transparent);
+  border-radius: 50%; background: transparent; color: var(--paper-ink); cursor: pointer;
+}
+.ach-panel-x:hover { border-color: var(--accent); color: var(--accent); }
+.ach-panel-cat {
+  font-family: var(--label); font-size: .72rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: #8a6a2e;
+}
+.ach-panel-title {
+  font-family: var(--display); font-weight: 600; font-size: 1.25rem;
+  line-height: 1.2; margin-top: .3rem;
+}
+.ach-panel-org { font-family: var(--label); font-size: .8rem; opacity: .75; margin-top: .25rem; }
+.ach-panel-desc { font-size: .92rem; line-height: 1.55; margin-top: .7rem; }
+.hall-stage.cert-open .ach-cert { filter: drop-shadow(0 6px 10px rgba(40, 30, 12, .45)) brightness(.82); }
+
+/* night: the window light is painted into the wall and cannot be relit, so
+   after dark the whole plate dims and warms - one pass over one image */
+body.night .ach-wall { filter: brightness(.62) saturate(.8) hue-rotate(-6deg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ach-cert, .ach-panel { animation: none; }
+  .ach-suu { animation: none; }
+  .ach-suu.react { animation: none; }
+}
 
 /* ---------- contact: a letter from the valley ---------- */
 .contact { padding-bottom: 4rem; }
@@ -1818,7 +2895,6 @@ body.presenting #sprite, body.presenting .editbar, body.presenting #lantern-disc
 .ps-case { margin-top: .9rem; display: grid; gap: .55rem; font-size: .92rem; }
 .ps-case b { display: block; color: var(--accent); font-family: var(--label); font-size: .66rem; letter-spacing: .13em; }
 .ps-quote { font-family: var(--display); font-style: italic; font-size: 1.12rem; border-left: 3px solid var(--accent); padding-left: .8rem; margin-top: 1rem; }
-.ps-exhibit .demo { margin-top: 0; }
 .ps-banner { text-align: center; }
 .ps-banner svg { width: min(600px, 88vw); height: auto; filter: drop-shadow(0 8px 14px rgba(20, 16, 8, .25)); }
 .ps-banner-line {
@@ -1840,6 +2916,8 @@ body.presenting #sprite, body.presenting .editbar, body.presenting #lantern-disc
 }
 .ps-tray ul { list-style: none; margin: .55rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .3rem; }
 .ps-journey { margin-top: .6rem; }
+/* the chapter modal lives on <body> at z 120; the deck sits at 200 */
+body.presenting .ja-card { z-index: 210; }
 .ps-tl { margin: .45rem 0; font-size: .92rem; }
 .ps-tl b { font-family: var(--label); font-size: .74rem; color: var(--accent); }
 .ps-tally-line { font-family: var(--label); font-size: .74rem; letter-spacing: .06em; opacity: .65; margin-top: .2rem; }
@@ -2160,7 +3238,10 @@ body.night .og-trail-line { opacity: .85; }
   /* an opened detail and the Suu signpost must span BOTH columns, not sit in one */
   .grid-detail, .grid-more { grid-column: 1 / -1; }
 
-  .skills-grid { grid-template-columns: repeat(2, 1fr); gap: .7rem; }
+  /* ONE column, unlike the toolboxes this replaced: each row now carries a
+     blurb, up to ten tags and a button, and two columns at 400px gives each
+     165px - measured - which wraps every tag onto its own line */
+  .tb-list { grid-template-columns: 1fr; gap: .7rem; }
 }
 
 /* ---------- Suu's reading lantern (toggle: nav button / L key) ----------
@@ -2535,4 +3616,2827 @@ body.touring #sprite { display: none; }   /* one Suu at a time */
   /* the flame stops guttering but must stay LIT; the lighthouse stops turning */
   .worldmap .wm-flame { animation: none; opacity: .92; }
   .worldmap .wm-beam-spin { animation: none; }
+  .wm-b.is-dim, .wm-board.is-dim { transition: none; }
+}
+
+/* ---------- map chrome: legend, zoom stack, hover card, filter dimming ----
+   Task 6. Filtering DIMS non-matching buildings rather than removing them -
+   emptying the valley of 17 of its 18 buildings would leave bare painted
+   meadow where a village was. */
+.wm-b.is-dim { filter: saturate(.15) brightness(1.12) opacity(.45); transition: filter .35s ease; }
+.wm-board.is-dim { opacity: .25; transition: opacity .35s ease; }
+
+/* The legend restores the hint the old wm-bar carried ("drag to wander -
+   scroll to zoom - WASD / arrows walk Suu - click a building") before Task 5
+   deleted it. border-WIDTH must match the border-image slash widths below -
+   see the comment on .pjs-scroll for why: without it the border box falls
+   back to `medium` (~3px) while the art still paints its full inset. */
+.wm-legend {
+  position: absolute; top: 14px; left: 14px; z-index: 5;
+  width: min(250px, 74vw);
+  padding: .8rem 1rem .9rem;
+  border-style: solid;
+  border-width: 20px 24px 22px 24px;
+  border-image: url("../assets/projects/panel.webp") 37 52 43 55 fill / 20px 24px 22px 24px / 0 stretch;
+  color: var(--paper-ink); font-size: .84rem; pointer-events: none;
+}
+.wm-legend.is-collapsed { display: none; }
+.wm-legend-x {
+  position: absolute; top: 2px; right: 6px; z-index: 1; pointer-events: auto;
+  appearance: none; border: 0; background: none; cursor: pointer;
+  font-size: 1.1rem; line-height: 1; color: var(--paper-ink); opacity: .7;
+}
+.wm-legend-x:hover { opacity: 1; color: var(--accent); }
+.wm-legend-x:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* shown only when the legend right before it in the DOM is collapsed */
+.wm-legend-btn { display: none; }
+.wm-legend.is-collapsed ~ .wm-legend-btn {
+  display: flex; align-items: center; justify-content: center;
+  position: absolute; top: 14px; left: 14px; z-index: 5;
+  width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line);
+  background: var(--bg-raise); color: var(--ink); font-size: 1.05rem; font-weight: 700;
+  cursor: pointer; box-shadow: var(--shadow);
+}
+.wm-legend-btn:hover { border-color: var(--accent); color: var(--accent); }
+.wm-legend-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wm-leg-h {
+  margin: 0 0 .55rem; font-family: var(--label); font-size: .7rem; letter-spacing: .12em;
+  text-transform: uppercase; font-weight: 700; color: var(--accent);
+}
+.wm-leg-row { display: flex; align-items: center; gap: .55rem; margin: .4rem 0; }
+.wm-leg-row .wm-glyph { flex: 0 0 auto; color: var(--paper-ink); }
+.wm-leg-row span { line-height: 1.25; }
+@media (max-width: 700px) {
+  .wm-legend { width: min(220px, 70vw); font-size: .78rem; }
+}
+
+.wm-zoom {
+  position: absolute; right: 14px; bottom: 14px; z-index: 5;
+  /* align-items:center, not the default stretch: otherwise the wider "Reset"
+     button sets the column width and the two round buttons deform into ovals */
+  display: flex; flex-direction: column; align-items: center; gap: .4rem;
+}
+.wm-zoom button {
+  width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line);
+  background: var(--bg-raise); color: var(--ink); font-size: 1.1rem; font-weight: 700;
+  cursor: pointer; box-shadow: var(--shadow);
+  transition: border-color .15s, color .15s;
+}
+.wm-zoom button:hover { border-color: var(--accent); color: var(--accent); }
+/* "Reset" is a word, not a glyph - it does not fit the 38px circle its two
+   siblings use, and squeezed into one it spills past the border. Let it be a
+   pill sized by its own label instead. */
+/* "Reset" is a word, not a glyph. Its two siblings are 38px circles, and in a
+   stretch-aligned column they all took this button's wider box, which left the
+   label sitting off-centre in a lozenge it did not fill. Centre it explicitly
+   in both axes and let the stack centre the buttons rather than stretch them. */
+.wm-zoom-reset {
+  font-size: .66rem !important; font-family: var(--label); font-weight: 600;
+  width: auto; min-width: 38px; padding: 0 .6rem; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; line-height: 1;
+}
+
+/* Hover card: category+year, title, subtitle, "View project ->". Gated
+   behind (hover: hover) and (pointer: fine) in worldmap.js - a
+   pointermove-driven transform breaks taps on touch. Hidden by default so a
+   coarse-pointer device (where wireHoverCard never attaches) never sees it. */
+.wm-hover {
+  position: absolute; z-index: 6; max-width: 230px; display: none;
+  padding: .65rem .8rem .75rem;
+  border-style: solid;
+  border-width: 16px 18px 18px 18px;
+  border-image: url("../assets/projects/panel.webp") 37 52 43 55 fill / 16px 18px 18px 18px / 0 stretch;
+  color: var(--paper-ink); cursor: pointer;
+}
+.wm-hov-kicker {
+  font-family: var(--label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--accent); font-weight: 700; margin-bottom: .2rem;
+}
+.wm-hov-title { font-family: var(--display); font-weight: 600; font-size: .98rem; margin: 0 0 .2rem; }
+.wm-hov-sub { font-size: .78rem; opacity: .85; margin: 0 0 .4rem; }
+.wm-hov-cta { font-family: var(--label); font-size: .72rem; font-weight: 700; color: var(--accent); }
+
+/* ---------- scene editor handles (owner-only, ?editor=1) ----------
+   Drawn INSIDE the page rather than overlaid from the admin document, so
+   handle geometry is native to the scene and needs no cross-document maths. */
+.sed-layer { position: fixed; inset: 0; z-index: 400; pointer-events: none; }
+body.sed-on .sed-layer { pointer-events: none; }
+.sed-h {
+  position: fixed; pointer-events: auto; cursor: move;
+  border: 1.5px dashed rgba(120, 220, 255, .75);
+  background: rgba(90, 200, 255, .07); border-radius: 3px;
+  transition: background .12s, border-color .12s;
+}
+.sed-h.rule { border-color: rgba(255, 196, 90, .8); background: rgba(255, 190, 80, .07); }
+.sed-h:hover { background: rgba(120, 220, 255, .16); }
+.sed-h.rule:hover { background: rgba(255, 196, 90, .18); }
+.sed-h.on { border-style: solid; border-width: 2px; box-shadow: 0 0 0 2px rgba(0, 0, 0, .35); }
+.sed-tag {
+  position: absolute; left: 0; top: -1.35em; white-space: nowrap;
+  font: 700 10px/1.3 "Space Grotesk", system-ui, sans-serif; letter-spacing: .04em;
+  color: #06222e; background: rgba(120, 220, 255, .92);
+  padding: .1em .45em; border-radius: 2px; pointer-events: none;
+}
+.sed-h.rule .sed-tag { color: #2c1d00; background: rgba(255, 196, 90, .95); }
+.sed-grip {
+  position: absolute; right: -6px; bottom: -6px; width: 12px; height: 12px;
+  background: #fff; border: 2px solid rgba(120, 220, 255, .95);
+  border-radius: 2px; cursor: nwse-resize;
+}
+.sed-h.rule .sed-grip { border-color: rgba(255, 196, 90, .95); }
+
+/* ---------- admin: the scene editor panel (owner-only page) ---------- */
+.sed-split { display: grid; grid-template-columns: 1fr 260px; gap: .8rem; margin-top: .7rem; }
+.sed-stage {
+  position: relative; overflow: hidden; border: 1px solid var(--line);
+  border-radius: 8px; background: #12100d;
+}
+/* fixed render size, scaled to fit: the room needs a desktop viewport to exist
+   at all, and pointer coordinates inside an iframe are unaffected by the
+   parent's transform, so dragging stays 1:1 */
+.sed-frame {
+  /* width/height are set from your viewport by fitStage() */
+  border: 0; display: block;
+  transform-origin: top left; transform: scale(var(--sed-k, 0.44));
+}
+.sed-panel {
+  border: 1px solid var(--line); border-radius: 8px; padding: .6rem;
+  max-height: 520px; overflow: auto; background: var(--bg-raise);
+}
+.sed-prop { margin-bottom: .55rem; }
+.sed-prop label {
+  display: block; font-family: var(--label); font-size: .68rem; font-weight: 700;
+  letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); margin-bottom: .15rem;
+}
+.sed-prop.on label { color: var(--accent); }
+.sed-prop-row { display: flex; align-items: center; gap: .35rem; }
+.sed-prop input[type=number] {
+  width: 5.2rem; font-family: var(--mono); font-size: .78rem;
+  padding: .2rem .3rem; border: 1px solid var(--line); border-radius: 4px;
+  background: var(--bg); color: var(--ink);
+}
+.sed-prop input[type=range] { flex: 1; min-width: 0; }
+.sed-prop button {
+  font-size: .66rem; padding: .12rem .4rem; border: 1px solid var(--line);
+  border-radius: 4px; background: transparent; color: var(--ink-3); cursor: pointer;
+}
+.sed-prop button:hover { border-color: var(--bad); color: var(--bad); }
+.sed-prop.dirty input[type=number] { border-color: var(--accent); font-weight: 700; }
+@media (max-width: 860px) { .sed-split { grid-template-columns: 1fr; } }
+/* grips: west/east resize a shelf's edges, south-east sizes one certificate */
+.sed-grip-w { left: -6px; right: auto; top: 50%; margin-top: -6px; cursor: ew-resize; }
+.sed-grip-e { right: -6px; top: 50%; margin-top: -6px; cursor: ew-resize; }
+.sed-grip-se { right: -6px; bottom: -6px; cursor: nwse-resize; }
+.sed-group { border-bottom: 1px solid var(--line); padding-bottom: .4rem; margin-bottom: .5rem; }
+.sed-group:last-child { border-bottom: 0; }
+.sed-group.on .sed-group-h { color: var(--accent); }
+.sed-group-h {
+  font-family: var(--label); font-size: .72rem; font-weight: 700;
+  letter-spacing: .04em; color: var(--ink-2); margin: 0 0 .3rem;
+}
+.sed-group .sed-prop label { text-transform: none; letter-spacing: 0; font-size: .64rem; }
+/* shelves squeeze on both axes; certificates too */
+.sed-grip-n { left: 50%; margin-left: -6px; top: -6px; cursor: ns-resize; }
+.sed-grip-s { left: 50%; margin-left: -6px; bottom: -6px; cursor: ns-resize; }
+
+/* ---------- the Hall's page control ----------
+   Painted plaques at the bottom right of the ROOM, 1rem in from the edge -
+   the mirror of "Back to the story" at the left. BOTH plaques are drawn on
+   every page and the one that leads nowhere is disabled, so the row's width
+   never changes and nothing moves between pages. */
+.hall-pager {
+  position: absolute; z-index: 3;
+  display: flex; align-items: center; gap: .6rem;
+}
+.hall-pg {
+  position: relative; box-sizing: border-box; background: transparent;
+  border-style: solid; border-color: transparent; padding: 0; cursor: pointer;
+  filter: drop-shadow(2px 5px 7px rgba(46, 30, 12, .45));
+  transition: transform .16s ease, filter .16s ease;
+}
+.hall-pg:hover:not(.off) {
+  transform: translateY(-2px);
+  filter: drop-shadow(3px 8px 11px rgba(46, 30, 12, .5)) brightness(1.07);
+}
+/* the end of the run: still there, holding its place, plainly not for clicking */
+.hall-pg.off {
+  opacity: .3; cursor: default; filter: grayscale(.55) drop-shadow(1px 3px 5px rgba(46, 30, 12, .3));
+}
+.hall-pg.off .hall-pg-in { color: #6a5b45; }
+.hall-pg:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.hall-pg-in {
+  position: absolute; display: flex; align-items: center; justify-content: center;
+  font-family: var(--label); font-weight: 700; color: #4a3a22;
+  font-size: var(--pg-fs, .8rem); white-space: nowrap; letter-spacing: .02em;
+}
+.hall-pg-num {
+  font-family: var(--label); font-size: .74rem; font-weight: 700;
+  letter-spacing: .1em; color: #f0e2c4; text-align: center;
+  text-shadow: 0 1px 3px rgba(28, 18, 6, .85);
+}
+
+/* ===== All Projects destination — shell chrome (js/projects.js) ============
+   Chrome ONLY: the title band, the Map|List toggle, the filter tabs and the
+   Back button. Views paint themselves inside .pj-stage.
+
+   Every control here is DRAWN, not painted. Four painted candidates were
+   measured in Task 1 and all four failed: tab-bar-segmented is a rail of five
+   FIXED plaques, tag-cream is a portrait luggage tag, and sign-wooden-large is
+   an ornate crest wanting ~162px for a ~40px plaque. Painted art for scenery,
+   drawn for UI chrome — the same call the Hall props settled. The win is that
+   these hold at any width and any number of categories, which the painted
+   route could not. Do not reintroduce a border-image here. */
+
+/* Two homes, one set of chrome rules. .pj-root is what both wear; only the
+   OVERLAY takes a viewport out of the page, and it is map-only now. */
+.pj-overlay {
+  position: fixed; inset: 0; z-index: 90;
+  display: flex; flex-direction: column;
+  background: var(--bg); color: var(--ink); overflow: hidden;
+}
+
+/* the archive in the page: normal flow, no inset, no fixed. The section-head
+   above it already carries the heading, so the inline chrome is toggle + tabs
+   only, and the deck's own "PROJECT ARCHIVE" band would be a third title. */
+/* The archive's paper ground. Every other section on this site sits directly
+   on the painted scene; the archive is the one that reads as a document, so it
+   gets paper under it - but a hard-edged rectangle of parchment dropped onto a
+   painted valley looks pasted on. The mask feathers the top and bottom edges so
+   the page emerges from the scene and returns to it.
+
+   Drawn on a ::before rather than as the section's own background so it can
+   bleed past the section's padding without moving any content, and so the
+   z-index:-1 stays trapped inside #projects' own stacking context instead of
+   sliding behind the page. */
+#projects { position: relative; z-index: 0; padding-top: 3rem; }
+#projects::before {
+  /* full-bleed: .section is a max-width column, so `inset: 0` would leave the
+     painted valley showing down both margins and the plate would read as a
+     panel rather than as the ground.
+
+     Scale the painting proportionally. The section's content height varies,
+     so independent width/height scaling distorted the mountain and foliage.
+     Anchor the sky band to the top; crop excess width rather than stretch it.
+     No mask: the art brings its own torn top edge. */
+  content: ""; position: absolute; top: 0; bottom: 0; z-index: -1;
+  left: 50%; transform: translateX(-50%); width: 100cqw;
+  background: url("../assets/projects/paper.webp") no-repeat;
+  background-size: cover;
+  background-position: center top;
+  pointer-events: none;
+}
+
+/* The section head is VISIBLE again (it was sr-only for one revision, when the
+   archive still carried its own PROJECT ARCHIVE heading). The current blueprint
+   has exactly one title block - "All Projects." with the valley line under it -
+   and then the filter tabs, so the archive's own heading is the one that goes.
+   See `.pj-inline .ar-head { display: none }` below. */
+/* The toggle rides on the heading's own row: heading left, Map|List right,
+   the valley line under both. Grid rather than flex so the <p> can keep its
+   own row while the toggle stays pinned to the h2's line. */
+#projects > .section-head {
+  margin-bottom: .2rem;
+  display: grid; grid-template-columns: 1fr auto;
+  align-items: end; column-gap: 1.2rem;
+}
+#projects > .section-head h2 { grid-column: 1; grid-row: 1; }
+#projects > .section-head p  { grid-column: 1 / -1; grid-row: 2; }
+#projects-view-toggle { grid-column: 2; grid-row: 1; display: flex; justify-self: end; }
+/* No paper sheet behind this heading: the painted plate is meant to read
+   through it. An opaque halo here was tried and rejected - it reads as a white
+   box laid over the art no matter how far the edges are feathered. */
+@media (max-width: 760px) {
+  #projects > .section-head { grid-template-columns: 1fr; }
+  #projects > .section-head p { grid-row: 2; }
+  #projects-view-toggle { grid-column: 1; grid-row: 3; justify-self: start; margin-top: .8rem; }
+}
+
+/* The inline toggle mounts in the visible section heading above; this shell
+   now contains only the filter tabs and archive stage. */
+.pj-inline { display: block; margin-top: 1rem; position: relative; }
+/* No lane to reserve any more: the toggle moved onto the section heading's own
+   row, so the tab row owns its full width and starts on the SAME left edge as
+   the heading and the card deck. Three near-miss left edges was what read as
+   untidy - not any one of them on its own. */
+.pj-inline .pj-tabs { padding: 0 0 1rem; }
+.pj-inline .pj-stage { overflow: visible; }
+.pj-inline .ar-root { padding: 0; max-width: none; }
+/* The archive keeps its own "PROJECT ARCHIVE" heading inline. Task 8 hid it,
+   reasoning the section's own head already titles the block - but the blueprint
+   shows BOTH: "All Projects" over the whole section, then "PROJECT ARCHIVE"
+   over the deck itself. They are different labels for different things. */
+/* The archive's own heading is GONE inline: the section head above it already
+   says "All Projects" with the valley line, and the current blueprint shows one
+   title block then straight into the filter tabs. The "click a project" hint
+   goes with it - the rows carry their own "View project ->" button, so the
+   nudge was telling the reader something the row already shows. */
+.pj-inline .ar-head { display: none; }
+
+.pj-bar {
+  display: flex; align-items: flex-start; gap: 1rem;
+  padding: 1.1rem 1.4rem .55rem;
+}
+.pj-titlewrap { flex: 1 1 auto; min-width: 0; position: relative; z-index: 1; }
+.pj-title {
+  font-family: var(--display); font-weight: 600;
+  font-size: clamp(1.55rem, 3.2vw, 2.6rem);
+  margin: 0; line-height: 1.04;
+}
+.pj-sub { margin: .28rem 0 0; color: var(--ink-2); font-size: .95rem; }
+
+/* the segmented control: a dark-wood pill with a brass hairline */
+.pj-toggle {
+  display: inline-flex; flex: 0 0 auto; padding: 4px; border-radius: 999px;
+  background: linear-gradient(#4b3927, #33261a);
+  border: 1px solid #21180f;
+  box-shadow: inset 0 1px 0 rgba(255, 226, 170, .22), var(--shadow);
+  position: relative; z-index: 1;
+}
+.pj-toggle button {
+  appearance: none; border: 0; cursor: pointer;
+  font-family: var(--label); font-size: .84rem; line-height: 1;
+  padding: .5rem 1.05rem; border-radius: 999px;
+  background: transparent; color: #dcc9a9;
+  transition: background .2s ease, color .2s ease;
+  display: inline-flex; align-items: center; gap: .4rem;
+}
+.pj-toggle button.on {
+  background: linear-gradient(#f4e7ca, #e3d1aa); color: #33261a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .35);
+}
+.pj-toggle button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* LIST MODE: the toggle sits on a cream page, not on the valley, so it inverts
+   - a light shell with a DARK active pill, which is what the blueprint's
+   archive panel shows. Stated explicitly for both states rather than letting
+   the map-mode rules leak through: measured on the rendered page, the active
+   and inactive text colours came out swapped against the backgrounds, so the
+   active label was cream-on-cream and the inactive one dark-on-dark. Both
+   buttons are now pinned in both modes, which is also simply what the two
+   panels of the blueprint ask for. */
+.pj-root.is-list .pj-toggle {
+  background: linear-gradient(var(--paper-bright), var(--paper));
+  border: 1px solid color-mix(in srgb, var(--paper-ink) 30%, transparent);
+  box-shadow: 0 1px 3px rgba(60, 50, 30, .16);
+}
+.pj-root.is-list .pj-toggle button { color: var(--paper-ink); background: transparent; }
+.pj-root.is-list .pj-toggle button.on {
+  background: linear-gradient(#4b3927, #33261a); color: #f2e6cc;
+  box-shadow: inset 0 1px 0 rgba(255, 226, 170, .25);
+}
+.pj-toggle svg { flex: 0 0 auto; }
+
+
+/* filter tabs: cream parchment, torn top edge, active one raised. Four corner
+   pins read as brass tacks holding the tab down - a radial dot in each
+   corner, invisible until you look for it. */
+.pj-tabs { display: flex; flex-wrap: wrap; gap: .4rem; padding: 0 1.4rem .75rem; position: relative; z-index: 1; }
+.pj-tab {
+  appearance: none; cursor: pointer; position: relative;
+  font-family: var(--label); font-size: .82rem; line-height: 1;
+  padding: .42rem .85rem; color: var(--paper-ink);
+  /* Nail-heads, not dots. The first pass drew 2.5px discs at 55% opacity and
+     6px in, which at this size read as grey specks scattered on the plaque
+     rather than as hardware. A nail is SMALL, DARK and DOMED: a 1.7px dark
+     core with a bright rim on its upper edge, tucked 5px into the corner. The
+     rim is what makes it read as metal catching light instead of a hole. */
+  background:
+    radial-gradient(circle 1.7px at 5px 5px, rgba(64, 47, 20, .88) 58%, rgba(255, 244, 214, .55) 62%, transparent 100%),
+    radial-gradient(circle 1.7px at calc(100% - 5px) 5px, rgba(64, 47, 20, .88) 58%, rgba(255, 244, 214, .55) 62%, transparent 100%),
+    radial-gradient(circle 1.7px at 5px calc(100% - 5px), rgba(64, 47, 20, .88) 58%, rgba(255, 244, 214, .55) 62%, transparent 100%),
+    radial-gradient(circle 1.7px at calc(100% - 5px) calc(100% - 5px), rgba(64, 47, 20, .88) 58%, rgba(255, 244, 214, .55) 62%, transparent 100%),
+    linear-gradient(var(--paper-bright), var(--paper));
+  border: 1px solid color-mix(in srgb, var(--paper-ink) 28%, transparent);
+  border-radius: 9px 9px 3px 3px;
+  box-shadow: 0 1px 2px rgba(60, 50, 30, .16);
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease, color .16s ease;
+}
+.pj-tab.on {
+  transform: translateY(-2px);
+  color: #f1e3c7;
+  /* on dark wood the nail inverts: a brass head with a dark seating shadow */
+  background:
+    radial-gradient(circle 1.7px at 5px 5px, rgba(232, 200, 132, .9) 58%, rgba(20, 13, 5, .5) 62%, transparent 100%),
+    radial-gradient(circle 1.7px at calc(100% - 5px) 5px, rgba(232, 200, 132, .9) 58%, rgba(20, 13, 5, .5) 62%, transparent 100%),
+    radial-gradient(circle 1.7px at 5px calc(100% - 5px), rgba(232, 200, 132, .9) 58%, rgba(20, 13, 5, .5) 62%, transparent 100%),
+    radial-gradient(circle 1.7px at calc(100% - 5px) calc(100% - 5px), rgba(232, 200, 132, .9) 58%, rgba(20, 13, 5, .5) 62%, transparent 100%),
+    linear-gradient(#4b3927, #33261a);
+  border-color: #21180f;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 226, 170, .2);
+}
+.pj-tab .pj-n { background: color-mix(in srgb, var(--paper-ink) 14%, transparent); }
+.pj-tab.on .pj-n { background: rgba(255, 226, 170, .2); }
+.pj-tab.is-empty { opacity: .45; cursor: default; transform: none; }
+.pj-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pj-n {
+  display: inline-block; margin-left: .4rem; padding: 0 .38rem;
+  border-radius: 999px; font-size: .74rem; font-weight: 700;
+}
+
+/* min-height:0 is load-bearing: without it a flex child holding an oversized
+   canvas refuses to shrink and the stage overflows the viewport. */
+.pj-stage { flex: 1 1 auto; min-height: 0; position: relative; overflow: hidden; }
+
+/* ---------- map mode: chrome floats on the valley, no header band --------
+   The blueprint has NO cream band above the map - the title, toggle and
+   tabs sit directly on the painted sky, readable via the parchment wash and
+   the scene halo text-shadow the valley already uses for its own labels at
+   night. List mode is unaffected: it keeps the flow layout and cream ground
+   the shell always had. */
+.pj-root.is-map .pj-bar {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 6;
+  pointer-events: none;
+}
+.pj-root.is-map .pj-bar > * { pointer-events: auto; }
+/* hard left, and clear of the subtitle by 5px rather than butting against it.
+   left:0 with the row's own padding supplying the inset, so the tabs line up
+   with the title's left edge instead of sitting a further 1.4rem in. */
+.pj-root.is-map .pj-tabs {
+  position: absolute; top: calc(5.6rem + 5px); left: 0; z-index: 6;
+  padding: 0 1.4rem; pointer-events: none;
+}
+.pj-root.is-map .pj-tabs > * { pointer-events: auto; }
+.pj-root.is-map .pj-stage { position: absolute; inset: 0; }
+/* the legend (js/worldmap.js buildLegend()) sits at top:14px by default,
+   which the floating tabs row now sits directly on top of. Push it below
+   the tabs instead of below a header band that no longer exists. */
+.pj-root.is-map .wm-legend { top: 8.7rem; }
+/* COLLAPSED, it is a single 38px button and does not belong under the tabs at
+   all - it rides the left edge at the vertical middle of the map, where it is
+   reachable without covering the valley or colliding with the header. */
+.pj-root.is-map .wm-legend.is-collapsed ~ .wm-legend-btn {
+  top: 50%; left: 14px; transform: translateY(-50%);
+}
+/* the parchment wash: just enough to read the title + tabs over a bright sky,
+   sized to that corner only so the rest of the valley stays uncovered. Tuned
+   by rendering (Step 8), not guessed. */
+.pj-root.is-map .pj-bar::before {
+  content: ""; position: absolute; left: 0; top: 0; z-index: -1;
+  width: min(44rem, 66%); height: 11rem;
+  /* A SHEET, not a wash. The first attempt was a full-width radial gradient
+     and it was invisible against a pale sky - the blueprint's header sits on a
+     torn parchment corner with a definite body, so the paper has to be opaque
+     where the text is and only feather as it leaves. The mask does the tearing:
+     solid out to 52%, then a soft fall to nothing by 88%, anchored at the
+     top-left corner so the fade runs down-and-right into the valley. */
+  background: var(--bg);
+  -webkit-mask-image: radial-gradient(125% 115% at 0% 0%,
+    #000 52%, rgba(0, 0, 0, .82) 68%, transparent 88%);
+  mask-image: radial-gradient(125% 115% at 0% 0%,
+    #000 52%, rgba(0, 0, 0, .82) 68%, transparent 88%);
+  pointer-events: none;
+}
+.pj-root.is-map .pj-title,
+.pj-root.is-map .pj-sub {
+  text-shadow: 0 1px 2px var(--scene-halo), 0 0 8px var(--scene-halo);
+}
+/* the toggle rides the RIGHT end of the title row, matching where the inline
+   list view puts it, so the control does not move when you switch views */
+.pj-root.is-map .pj-toggle {
+  position: absolute; right: 1.4rem; top: 1.1rem;
+}
+
+@media (max-width: 760px) {
+  .pj-root.is-map .pj-tabs { top: 7.4rem; left: 1rem; }
+  .pj-root.is-map .pj-bar::before { inset: -1rem -1rem -9rem -1rem; }
+  .pj-root.is-map .wm-legend { top: 10.5rem; }
+}
+
+.pj-wipe { animation: pj-in .45s ease both; }
+@keyframes pj-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .pj-wipe { animation: none; } }
+
+@media (max-width: 760px) {
+  .pj-bar { flex-wrap: wrap; gap: .6rem; padding: .9rem 1rem .5rem; }
+  .pj-titlewrap { flex: 1 0 100%; }
+  .pj-tabs { padding: 0 1rem .6rem; }
+}
+
+/* ===== Project detail scroll — two-page panel (js/proj-scroll.js) =========
+   Built standalone before either the Map or List view (Tasks 5/6), so both
+   can just call it. Page 1 is photo + tools + three info tiles, page 2 is
+   the case study, the mounted exhibit and the links row. overflow-y lives
+   on .pjs-pg, never on .pjs-scroll itself, so the border-image never
+   scrolls away from its own content. */
+
+.pjs-backdrop {
+  position: fixed; inset: 0; z-index: 95; display: grid; place-items: center;
+  background: rgba(20, 16, 8, .6); padding: 1.2rem;
+}
+
+.pjs-scroll {
+  position: relative; display: flex; flex-direction: column;
+  /* ONE panel size for every project. Sized by content, the scroll grew and
+     shrank with each project's write-up, so paging or opening a second
+     project made the whole panel jump. .pjs-pg already scrolls, so a fixed
+     box costs nothing: a long case study scrolls inside a steady frame. */
+  /* LONGER, not taller: a scroll unrolls sideways, so the extra room goes
+     into width. It is also what lets page 2 hold two columns. */
+  width: min(1240px, 94vw); height: min(620px, 88vh);
+  max-width: min(1240px, 94vw); max-height: 88vh;
+  /* border-WIDTH must match the border-image's slash widths below. Without it
+     the border box falls back to `medium` (~3px) while the art still PAINTS
+     96px of rolled edge, so the content box starts underneath the roll and
+     every line of text runs across it. border-image-width paints; border-width
+     is what actually reserves the space. */
+  border-style: solid;
+  border-width: 10px 22px 10px 96px;
+  border-image: url("../assets/projects/scroll.webp") 8 19 8 87 fill / 10px 22px 10px 96px / 0 stretch;
+  /* Ink PINNED, not themed - same reason .ja-panel pins its own: the scroll is
+     a PHOTOGRAPH of parchment and cannot follow the theme, so in dark mode a
+     themed --paper-ink turns pale and dissolves into the paper.
+     --pjs-label is a deep amber rather than --accent (#E8A200): the accent is
+     tuned for dark chrome, and on tan paper it sits within a hair of the
+     paper's own tone - which is what made every heading read as blurred. */
+  --pjs-ink: #3a3021;
+  --pjs-label: #8a4a08;
+  color: var(--pjs-ink);
+}
+
+.pjs-x {
+  position: absolute; top: 10px; right: 22px; z-index: 2;
+  appearance: none; border: 0; background: none; cursor: pointer;
+  font-size: 1.6rem; line-height: 1; color: var(--pjs-ink);
+}
+.pjs-x:hover { color: var(--pjs-label); }
+.pjs-x:focus-visible { outline: 2px solid var(--pjs-label); outline-offset: 2px; }
+
+.pjs-pg { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 1.6rem 2rem 1.4rem; }
+/* The default scrollbar is a grey system block sitting on painted parchment.
+   This makes it a thin ink rail instead: transparent track, rounded thumb in
+   the panel's own ink, held off the edge by a transparent border so it reads
+   as part of the paper. Firefox gets the same two colours via scrollbar-color. */
+/* Firefox ONLY. Chrome now supports scrollbar-width/scrollbar-color too, and
+   setting them there SUPERSEDES the ::-webkit-scrollbar rules below - you get
+   a tinted CLASSIC scrollbar complete with stepper arrows, which is the pair
+   of grey triangles this was meant to remove. Measured on the rendered panel:
+   ::-webkit-scrollbar-button { display: none } cannot take them away, because
+   the webkit pseudo-elements are not the ones drawing. */
+@supports not selector(::-webkit-scrollbar) {
+  .pjs-pg { scrollbar-width: thin; scrollbar-color: rgba(58, 48, 33, .38) transparent; }
+}
+.pjs-pg::-webkit-scrollbar { width: 11px; }
+.pjs-pg::-webkit-scrollbar-track { background: transparent; }
+/* styling the scrollbar at all makes Chrome draw its stepper arrows, which
+   land as two grey triangles on the paper - measured on the rendered panel */
+.pjs-pg::-webkit-scrollbar-button,
+.pjs-pg::-webkit-scrollbar-button:single-button,
+.pjs-pg::-webkit-scrollbar-button:vertical:start:decrement,
+.pjs-pg::-webkit-scrollbar-button:vertical:end:increment {
+  display: none; width: 0; height: 0; background: none;
+}
+.pjs-pg::-webkit-scrollbar-thumb {
+  background: rgba(58, 48, 33, .34); border-radius: 99px;
+  border: 3px solid transparent; background-clip: padding-box;
+}
+.pjs-pg::-webkit-scrollbar-thumb:hover { background: rgba(58, 48, 33, .58); background-clip: padding-box; }
+
+.pjs-kicker { display: flex; align-items: center; gap: .6rem; margin: 0 0 .3rem; }
+.pjs-cat {
+  font-family: var(--label); font-size: .75rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--pjs-label); font-weight: 700;
+}
+.pjs-title {
+  font-family: var(--display); font-weight: 600; font-size: clamp(1.5rem, 3vw, 2.2rem);
+  line-height: 1.1; margin: 0 0 .35rem;
+}
+/* no opacity: fading ink on a busy paper texture is exactly what reads as
+   blurred - a slightly lighter ink says "secondary" without the haze */
+.pjs-sub { margin: 0 0 1.1rem; color: color-mix(in srgb, var(--pjs-ink) 88%, transparent); font-size: .98rem; }
+
+/* Page 1 is TWO COLUMNS - text left, framed image right - which is what keeps
+   it inside the panel. Stacked, the image took the full width and pushed the
+   tools and tiles below the fold, so a scroll meant to be read at a glance
+   grew its own scrollbar. `align-items: start` stops the image stretching to
+   the text column's height. */
+.pjs-pg1 {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 38%);
+  gap: 1.6rem; align-items: start;
+}
+.pjs-col { min-width: 0; }
+@media (max-width: 760px) {
+  /* one column, image first - a 38% frame on a phone is a postage stamp */
+  .pjs-pg1 { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+  .pjs-shot { order: -1; }
+  /* full width now, so the same 200px would be a letterbox strip */
+  .pjs-shot img { height: 160px; }
+}
+
+.pjs-shot {
+  display: block; margin: 0; padding: 12px;
+  /* same pairing as .pjs-scroll: paint width and layout width must agree, or
+     the brass corners overlap the screenshot they are framing */
+  border-style: solid;
+  border-width: 20px 21px 21px 21px;
+  border-image: url("../assets/projects/frame-gold.webp") 55 57 58 57 fill / 20px 21px 21px 21px / 0 stretch;
+}
+/* Fixed frame, contained picture. The box is the same size on every project so
+   the panel does not reshape itself around each screenshot, and the shot is
+   CONTAINED inside it - shrunk until it fits, never zoomed and cropped the way
+   the old 4:3 `cover` did. Leftover space shows the frame's own paper. */
+.pjs-shot img {
+  display: block; width: 100%; height: 200px;
+  object-fit: contain; border-radius: 2px;
+}
+
+.pjs-tools h4 {
+  font-family: var(--label); font-size: .72rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--pjs-label); margin: 0 0 .5rem;
+}
+.pjs-toolrow { display: flex; flex-wrap: wrap; gap: .45rem; margin-bottom: 1.3rem; }
+
+.pjs-tiles {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem;
+  border-top: 1px solid color-mix(in srgb, var(--pjs-ink) 30%, transparent);
+  padding-top: 1rem;
+}
+.pjs-tile { display: flex; flex-direction: column; gap: .25rem; text-align: center; }
+.pjs-tile-k {
+  font-family: var(--label); font-size: .66rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--pjs-label); font-weight: 700;
+}
+.pjs-tile-v { font-size: .88rem; color: var(--pjs-ink); line-height: 1.35; }
+
+.pjs-case { font-size: .95rem; color: var(--pjs-ink); margin: 0 0 1rem; }
+.pjs-case b {
+  display: block; font-family: var(--label); font-size: .72rem; letter-spacing: .12em;
+  color: var(--pjs-label); margin-bottom: .2rem;
+}
+/* Page 2's two columns - write-up left, exhibit right. The grid lives on an
+   inner wrapper, NEVER on .pjs-pg2 itself: page() hides a page with the
+   `hidden` attribute, and a display rule on that element would out-specify
+   [hidden] and paint both pages at once. */
+/* 3:4 - the write-up reads fine in a narrower measure, and the exhibit is the
+   thing you came to play, so the extra width goes to it. */
+.pjs-two {
+  display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 4fr);
+  gap: 1.8rem; align-items: start;
+}
+.pjs-two.is-single { grid-template-columns: minmax(0, 1fr); }
+.pjs-twocol { min-width: 0; }
+.pjs-pg2 .feature-exhibit { margin: 0 0 1rem; }
+.pjs-pg2 .proj-links { margin-top: .4rem; }
+@media (max-width: 760px) {
+  /* a half-width mini game on a phone is unplayable - stack, text first */
+  .pjs-two { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+}
+
+.pjs-pager {
+  flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+  gap: 1rem; padding: .8rem 0 1.1rem;
+  border-top: 1px solid color-mix(in srgb, var(--pjs-ink) 22%, transparent);
+}
+.pjs-prev, .pjs-next {
+  appearance: none; cursor: pointer; width: 36px; height: 36px; border-radius: 50%;
+  border: 1.5px solid var(--pjs-ink); background: transparent; color: var(--pjs-ink);
+  font-size: 1.1rem; line-height: 1;
+}
+.pjs-prev:hover:not(:disabled), .pjs-next:hover:not(:disabled) {
+  border-color: var(--pjs-label); color: var(--pjs-label);
+}
+.pjs-prev:disabled, .pjs-next:disabled { opacity: .35; cursor: default; }
+.pjs-prev:focus-visible, .pjs-next:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pjs-count { font-family: var(--label); font-size: .8rem; color: var(--paper-ink); opacity: .8; }
+
+@media (max-width: 760px) {
+  .pjs-pg { padding: 1.3rem 1.2rem 1.1rem; }
+  .pjs-tiles { grid-template-columns: 1fr; text-align: left; gap: .6rem; }
+}
+
+/* ===== All Projects destination — List view: the archive deck (js/archive.js)
+   A row of parchment cards with brass corners, paged left/right, under a
+   wooden signpost. Mounted into the .pj-stage of whichever .pj-root.is-list
+   holds it - since Task 8 that is normally .pj-inline, the copy that lives in
+   the #projects section. No header band of its own: the shell's bar and tabs
+   sit above it in normal flow. */
+
+.ar-root { padding: 0 1.4rem 2rem; max-width: 1200px; margin: 0 auto; }
+
+/* heading left, hint right, toggle pinned above the hint by .pj-inline .pj-bar.
+   The right padding reserves the toggle's lane so a long heading can never run
+   underneath it. */
+.ar-head {
+  padding: .3rem 0 1.3rem; display: flex; align-items: flex-start;
+  gap: 1.2rem; padding-right: 15rem;
+}
+.ar-htext { flex: 1 1 auto; min-width: 0; }
+.ar-hint {
+  flex: 0 0 auto; display: flex; align-items: center; gap: .45rem;
+  margin: 2.6rem 0 0 auto; color: var(--ink-2);
+  font-family: var(--label); font-size: .74rem; line-height: 1.35;
+}
+.ar-hint svg { width: 42px; height: 24px; flex: 0 0 auto; opacity: .8; }
+@media (max-width: 900px) {
+  .ar-head { padding-right: 0; flex-wrap: wrap; }
+  .ar-hint { display: none; }   /* the toggle drops below; the nudge is desktop polish */
+}
+.ar-h {
+  font-family: var(--display); font-weight: 600;
+  font-size: clamp(1.3rem, 2.4vw, 1.8rem); margin: 0;
+}
+.ar-head .ar-sub { margin: .3rem 0 0; color: var(--ink-2); font-size: .92rem; }
+
+/* Block, not flex: the arrows were in flow and pushed the deck 58px right of
+   the heading and the tabs, which is where the section's three different left
+   edges came from. They are absolute now - vertically centred on the deck and
+   sitting in the margin beside it - so .ar-cards spans the full column. */
+.ar-deck { display: block; position: relative; }
+
+/* The painted pager. One master (art-source/ui/button-green-arrow.png, built
+   to assets/projects/pager-arrow.webp) drawn pointing RIGHT; .ar-prev mirrors
+   it with scaleX(-1). The chevron, the brass rim and the drop shadow are all
+   in the art, so this element draws no border, no background and no glyph of
+   its own - the button's own text stays in the DOM for its accessible name
+   but is painted out.
+   The flip rides on --flip rather than being written into .ar-prev's rule,
+   because `transform` is also what centres these (translateY(-50%)) and what
+   the hover and press states animate. Every one of those states has to carry
+   the mirror, or the left arrow snaps round to point right mid-hover. */
+.ar-prev, .ar-next {
+  --flip: 1;
+  /* --ty carries the vertical centring for the same reason --flip carries the
+     mirror: hover and press animate `transform`, so every state has to restate
+     both. Beside the deck --ty is -50%; under it, 0. */
+  --ty: 0%;
+  position: absolute; bottom: 0; top: auto;
+  transform: translateY(var(--ty)) scaleX(var(--flip));
+  appearance: none; cursor: pointer; z-index: 2; padding: 0;
+  /* 73x78 master, kept at its own aspect so the disc stays round */
+  width: 48px; height: 51px;
+  border: 0; border-radius: 0; box-shadow: none; background: transparent
+    url("../assets/projects/pager-arrow.webp") center / 100% 100% no-repeat;
+  font-size: 0; color: transparent; line-height: 0;
+  transition: transform .18s ease, filter .18s ease;
+}
+.ar-prev { --flip: -1; }
+
+/* WHERE THEY GO. The cards keep their full width at every size - the deck is
+   never narrowed to make room - so the only question is whether the margin
+   beside it can hold a 48px button.
+   .section is max-width 1200 with 1.4rem padding, so the deck is 1155.2px and
+   the margin either side is (100vw - 1155.2) / 2. A button needs that margin
+   to be at least 12 (inset) + 48 (button) + 6 (gap) = 66px, which happens at
+   1287px and up. MEASURED below that: 51px of margin at 1258 and 22px at 1078
+   and 878 - which is why the old width-based rule tucked them inward and put
+   28px of button on top of every card.
+   Under 1287 there is no honest horizontal answer, so the pager drops BELOW
+   the deck and centres instead. Vertical room is cheap; horizontal is not. */
+.ar-deck { padding-bottom: 4.4rem; }
+.ar-prev { left: calc(50% - 3.6rem); right: auto; }
+.ar-next { right: calc(50% - 3.6rem); left: auto; }
+
+@media (min-width: 1287px) {
+  /* out at the plate's own edge, 12px in from the viewport - "most left" and
+     "most right" literally, with the whole card column between them */
+  .ar-deck { padding-bottom: 0; }
+  .ar-prev, .ar-next { top: 50%; bottom: auto; --ty: -50%; }
+  .ar-prev { left: calc(589.6px - 50vw); right: auto; }
+  .ar-next { right: calc(589.6px - 50vw); left: auto; }
+}
+/* lifts off the page towards the reader, and catches the light */
+.ar-prev:hover:not(:disabled), .ar-next:hover:not(:disabled) {
+  transform: translateY(calc(var(--ty) - 2px)) scaleX(var(--flip)) scale(1.05);
+  filter: brightness(1.07) drop-shadow(0 5px 10px rgba(40, 34, 16, .35));
+}
+/* pressed back down into the page */
+.ar-prev:active:not(:disabled), .ar-next:active:not(:disabled) {
+  transform: translateY(var(--ty)) scaleX(var(--flip)) scale(.94);
+  filter: brightness(.94);
+}
+/* an end of the deck, not a half-legible button: the stone goes cold rather
+   than merely faint, so it reads as unavailable at a glance */
+.ar-prev:disabled, .ar-next:disabled {
+  cursor: default; filter: grayscale(.7) brightness(1.06); opacity: .5;
+}
+.ar-prev:focus-visible, .ar-next:focus-visible { outline: 2px solid #8a4a08; outline-offset: 3px; }
+
+/* One row per line at every width (Task 12). It stays a GRID rather than
+   becoming a plain block because the layout probe reads
+   gridTemplateColumns on this element and because a future multi-up
+   variant should be a track change, not a display change. minmax(0, 1fr),
+   not a bare 1fr: a bare 1fr floors at min-content, so a long title would
+   widen the deck and break the equal-width rule the probe checks for. */
+.ar-cards {
+  flex: 1 1 auto; min-width: 0;
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  gap: .85rem;
+}
+
+/* thumb | text | rule | (stack chips + arrow).
+   The last track used to hold a meta index that repeated the kicker's category
+   and status word for word; it now holds what the project is BUILT FROM, which
+   is the one thing nothing else in the row says. */
+.ar-row {
+  display: grid;
+  /* four columns, not five - the tool-icon column was cut. The text column
+     takes the space it freed. */
+  grid-template-columns: 180px minmax(0, 1fr) 1px auto;
+  align-items: center; gap: 1.15rem;
+  cursor: pointer; position: relative; min-width: 0;
+  /* overflow: hidden is load-bearing, not tidiness: it is what keeps the
+     absolutely-positioned vine inside the row's own box instead of letting it
+     hang into the page and open a horizontal scrollbar. */
+  overflow: hidden;
+  /* the extra right padding is the vine's lane - without it the "View project"
+     button sits under the leaves */
+  padding: .8rem 3rem .8rem 1.1rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--paper-ink) 24%, transparent);
+  background: linear-gradient(var(--paper-bright), var(--paper));
+  box-shadow: 0 1px 3px rgba(60, 50, 30, .14);
+  transition: transform .18s, box-shadow .18s, filter .18s;
+}
+.ar-row:hover {
+  transform: translateY(-2px); filter: brightness(1.02);
+  box-shadow: 0 5px 14px rgba(60, 50, 30, .22);
+}
+.ar-row:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* the colour plate, in a thin frame. The box is a fixed size so a row of
+   differently-shaped pictures still reads as a grid, but the picture inside
+   is CONTAINED, not cropped: it shrinks until the whole shot fits and the
+   paper shows through the leftover margin. Screenshots are the point of these
+   plates, and cover was zooming into a corner of them. */
+.ar-shot {
+  width: 180px; height: 100px; border-radius: 7px; overflow: hidden;
+  border: 2px solid color-mix(in srgb, var(--paper-ink) 32%, transparent);
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px rgba(255, 246, 220, .5);
+}
+.ar-shot img {
+  display: block; width: 100%; height: 100%;
+  object-fit: contain; object-position: center;
+}
+
+.ar-text { min-width: 0; }
+.ar-kick { display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; }
+.ar-cat {
+  font-family: var(--label); font-size: .66rem; letter-spacing: .1em;
+  text-transform: uppercase; font-weight: 700;
+  color: color-mix(in srgb, var(--paper-ink) 62%, transparent);
+}
+/* the year moved out of the deleted meta column into the kicker, where it is
+   stated once and reads as a date rather than as a third coloured label */
+.ar-year {
+  font-family: var(--label); font-size: .7rem;
+  color: color-mix(in srgb, var(--paper-ink) 55%, transparent);
+}
+.ar-title {
+  font-family: var(--display); font-weight: 600; font-size: 1.12rem;
+  line-height: 1.2; margin: .35rem 0 .25rem; color: var(--paper-ink);
+}
+.ar-row .ar-sub {
+  margin: 0; font-size: .84rem; line-height: 1.4;
+  color: var(--paper-ink); opacity: .85;
+  /* TWO lines here, not the card's three: the row is wide, so two lines carry
+     more words than the old card's three did, and a fixed clamp is what keeps
+     four rows the same height. */
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ar-tools { display: flex; align-items: flex-start; gap: 1rem; }
+.ar-tool {
+  display: flex; flex-direction: column; align-items: center; gap: .3rem;
+  width: 62px; text-align: center;
+}
+/* multiply, so the card master's own parchment ground disappears into the
+   row's parchment. The icons are cut from the toolbox CARDS, which are painted
+   plaques - crop the frame off (the builder does) and you still have a square
+   of paper behind the logo, and four pale squares in a line read as unloaded
+   images. Blending is safer than keying the paper out: a colour key would eat
+   the cream in the logos themselves (the Java cup, the Unity mark). */
+.ar-tool img { display: block; width: 32px; height: 32px; mix-blend-mode: multiply; }
+.ar-tlabel {
+  font-family: var(--label); font-size: .6rem; line-height: 1.2;
+  color: var(--paper-ink); opacity: .78;
+  /* the label is the stack string verbatim, and some run long
+     ("OpenXR + XR Interaction Toolkit") - two lines then clip, so one verbose
+     entry cannot make the icon column taller than the picture beside it */
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* The row's right-hand column: the stack, as text. Wrapped in rows rather than
+   stacked one per line, so a four-entry stack is two tidy lines no taller than
+   the picture beside it instead of a thin ladder. */
+.ar-tools.is-chips {
+  flex-direction: row; flex-wrap: wrap; align-items: center;
+  justify-content: flex-start; gap: .3rem .35rem; width: 15rem;
+}
+.ar-toolchip {
+  font-family: var(--label); font-size: .68rem; line-height: 1.5;
+  padding: .18rem .55rem; white-space: nowrap; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis;
+  border-radius: 99px; color: color-mix(in srgb, var(--paper-ink) 88%, transparent);
+  background: color-mix(in srgb, var(--paper-ink) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--paper-ink) 20%, transparent);
+}
+
+.ar-rule {
+  width: 1px; align-self: stretch;
+  border-left: 1px dashed color-mix(in srgb, var(--paper-ink) 32%, transparent);
+}
+
+.ar-end { display: flex; align-items: center; gap: 1rem; }
+
+/* The affordance without the button. The row itself has always been the click
+   target, so all this has to do is point - and it points with the deck's own
+   wooden signpost (archive.js signpostSVG), moved in here from the foot of the
+   deck where one sign stood for four rows. It leans towards the project on
+   hover, the way the signpost's own hover used to nudge Suu. */
+.ar-go {
+  position: relative; flex: 0 0 auto; width: 4.6rem; line-height: 0;
+  transition: transform .2s ease, filter .2s ease;
+}
+.ar-go svg { display: block; width: 100%; height: auto; }
+/* the site's label face, inherited rather than named inside the SVG so the
+   lettering can never drift from the rest of the row's small caps */
+.ar-go text { font-family: var(--label); letter-spacing: .02em; }
+/* Suu stands at the foot of the post, on the shadow, overlapping the row's
+   left neighbour by a hair - she is 34% of a 4.6rem sign, so she reads as a
+   small companion rather than a second icon competing with the board. */
+.ar-suu {
+  position: absolute; left: -6%; bottom: -4%; width: 34%; line-height: 0;
+  transition: transform .2s ease;
+}
+.ar-row:hover .ar-go {
+  transform: translateX(.22rem);
+  filter: brightness(1.04) drop-shadow(0 2px 4px rgba(60, 50, 30, .28));
+}
+/* she hops when the row lights up */
+.ar-row:hover .ar-suu { transform: translateY(-3px); }
+
+/* DECORATION, so it must not occupy layout - the same contract the card's
+   sepia watermark had. In flow it would take a track's worth of width from
+   the text column; absolute keeps the look and returns the width. .ar-row is
+   position: relative already, so it anchors here and not to the page. */
+/* Sized by WIDTH, and deliberately taller than the row it sits in.
+   vine.webp is a 25x220 leaf column - fitting it to the row's HEIGHT (the
+   first attempt) squeezed it to ~13px across and it rendered as a green
+   smear rather than leaves, so the width is what is pinned and the overflow
+   is clipped by .ar-row. Clipping a continuous ivy run is invisible; the
+   alternative, upscaling a 22px-native crop, is not. top: 0 rather than a
+   negative offset because the probe asserts the vine stays inside the row -
+   one that hangs out opens a horizontal scrollbar on a phone. */
+/* Pulled to the very edge and quietened: at right:6px it cut across the card's
+   rounded corner and read as a clipped smear rather than ivy on the margin. */
+.ar-vine {
+  position: absolute; top: 0; right: 0; width: 26px; height: auto;
+  opacity: .38; pointer-events: none; z-index: 0;
+}
+.ar-row > *:not(.ar-vine) { position: relative; z-index: 1; }
+
+/* right-hand end of the shell's filter-tab row - archive.js hangs it there */
+/* on the filter tabs' own baseline, not floating above it: same control
+   height, centred against the row it shares */
+.ar-sortwrap {
+  margin-left: auto; display: flex; align-items: center; gap: .45rem;
+  align-self: center;
+}
+.ar-sortlbl { font-family: var(--label); font-size: .8rem; color: var(--ink-2); }
+.ar-sort {
+  font-family: var(--label); font-size: .8rem; color: var(--paper-ink);
+  padding: .42rem 1.6rem .42rem .6rem; border-radius: 7px;
+  background: linear-gradient(var(--paper-bright), var(--paper));
+  border: 1px solid color-mix(in srgb, var(--paper-ink) 30%, transparent);
+  box-shadow: 0 1px 2px rgba(60, 50, 30, .16);
+  /* the native arrow is drawn in the OS chrome colour and reads as a grey UI
+     part dropped onto parchment; this one is painted in the row's own ink */
+  appearance: none; -webkit-appearance: none; cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%),
+    linear-gradient(var(--paper-bright), var(--paper));
+  background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%, 0 0;
+  background-size: 5px 5px, 5px 5px, 100% 100%;
+  background-repeat: no-repeat;
+}
+.ar-sort:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* No .ar-foot here any more: the "More projects this way" signpost was purely
+   decorative (the deck has always paged on the ‹/› buttons, never on it) and
+   it said "more projects" directly above the row arrows that open them. The
+   row's own -> is the affordance. .gm-suu stays - .grid-more still uses it. */
+
+/* Below 900px the five tracks cannot survive side by side - the icon column
+   alone wants ~280px. The row folds into two bands instead: thumb + text on
+   the first, icons and meta side by side beneath it, and the button on its own
+   full-width line. The rule turns from a vertical divider into a horizontal
+   one, which is the same mark doing the same job in the other axis. */
+@media (max-width: 900px) {
+  .ar-row {
+    grid-template-columns: 140px minmax(0, 1fr);
+    align-items: start; gap: .8rem 1rem;
+  }
+  .ar-shot { width: 140px; height: 88px; }
+  .ar-tools { grid-column: 1 / -1; gap: .8rem; flex-wrap: wrap; }
+  .ar-rule {
+    grid-column: 1 / -1; width: auto; height: 1px; align-self: auto;
+    border-left: 0;
+    border-top: 1px dashed color-mix(in srgb, var(--paper-ink) 32%, transparent);
+  }
+  .ar-end {
+    grid-column: 1 / -1; flex-wrap: wrap; align-items: flex-start;
+    justify-content: space-between; gap: .8rem;
+  }
+  .ar-go { flex: 0 0 auto; }
+  /* narrower and quieter: the folded row is three times as tall, so the same
+     ivy run reads as a hard green edge rather than a flourish */
+  .ar-vine { width: 24px; opacity: .3; }
+}
+
+/* Under ~620px there is no honest two-up: a 140px picture leaves about 150px
+   for the text, which broke "Delivery Order Intelligence Pipeline" into one
+   word per line and pushed it out of its own column. The picture goes
+   full-width above the text instead. */
+@media (max-width: 620px) {
+  .ar-row { grid-template-columns: minmax(0, 1fr); gap: .7rem; }
+  .ar-shot { width: 100%; height: 130px; }
+  .ar-tools { justify-content: flex-start; gap: .6rem 1rem; }
+  .ar-tool { width: 58px; }
+  .ar-end { flex-direction: column; align-items: stretch; gap: .7rem; }
+  /* .22 washed out to a grey smudge in the 390 render - at this width the
+     strip is narrow enough that it needs the contrast to read as leaves */
+  .ar-vine { width: 22px; opacity: .38; }
+  /* the vine lane shrinks with it - a 3rem reserve costs 8% of a 390px row */
+  .ar-row { padding-right: 1.6rem; }
+}
+@media (max-width: 760px) {
+  .ar-root { padding: 0 1rem 1.6rem; }
+  /* four rows stack tall; centering the arrows on that whole stack strands
+     them in the middle of the second row, so pin them to the top instead -
+     level with the first row, where a "next page" control reads naturally on
+     a phone. */
+  .ar-deck { gap: .6rem; align-items: flex-start; }
+  .ar-prev, .ar-next { width: 38px; height: 41px; }
+  .ar-sortwrap { margin-left: 0; }
+}
+
+/* ============================================================
+   .dw- - the Document Mill workbench (js/do-workbench.js).
+   The INTERIOR of the DO exhibit: the queue, the document, the
+   checks and the four pipeline stages, all on one desk. The
+   .ft- namespace above is the exterior that frames it.
+
+   Insets into the painted console and pipeline panel are
+   MEASURED off the built WebP, not eyeballed:
+     console screen  x 14.9-85.0%   y 21.4-70.6%
+     console slot                   y 79.5-89.8%
+     panel wells     x 11.8-94.1%   y 16.3% + n*19.27%, h 13.7%
+   Re-measure if either master is regenerated.
+   ============================================================ */
+.dw {
+  --dw-ink: #2f2718;
+  --dw-paper: #f4e8cd;
+  --dw-brass: #c8a24e;
+  --dw-ok: #3f9c5a;
+  --dw-warn: #d08a1c;
+  --dw-bad: #b5462f;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.35fr 2.4fr 3.3fr 1.4fr .65fr;
+  gap: clamp(.55rem, 1.15vw, 1.15rem);
+  align-items: start;
+  padding: 0 0 3.2rem;
+  font-size: clamp(.7rem, .86vw, .95rem);
+  color: var(--dw-ink);
+  padding-bottom: 7rem;
+}
+.dw-live, .dw-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.dw-zone-title {
+  margin: 0 0 .35rem;
+  text-align: center;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1em;
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: #f2e2bd;
+  text-shadow: 0 1px 2px rgba(24, 14, 4, .8);
+  background: linear-gradient(#8a6a34, #6d5127);
+  border: 1px solid #4e3a1c;
+  border-radius: .3rem;
+  padding: .2rem .3rem;
+}
+
+/* ---- zone 1: incoming orders ---- */
+.dw-crate { position: relative; }
+.dw-batch-summary {
+  margin: 0 0 .35rem;
+  color: #f5e8c8;
+  font-size: .78em;
+  line-height: 1.2;
+  text-align: center;
+  letter-spacing: .01em;
+}
+/* aspect-ratio matches the built crate (360x878), so the painted box is drawn
+   at its own proportions instead of being squeezed to whatever height seven
+   rows happen to need. The 6-slot art this replaced was being squashed 28%.
+   The rows then space out to fill, which also lands them near the painted
+   slots - pitch 10.9% of the art's height, first slot at 7.1%. */
+.dw-inbox {
+  position: relative;
+  min-height: 252px;
+  box-sizing: border-box;
+  background: url("../assets/selected/web/inbox.webp") center bottom / 100% 100% no-repeat;
+  border-radius: .3rem;
+}
+.dw-files {
+  list-style: none;
+  margin: 0;
+  /* Seven rows remain visible in the painted inbox: 7 x 36px plus compact
+     gaps and padding, with heading/summary/action above and below it. */
+  min-height: 252px;
+  box-sizing: border-box;
+  padding: 3.5% 4% 12%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: .22rem;
+  transform-origin: center;
+}
+.dw-file {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: .1rem;
+  min-height: 36px;
+  box-sizing: border-box;
+  padding: .2rem .34rem;
+  border-radius: .18rem;
+  background: linear-gradient(#f6ecd2, #e3d3ae);
+  border: 1px solid #b49a68;
+  border-left: 3px solid #9c7f4c;
+  box-shadow: 0 1px 2px rgba(40, 26, 8, .35);
+}
+.dw-file.is-out { opacity: .5; filter: saturate(.5); }
+.dw-file.is-focus {
+  border-left-color: #c8a24e;
+  border-width: 2px 1px 2px 6px;
+  /* Emphasis stays inside the painted slot so every tab keeps one left edge. */
+  transform: none;
+  box-shadow: 0 0 0 2px rgba(200, 162, 78, .85), 0 2px 5px rgba(40, 26, 8, .4);
+  z-index: 2;
+}
+.dw-pick-hit {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  margin-right: -10px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.dw-file-pick {
+  width: 22px;
+  height: 22px;
+  accent-color: #7a5c2a;
+  margin: 0;
+  translate: -3px 0;
+  cursor: pointer;
+}
+.dw-file-open {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-inline-size: 36px;
+  min-block-size: 36px;
+  display: flex;
+  align-items: center;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 1.12em;
+  color: var(--dw-ink);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dw-file-open:focus-visible { outline: 2px solid #7a5c2a; outline-offset: 2px; }
+.dw-badge:empty { display: none; }
+.dw-badge {
+  flex: none;
+  min-width: 1.05em;
+  height: 1.05em;
+  border-radius: 50%;
+  background: var(--dw-bad);
+  color: #fff;
+  font-size: .78em;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+.dw-stamp { display: none; }
+.dw-stamp.is-on {
+  display: block;
+  position: absolute;
+  right: .1rem;
+  bottom: -.42rem;
+  font-size: .7em;
+  font-weight: 700;
+  letter-spacing: .06em;
+  padding: 0 .2rem;
+  border: 1px solid currentColor;
+  border-radius: .1rem;
+  background: rgba(255, 252, 244, .9);
+  transform: rotate(-3deg);
+}
+.dw-stamp.good { color: #3f9c5a; }
+.dw-stamp.warn { color: #d08a1c; }
+.dw-stamp.bad { color: #b5462f; }
+.dw-add {
+  width: 100%;
+  margin-top: .4rem;
+  padding: .3rem .4rem;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  color: #f4e6c4;
+  background: linear-gradient(#7d5f2d, #5d4520);
+  border: 1px solid #433015;
+  border-radius: .28rem;
+  box-shadow: 0 2px 3px rgba(30, 18, 6, .4);
+}
+.dw-add:hover { filter: brightness(1.12); }
+.dw-add:disabled { opacity: .55; cursor: default; }
+
+/* ---- zone 2: the document viewer ---- */
+.dw-viewer { position: relative; }
+.dw-glass {
+  position: relative;
+  border-radius: .3rem;
+  aspect-ratio: 520 / 626;
+}
+.dw-viewer-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: url("../assets/selected/web/clipboard.svg") center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+/* the drawn paper of clipboard.svg: x 8%-92%, y 12%-96% of the board */
+.dw-paper-space {
+  position: absolute;
+  inset: 12% 8% 4%;
+  z-index: 1;
+}
+.dw-paper {
+  height: 100%;
+  overflow: hidden;
+  padding: .4rem .45rem;
+  border-radius: .08rem;
+  /* no fill: the order prints straight onto the painted clipboard paper */
+  background: transparent;
+  font-size: clamp(.625rem, .65vw, .78rem);
+  line-height: 1.1;
+}
+.dw-doc-head { display: flex; justify-content: space-between; align-items: baseline; }
+.dw-doc-head h4 {
+  margin: 0 0 .3rem;
+  font-size: .98em;
+  letter-spacing: .05em;
+  font-family: Georgia, "Times New Roman", serif;
+  margin-bottom: .2rem;
+}
+.dw-doc-ref { flex: none; margin-left: .35rem; font-size: .8em; color: #7b6a49; white-space: nowrap; }
+.dw-doc-meta {
+  display: grid;
+  grid-template-columns: 4.8em minmax(0, 1fr);
+  gap: 0 .35rem;
+  margin: 0 0 .16rem;
+  font-size: .74em;
+  margin-bottom: .16rem;
+}
+.dw-doc-meta dt { color: #7b6a49; }
+.dw-doc-meta dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.dw-doc-items { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: .64em; }
+.dw-doc-items th, .dw-doc-items td {
+  border: 1px solid #c3b087;
+  padding: .03rem .15rem;
+  text-align: left;
+}
+.dw-doc-items th { background: #e6d8b5; font-weight: 700; }
+.dw-doc-items td:nth-child(3), .dw-doc-items td:nth-child(4) { text-align: right; }
+.dw-doc-foot { display: flex; align-items: flex-end; gap: .3rem; margin-top: .16rem; }
+.dw-doc-stamp {
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: .1rem .3rem;
+  color: var(--dw-bad);
+  border: 1.5px solid currentColor;
+  border-radius: .16rem;
+  transform: rotate(-7deg);
+  opacity: .82;
+  font-size: .72em;
+  line-height: 1.15;
+}
+.dw-doc-stamp b { letter-spacing: .05em; }
+.dw-chop {
+  flex: 1 1 auto;
+  position: relative;
+  min-height: 2.2rem;
+  border: 1px dashed #9c8a63;
+  border-radius: .1rem;
+  display: grid;
+  place-items: center;
+  align-content: end;
+  padding-bottom: .1rem;
+}
+.dw-chop small { font-size: .62em; color: #8b7a58; }
+.dw-chop-ring {
+  position: absolute;
+  top: .18rem;
+  left: 50%;
+  transform: translateX(-50%) rotate(-6deg);
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 2px solid #b5462f;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: .5em;
+  color: #b5462f;
+  opacity: .85;
+}
+.dw-chop-sign {
+  position: absolute;
+  top: 1.25rem;
+  left: 18%;
+  width: 55%;
+  height: .6rem;
+  border-bottom: 1.6px solid #2b3d55;
+  border-radius: 0 0 60% 40%;
+  transform: rotate(-3deg);
+}
+.dw-chop-ring.is-faint, .dw-chop-sign.is-faint { opacity: .22; }
+.dw-mo {
+  margin-top: .25rem;
+  text-align: center;
+  font-size: .74em;
+  font-weight: 700;
+  color: #b5462f;
+  transform: rotate(-1.6deg);
+}
+/* ---- zone 3: the inspection console ---- */
+.dw-console {
+  position: relative;
+  aspect-ratio: 760 / 677;
+  background: url("../assets/selected/web/console.webp") center / 100% 100% no-repeat;
+}
+.dw-screen {
+  position: absolute;
+  left: 14.9%;
+  right: 15%;
+  top: 21.4%;
+  bottom: 29.4%;
+  display: flex;
+  flex-direction: column;
+  gap: .08rem;
+  padding: .25rem .32rem;
+  overflow: hidden;
+  color: #cfe8cf;
+  font-size: .95em;
+  padding-bottom: .28rem;
+}
+.dw-screen-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  letter-spacing: .03em;
+  color: #e6d8a8;
+  border-bottom: 1px solid rgba(198, 232, 198, .28);
+  padding-bottom: .08rem;
+  font-size: .86em;
+  white-space: nowrap;
+  padding-right: 5.6rem;
+}
+.dw-lamps { display: flex; gap: .22rem; }
+.dw-lamp {
+  width: .4rem;
+  height: .4rem;
+  border-radius: 50%;
+  background: #4a3a22;
+  box-shadow: inset 0 0 2px rgba(0, 0, 0, .7);
+}
+.dw-console.is-busy .dw-lamp--busy { background: #e2913a; box-shadow: 0 0 5px #e2913a; }
+.dw-console.is-done .dw-lamp--ok { background: #3f9c5a; box-shadow: 0 0 5px #3f9c5a; }
+.dw-console.is-review .dw-lamp--busy { background: #d08a1c; box-shadow: 0 0 5px #d08a1c; }
+.dw-boot {
+  font-family: ui-monospace, Consolas, "Courier New", monospace;
+  font-size: .68em;
+  color: #f0dda8;
+  min-height: 1.1em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: absolute;
+  left: 17%;
+  right: 17%;
+  bottom: .2rem;
+  top: 71.4%;
+  height: 7.6%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 1px 1px rgba(30, 18, 4, .8);
+}
+.dw-boot.is-warn { color: #ffd479; }
+.dw-checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: .06rem;
+  flex: 1 1 auto;
+  align-content: start;
+  overflow: hidden;
+}
+.dw-check {
+  display: grid;
+  grid-template-columns: .85rem 1fr .72rem;
+  align-items: center;
+  gap: .18rem;
+  padding: .02rem .14rem;
+  border-radius: .16rem;
+  background: rgba(12, 34, 22, .5);
+  border: 0;
+}
+.dw-check-icon { width: .85rem; height: .85rem; background: center / contain no-repeat; }
+.dw-check-icon--read { background-image: url("../assets/selected/web/check-read.webp"); }
+.dw-check-icon--chop { background-image: url("../assets/selected/web/check-chop.webp"); }
+.dw-check-icon--duplicate {
+  background-image: url("../assets/selected/web/check-duplicate.webp");
+}
+.dw-check-icon--override {
+  background-image: url("../assets/selected/web/check-override.webp");
+}
+.dw-check-text { min-width: 0; display: flex; flex-direction: column; }
+.dw-check-text b { font-size: .9em; color: #eaf3e0; }
+.dw-check-text small { font-size: .7em; color: #9dc39d; line-height: 1.1; display: none; }
+.dw-check-mark {
+  width: .72rem;
+  height: .72rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: .54rem;
+  font-weight: 700;
+  color: #fff;
+}
+.dw-check.is-pass .dw-check-mark { background: #3f9c5a; }
+.dw-check.is-pass .dw-check-mark::before { content: "\2713"; }
+.dw-check.is-warn .dw-check-mark { background: #d08a1c; }
+.dw-check.is-warn .dw-check-mark::before { content: "!"; }
+.dw-check.is-fail .dw-check-mark { background: #b5462f; }
+.dw-check.is-fail .dw-check-mark::before { content: "\2715"; }
+.dw-check.is-info .dw-check-mark { background: #4a7fa8; }
+.dw-check.is-info .dw-check-mark::before { content: "i"; font-style: italic; }
+.dw-check.is-skip { opacity: .58; }
+.dw-check.is-skip .dw-check-mark { background: #55604f; }
+.dw-check.is-skip .dw-check-mark::before { content: "\2013"; }
+.dw-check.is-neutral { opacity: .58; }
+.dw-check.is-neutral .dw-check-mark {
+  background: transparent;
+  border: 1px solid #748274;
+}
+.dw-meter {
+  display: flex;
+  align-items: center;
+  gap: .22rem;
+  font-size: .74em;
+  border-top: 0;
+  padding-top: 0;
+  position: absolute;
+  top: .2rem;
+  right: .32rem;
+  width: 5.6rem;
+}
+.dw-meter-label { color: #9dc39d; font-size: .95em; letter-spacing: .04em; }
+.dw-meter-bar {
+  flex: 1 1 auto;
+  height: .28rem;
+  border-radius: .17rem;
+  overflow: hidden;
+  background: rgba(10, 30, 18, .8);
+  box-shadow: inset 0 0 2px rgba(0, 0, 0, .8);
+}
+.dw-meter-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: #3f9c5a;
+  transition: width .3s ease;
+}
+.dw-meter.is-partial .dw-meter-bar i { background: #d08a1c; }
+.dw-meter-val { color: #eaf3e0; font-variant-numeric: tabular-nums; }
+.dw-run {
+  position: absolute;
+  left: 19%;
+  right: 19%;
+  top: 79.5%;
+  height: 10.3%;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  font-size: max(14px, 1em);
+  color: #eafbe8;
+  letter-spacing: .02em;
+  background: linear-gradient(#3f9c5a, #24693c);
+  border: 1px solid #1c5a34;
+  border-radius: .22rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 2px 4px rgba(10, 26, 14, .5);
+}
+.dw-run:hover { filter: brightness(1.13); }
+.dw-run:disabled { filter: grayscale(.6) brightness(.8); cursor: default; }
+.dw-run:focus-visible { outline: 2px solid #eafbe8; outline-offset: 2px; }
+.dw-rules-tab {
+  position: absolute;
+  right: -9.5%;
+  top: 27%;
+  width: 16%;
+  aspect-ratio: 140 / 258;
+  cursor: pointer;
+  padding: 0;
+  background: url("../assets/selected/web/rules-tab.webp") center / 100% 100% no-repeat;
+  border: 0;
+  font-size: 0;
+  color: transparent;
+  min-width: 2.25rem;
+}
+.dw-rules-tab:focus-visible { outline: 2px solid #c8a24e; outline-offset: 2px; }
+
+/* ---- the rules panel ---- */
+.dw-rules {
+  position: absolute;
+  z-index: 9;
+  left: 12%;
+  right: 12%;
+  top: 8%;
+  padding: 1rem 1.2rem;
+  border-radius: .4rem;
+  background: linear-gradient(#f6ecd2, #e6d5ac);
+  border: 1px solid #a98d5c;
+  box-shadow: 0 12px 26px rgba(28, 16, 6, .45);
+}
+.dw-rules h4 {
+  margin: 0 0 .5rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35em;
+}
+.dw-rules ol {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: .34rem;
+  font-size: 1.02em;
+  line-height: 1.35;
+}
+.dw-rules-close, .dw-report-close, .dw-fix {
+  margin-top: .7rem;
+  padding: .28rem .7rem;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  color: #f4e6c4;
+  background: linear-gradient(#7d5f2d, #5d4520);
+  border: 1px solid #433015;
+  border-radius: .28rem;
+}
+.dw-rules-close:hover, .dw-report-close:hover, .dw-fix:hover { filter: brightness(1.13); }
+.dw > [inert] { pointer-events: none; user-select: none; }
+
+/* ---- zone 5: the intelligence pipeline ---- */
+.dw-pipe {
+  position: relative;
+  aspect-ratio: 560 / 1019;
+  background: url("../assets/selected/web/pipeline-panel.webp") center / 100% 100% no-repeat;
+}
+.dw-pipe-title {
+  position: absolute;
+  left: 11.8%;
+  right: 5.9%;
+  top: 6.4%;
+  height: 8.5%;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: .82em;
+  font-weight: 700;
+  color: #3b2a12;
+  text-shadow: 0 1px 0 rgba(255, 240, 200, .5);
+  white-space: nowrap;
+  letter-spacing: 0;
+}
+.dw-stage {
+  position: absolute;
+  left: 11.8%;
+  right: 5.9%;
+  height: 13.7%;
+  display: grid;
+  grid-template-columns: 1rem 1fr;
+  grid-template-rows: auto auto;
+  align-content: center;
+  align-items: center;
+  column-gap: .25rem;
+  row-gap: .08rem;
+  padding: 0 .2rem 0 .55rem;
+  border-radius: .2rem;
+  color: #c9b98f;
+  transition: color .25s ease, background-color .25s ease;
+}
+.dw-stage:nth-of-type(1) { top: 16.3%; }
+.dw-stage:nth-of-type(2) { top: 35.5%; }
+.dw-stage:nth-of-type(3) { top: 54.9%; }
+.dw-stage:nth-of-type(4) { top: 74.1%; }
+.dw-stage-no {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  border: 1px solid currentColor;
+  font-size: .68em;
+  grid-row: 1 / span 2;
+}
+.dw-stage-text { min-width: 0; display: flex; flex-direction: column; line-height: 1.15; }
+.dw-stage-text b { font-family: Georgia, "Times New Roman", serif; font-size: 1em; }
+.dw-stage-text small { font-size: .75em; opacity: .86; line-height: 1.08; }
+.dw-stage-state {
+  grid-column: 2;
+  font-size: .67em;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  opacity: .72;
+}
+.dw-stage.is-live .dw-stage-state::before { content: "\25B6  "; }
+.dw-stage.is-done .dw-stage-state::before { content: "\2713  "; }
+.dw-stage.is-done { color: #9fd0a8; }
+.dw-stage.is-live {
+  color: #d8f5df;
+  background: rgba(46, 132, 96, .42);
+  box-shadow: inset 0 0 0 1px rgba(126, 224, 170, .6), 0 0 10px rgba(70, 190, 130, .35);
+}
+
+/* ---- zone 6: gauge and status ---- */
+.dw-gauge {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  margin-left: calc(clamp(.45rem, .75vw, .8rem) * -1);
+}
+.dw-gauge::before {
+  content: "";
+  width: 100%;
+  aspect-ratio: 200 / 326;
+  background: url("../assets/selected/web/lever.webp") center / contain no-repeat;
+}
+.dw-needle {
+  position: absolute;
+  left: 50%;
+  top: 27%;
+  width: 2px;
+  height: 15%;
+  background: #b5462f;
+  border-radius: 1px;
+  transform-origin: 50% 100%;
+  transform: rotate(-120deg);
+  transition: transform .5s ease;
+}
+.dw-plate {
+  position: absolute;
+  left: 12%;
+  top: 57%;
+  width: 76%;
+  height: 30%;
+  display: grid;
+  justify-items: center;
+  align-items: start;
+  padding: 11% 0 0;
+  text-align: center;
+  background: none;
+  border: 0;
+  color: #2b1b0c;
+  text-shadow: 0 1px rgba(255, 226, 154, .65);
+}
+.dw-plate-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+.dw-plate-val { font-family: Georgia, "Times New Roman", serif; font-size: .7em; }
+.dw-leds { position: absolute; inset: 0; pointer-events: none; }
+/* measured from lever.webp: centres x 35% / 52% / 69.5%, y 84.2%; lamp incl. green rim ~12% wide */
+.dw-leds i {
+  position: absolute;
+  top: 84.2%;
+  width: 13%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #3d3120;
+}
+.dw-leds i:nth-child(1) { left: 35%; }
+.dw-leds i:nth-child(2) { left: 52%; }
+.dw-leds i:nth-child(3) { left: 69.5%; }
+.dw-gauge.is-busy .dw-leds i { background: #e2913a; box-shadow: 0 0 4px #e2913a; }
+.dw-gauge.is-ok .dw-leds i { background: #3f9c5a; box-shadow: 0 0 4px #3f9c5a; }
+.dw-gauge.is-warn .dw-leds i { background: #d08a1c; box-shadow: 0 0 4px #d08a1c; }
+
+/* ---- the sticky note ---- */
+.dw-sticky {
+  position: absolute;
+  z-index: 7;
+  left: 60%;
+  bottom: 0;
+  width: 12rem;
+  aspect-ratio: 190 / 135;
+  cursor: pointer;
+  padding: 0;
+  display: block;
+  place-content: center;
+  gap: .1rem;
+  text-align: center;
+  background: url("../assets/selected/web/desk-note.webp") center / 100% 100% no-repeat;
+  border: 0;
+  font: inherit;
+  color: #4a3413;
+  transform: rotate(-4deg);
+  filter: drop-shadow(0 4px 6px rgba(35, 22, 8, .4));
+}
+.dw-sticky:hover { transform: rotate(-4deg) translateY(-2px); }
+.dw-sticky:focus-visible { outline: 2px solid #b5462f; outline-offset: 2px; }
+.dw-sticky-text {
+  font-size: .75em;
+  font-weight: 700;
+  line-height: 1.15;
+  left: 39.5%;
+  width: 34%;
+  top: 30%;
+  text-align: center;
+}
+.dw-sticky-count {
+  justify-self: center;
+  min-width: 1.2em;
+  height: 1.2em;
+  border-radius: 50%;
+  background: #b5462f;
+  color: #fff;
+  font-size: .62em;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  left: 56.5%;
+  top: 63%;
+  transform: translateX(-50%);
+}
+.dw-sticky.is-clear .dw-sticky-count { background: #3f9c5a; }
+
+/* ---- the run report ---- */
+.dw-report {
+  position: absolute;
+  z-index: 10;
+  left: 6%;
+  right: 6%;
+  top: 4%;
+  max-height: 92%;
+  overflow: auto;
+  padding: .9rem 1.1rem 1.1rem;
+  border-radius: .4rem;
+  background: linear-gradient(#f8efd9, #ecdcb6);
+  border: 1px solid #a98d5c;
+  box-shadow: 0 16px 34px rgba(28, 16, 6, .5);
+  font-size: 1.02em;
+}
+.dw-report:focus { outline: none; }
+.dw-report-head { display: grid; gap: .1rem; margin-bottom: .6rem; }
+.dw-report-head h4 { margin: 0; font: 700 1.05em/1.25 Georgia, "Times New Roman", serif; }
+.dw-report-head span { font-size: .84em; color: #7b6a49; }
+.dw-report-head .dw-report-close { justify-self: start; margin-top: .35rem; }
+.dw-report h5 {
+  margin: .7rem 0 .3rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.05em;
+  letter-spacing: .02em;
+}
+.dw-sheet { width: 100%; border-collapse: collapse; font-size: .88em; }
+.dw-sheet th, .dw-sheet td {
+  border: 1px solid #c3b087;
+  padding: .16rem .3rem;
+  text-align: left;
+}
+.dw-sheet th { background: #e6d8b5; }
+.dw-sheet tr.warn td { background: rgba(208, 138, 28, .16); }
+.dw-sheet tr.bad td { background: rgba(181, 70, 47, .14); }
+.dw-fix { margin: 0; padding: .12rem .4rem; font-size: .9em; }
+.dw-verdict { margin: .7rem 0 0; font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dw-needle, .dw-meter-bar i, .dw-stage { transition: none; }
+}
+
+/* The console is the interactive heart and needs more room than the blueprint
+   gives it: four check rows, a heading and the field meter do not fit the
+   screen inset at the blueprint's share of the desk. */
+
+.dw-crate, .dw-viewer, .dw-console, .dw-pipe, .dw-gauge { z-index: 1; }
+
+/* The painted frame is a BORDER with an open middle - the valley shows
+   through it - and no desk asset exists in the library. The blueprint's
+   wooden desktop is this fill, sized to sit inside the frame's opening. */
+.dw::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: -3% -3.5% -7%;
+  border-radius: .45rem;
+  background:
+    linear-gradient(180deg, rgba(96, 65, 34, .95), rgba(64, 42, 21, .97)),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, .05) 0 2px, transparent 2px 26px);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 222, 165, .16),
+    inset 0 -22px 34px rgba(0, 0, 0, .34),
+    0 6px 18px rgba(24, 14, 5, .35);
+  display: none;
+}
+
+/* the delivery order has to fit the clipboard without clipping */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.dw-check.is-current .dw-check-text small { display: block; }
+
+
+/* the viewer lost too much to the console and clipped the item table again */
+
+
+/* captions were clipped at the well's right edge */
+
+
+
+/* the note text ran past the painted paper, not just past the button box */
+
+
+/* ---- give the check rows the whole middle of the screen ----
+   The screen is a fixed 49% of the console art's height. A heading, a status
+   line, four rows and a meter stacked in flow left three rows' worth of room.
+   The meter moves into the header bar and the status line pins to the floor,
+   so the rows get the entire middle band instead of competing for it. */
+/* NOT position:relative - .dw-screen is absolutely pinned to the console's
+   measured screen inset, and relative here silently unpins it: the screen
+   then sizes to its content and the check rows spill over the brass. */
+
+
+
+
+
+
+
+
+/* the item table was still losing its last row */
+
+
+
+/* ---- final sizing, from measurement ----
+   MEASURED: the check rows needed 107px in a 73px slot, the delivery order
+   overflowed its paper by 66px, and the band was 864 wide inside a 959 desk -
+   95px of desk was going unused. Widening the band and re-cutting the shares
+   pays for both. Shares are the measured minimums: a console wide enough that
+   its screen (49% of the art's height) holds four rows, and a clipboard tall
+   enough for the whole document. */
+
+
+/* every 3px of row padding is 12px across four rows, and 12px is the margin
+   between four rows fitting and the fourth being clipped */
+
+/* backstop: a long note must never spill over the status line below it */
+
+
+
+/* the status line was clipping the fourth row's verdict badge */
+
+/* the title was riding the panel's top ornament rather than sitting in the
+   brass bar below it */
+
+/* the painted tab is unreadable below about 3rem wide */
+
+
+/* the band lives inside the opening: 79.7% of the stage, less a margin of
+   painted wood on each side */
+
+
+/* the brief had collapsed to 262px at this width - every fact wrapped to
+   three lines and the tool tags stacked one per row */
+
+
+/* ---- the screen holds check rows and nothing else ----
+   MEASURED on the 1280x800 screen: console 195 wide -> 174 tall -> a screen of
+   137x85. Heading + status line were 39px of that 85, so four rows had 46px.
+   The status line moves onto the brass band between the screen (ends 70.6%)
+   and the button slot (starts 79.5%), which is dead art otherwise. */
+
+
+
+/* the icon is what sets a row's height, and four rows must fit 66px */
+
+
+
+
+/* ---- the desk overlaps the frame's inner rim ----
+   MEASURED at 1280: holding the band strictly inside the frame's painted
+   opening (79.7% of the stage) left 649px for five zones, which gave a 130x81
+   console screen - four check rows need ~95. The desk and the band both widen
+   to ~90% of the stage: the frame's OUTER decoration (the lamp, the books, the
+   pens, the gears) is at the outer 9% and stays fully visible; only the inner
+   rim goes under the desk, which is what a desk surface does to a rim anyway. */
+
+
+
+
+/* the clipboard is narrower here than the 1600 pass assumed */
+
+
+
+
+/* ---- the sticky note's text belongs on the PAPER, not on the button box ----
+   MEASURED off desk-note.webp: the painted paper covers only x 36%-82% of the
+   art (the rest is transparent margin and the pin) and y 0%-84%. Centring the
+   label on the button therefore ran it straight off the paper's right edge,
+   which is exactly how it looked on screen. These percentages are the paper. */
+
+.dw-sticky-text, .dw-sticky-count { position: absolute; }
+
+
+
+/* The note's usable paper is the largest fully-opaque rectangle inside the
+   art, COMPUTED not guessed: x 38.9%-74.2%, y 26.7%-80.0%. Anything wider
+   runs off the paper's right edge; anything higher collides with the pin.
+   The note is enlarged because 35% of a small button is not enough width for
+   a three-line label and the exception count, and that count is the thing
+   that sends a visitor to the report. */
+
+/* ---- Task 3: wide, shallow Document Mill exterior ----
+   The frame source is 3:2 artwork. Its four edge slices retain that artwork's
+   proportions while allowing the live workbench to occupy a wide desk. */
+.ft-scene--mill {
+  width: min(96vw, 108rem);
+  margin-inline: calc((100% - min(96vw, 108rem)) / 2);
+  grid-template-columns: minmax(0, 3.25fr) minmax(17rem, 1fr);
+  gap: clamp(1rem, 1.8vw, 2rem);
+  /* Stage and brief have independent content heights. Stretching both to the
+     same row produced the long, empty parchment shown in the wide layout. */
+  align-items: start;
+}
+.ft-stage--mill {
+  /* Its min-height and 2.45:1 art ratio otherwise become a transferred grid
+     minimum that overlaps the parchment at 1280px and 1600px. The scene grid,
+     not the artwork's intrinsic ratio, owns the column width. */
+  min-width: 0;
+  width: 100%;
+  min-height: clamp(25rem, 34vw, 33rem);
+  aspect-ratio: 2.45 / 1;
+  padding: 0;
+  border-radius: .75rem;
+  background: transparent;
+}
+.ft-stage--mill::before {
+  display: none;
+}
+/* Retain the established workbench bounds so saved editor coordinates and
+   the surrounding project brief remain stable after removing the art frame. */
+.ft-stage--mill::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  inset: 10% 11% 11% 9.5%;
+  pointer-events: none;
+  border-radius: .45rem;
+  background:
+    linear-gradient(180deg, rgba(104, 72, 38, .97), rgba(61, 39, 20, .98)),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, .06) 0 2px, transparent 2px 30px);
+  box-shadow: inset 0 2px rgba(255, 226, 171, .16), inset 0 -2rem 3rem rgba(0, 0, 0, .28);
+}
+.ft-stage--mill .feature-exhibit {
+  position: absolute;
+  z-index: 5;
+  /* Keep controls inside the measured painted opening, beneath the z4 frame. */
+  inset: 10% 11% 11% 9.5%;
+  width: auto;
+  display: grid;
+  align-items: stretch;
+}
+/* The shared journal shell would otherwise paint a cream card over the desk
+   and impose its 240px minimum on the shallow frame opening. */
+.ft-stage--mill .feature-exhibit .demo {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  min-height: 0;
+}
+.ft-stage--mill .feature-exhibit .demo::before { display: none; }
+
+/* The semantic stand-down note is mounted by exhibits.js at compact desktop
+   widths; fit it inside the measured stage opening rather than allowing the
+   shared card margins to impose overflow. */
+.ft-stage--mill .feature-exhibit .demo-desktop-only {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.ft-stage--mill .feature-exhibit .demo-desktop-only .ddo-body p {
+  line-height: 1.35;
+}
+
+/* ---- Task 9: compact DO project brief ---- */
+.ft-scene--mill .ft-brief {
+  /* keep the copy inside the parchment's painted inner rule; the title
+     starts below the top ornament */
+  padding: clamp(3.5rem, 4.8vw, 4.4rem) clamp(1.1rem, 1.6vw, 1.8rem) clamp(1.7rem, 2.4vw, 2.3rem);
+}
+.ft-scene--mill .ft-brief::before {
+  inset: -.6rem -.7rem;
+  filter: drop-shadow(0 10px 14px rgba(54, 39, 16, .2));
+}
+.ft-scene--mill .ft-brief h3 {
+  max-width: 15ch;
+  margin-inline: auto;
+  font-size: clamp(1.3rem, 1.85vw, 1.8rem);
+  line-height: 1.05;
+  text-wrap: balance;
+  letter-spacing: -.04em;
+  margin-bottom: 1rem;
+}
+.ft-scene--mill .ft-brief .f-sub {
+  margin-top: 1rem;
+  font-size: .9rem;
+  line-height: 1.42;
+}
+.ft-scene--mill .ft-facts { margin-top: 1rem; }
+.ft-scene--mill .ft-facts li {
+  padding: .5rem .15rem;
+  gap: .55rem;
+  font-size: .84rem;
+}
+.ft-scene--mill .ft-story { margin-top: 1rem; }
+
+/* The Mill's responsive modes follow the workbench authority below. Keeping
+   them after the legacy phone rules makes the mounting boundary and visual
+   layout agree at every breakpoint. */
+
+/* ---- Task 4: one left-to-right workbench grid ----
+   The workbench owns a single functional row and a short prop strip. Keep
+   these named tracks after the legacy sizing rules so the reading order
+   cannot drift when a later content-specific rule is added. */
+.dw {
+  width: 100%;
+  height: 100%;
+  padding: 1.25rem 1rem 0;
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.35fr)
+    minmax(0, 2fr)
+    minmax(0, 2.47fr)
+    minmax(0, 1.33fr)
+    minmax(0, 1.05fr);
+  /* The queue spans the prop lane: seven 36px rows need 252px before the
+     heading, summary and Add action are counted. */
+  grid-template-rows: minmax(0, 1fr) 9rem;
+  grid-template-areas:
+    "queue viewer console pipeline status"
+    "props props props props props";
+  gap: clamp(.45rem, .75vw, .8rem);
+  align-items: start;
+  font-size: clamp(.75rem, .78vw, .9rem);
+}
+.dw-crate, .dw-viewer, .dw-console, .dw-pipe, .dw-gauge {
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  overflow: visible;
+}
+.dw-crate { grid-area: queue; grid-row: 1 / span 2; }
+.dw-viewer { grid-area: viewer; }
+.dw-console { grid-area: console; }
+.dw-pipe { grid-area: pipeline; }
+.dw-gauge { grid-area: status; }
+
+/* The stage supplies the shared desk surface. The workbench itself stays
+   transparent; only the final track is reserved for non-functional props. */
+.dw::before { display: none; }
+.dw-sticky {
+  grid-area: props;
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  justify-self: end;
+  align-self: end;
+  width: 6rem;
+  height: 4.25rem;
+  aspect-ratio: auto;
+  margin: 0;
+  justify-self: center;
+  align-self: center;
+  transform: rotate(-2deg);
+}
+.dw-sticky:hover { transform: rotate(-2deg); }
+
+/* Non-queue controls keep the 36px minimum hit size. Queue rows intentionally
+   remain compact until Task 5 restructures the seven-slot interaction. */
+.dw-add, .dw-run, .dw-rules-close, .dw-report-close, .dw-fix {
+  min-height: 2.25rem;
+}
+
+/* ---- Task 8: purposeful glossary, exception note, and prop strip ----
+   The tab remains painted, while the button owns a 36px minimum box around
+   that art. Its semantic label stays available to keyboard and touch users. */
+.dw-rules-tab { min-width: 2.25rem; min-height: 2.25rem; }
+
+/* The queue no longer occupies the prop strip. That gives the three scenic
+   objects a real desk edge without letting them cover an order tab. */
+.dw {
+  grid-template-rows: minmax(0, 1fr) 5rem;
+}
+.dw-crate { grid-row: 1; }
+
+/* Keep the only active desk prop at the far edge. The measured opaque paper
+   rectangle is x 38.9%-74.2%, y 26.7%-80.0% of desk-note.webp. */
+.dw-sticky {
+  justify-self: end;
+  width: 7rem;
+  height: 4.95rem;
+  overflow: hidden;
+}
+.dw-sticky:disabled { cursor: default; filter: drop-shadow(0 4px 6px rgba(35, 22, 8, .4)); }
+.dw-sticky-text {
+  left: 39.5%;
+  top: 30%;
+  width: 34%;
+  max-height: 48%;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.dw-sticky-count[hidden] { display: none; }
+
+/* Compact fine-pointer fallback: stack every zone after the desktop authority
+   so the five-column contract cannot leak into a narrow viewport. The stage's
+   existing relative mobile exhibit rule remains the positioning authority. */
+@media (max-width: 760px) {
+  .dw {
+    height: auto;
+    padding: 1rem;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-template-areas:
+      "queue"
+      "viewer"
+      "console"
+      "pipeline"
+      "status"
+      "props";
+  }
+  .dw-crate, .dw-viewer, .dw-console, .dw-pipe, .dw-gauge {
+    max-width: none;
+    overflow: visible;
+  }
+  .dw-crate { grid-row: auto; }
+  .dw-sticky { margin: 0; }
+}
+
+/* ---- Task 10: deliberate Document Mill responsive modes ----
+   The interaction has a minimum usable width. Below 1100px exhibits.js keeps
+   the semantic brief but stands the workbench down, so these scene rules must
+   change the reading order instead of attempting to shrink its five zones. */
+.ft-scene--mill .ft-brief,
+.ft-scene--mill .ft-stage--mill { order: 0; }
+/* The Mill parchment's inset/filter is decorative and otherwise extends its
+   parent scroll box by its shadow. Its controls remain inside padded content. */
+.ft-scene--mill .ft-brief { overflow-x: clip; }
+
+@media (min-width: 1440px) {
+  .ft-scene--mill {
+    width: 100cqw;
+    margin-inline: calc((100% - 100cqw) / 2);
+    grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+    gap: .5rem;
+  }
+  .ft-stage--mill::after,
+  .ft-stage--mill .feature-exhibit { inset-inline: 0; }
+}
+
+/* Blueprint composition at the owner's 1920x1080 review size. The earlier
+   wide rule expanded the live desk across the frame's painted side trim and
+   kept the 37rem safety height used by narrower desktops. That produced a
+   tall 2.42:1 cabinet with an undersized parchment. Restore the artwork's
+   visible opening and let the stage's wide ratio set the shared row height. */
+@media (min-width: 1800px) {
+  .ft-scene--mill { align-items: stretch; }
+  .ft-stage--mill {
+    min-height: 0;
+    aspect-ratio: 2.8 / 1;
+  }
+  .ft-stage--mill::after,
+  .ft-stage--mill .feature-exhibit {
+    inset: 10% 8% 11%;
+  }
+  .ft-scene--mill .ft-brief { align-self: stretch; }
+  .dw { padding: .75rem .75rem 0; }
+  .dw-crate {
+    grid-row: 1 / span 2;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+  }
+  .dw-files {
+    min-height: 0;
+    height: 100%;
+    padding: 2% 4% 5%;
+    gap: 0;
+  }
+  .dw-inbox { min-height: 0; height: 100%; }
+  .dw-stage { height: 14.5%; }
+  .dw-stage-text { min-height: 1.9em; line-height: 1.05; }
+  .dw-stage-text small { font-size: .7em; line-height: 1; }
+}
+
+@media (min-width: 1180px) and (max-width: 1439px) {
+  .ft-scene--mill {
+    grid-template-columns: minmax(0, 3.15fr) minmax(14rem, .92fr);
+    gap: clamp(.75rem, 1.2vw, 1.1rem);
+  }
+  .ft-scene--mill .ft-brief {
+    min-width: 0;
+    padding-inline: clamp(1.1rem, 1.6vw, 1.8rem);
+  }
+  /* Preserve the viewer and console before preserving decorative inner trim. */
+  .ft-stage--mill::after,
+  .ft-stage--mill .feature-exhibit { inset-inline: 1%; }
+  .dw {
+    grid-template-columns:
+      minmax(8.5rem, 1.35fr)
+      minmax(12.5rem, 2fr)
+      minmax(16.5rem, 2.47fr)
+      minmax(8.5rem, 1.33fr)
+      minmax(6.5rem, 1.05fr);
+    gap: clamp(.35rem, .5vw, .55rem);
+  }
+}
+
+@media (min-width: 1100px) and (max-width: 1179px) {
+  .ft-scene--mill {
+    width: min(96vw, 73.75rem);
+    margin-inline: auto;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(1.25rem, 2.5vw, 1.75rem);
+  }
+  /* In the stacked desktop mode the stage owns the full row. Use that width
+     for the live desk, matching the wide-mode treatment, so its readable text
+     does not have to collapse into the frame's narrow historical opening. */
+  .ft-stage--mill::after,
+  .ft-stage--mill .feature-exhibit { inset-inline: 1%; }
+  /* This compact scene is intentionally narrower than the root container;
+     keep its painted plate with it instead of reintroducing full-bleed x. */
+  .ft-scene--mill::before {
+    inset-inline: 0;
+    width: auto;
+    transform: none;
+  }
+  .ft-scene--mill .ft-brief {
+    width: min(100%, 38rem);
+    margin-inline: auto;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1099px) {
+  .ft-scene--mill {
+    width: min(94vw, 48rem);
+    margin-inline: auto;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(1rem, 2.5vw, 1.5rem);
+  }
+  .ft-scene--mill .ft-brief {
+    width: min(100%, 38rem);
+    min-width: 0;
+    margin-inline: auto;
+  }
+  .ft-scene--mill .ft-stage--mill {
+    min-height: 0;
+    aspect-ratio: auto;
+    padding: 0;
+    overflow: hidden;
+    background: none;
+    box-shadow: none;
+  }
+  .ft-stage--mill::before,
+  .ft-stage--mill::after { display: none; }
+  .ft-stage--mill .feature-exhibit {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    display: block;
+  }
+  .ft-stage--mill .feature-exhibit .demo-desktop-only {
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 760px), (pointer: coarse) {
+  .ft-scene--mill {
+    width: auto;
+    margin-inline: 0;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.1rem;
+  }
+  .ft-scene--mill .ft-brief {
+    width: auto;
+    min-width: 0;
+    margin-inline: 0;
+  }
+  .ft-scene--mill .ft-stage--mill {
+    min-height: 0;
+    aspect-ratio: auto;
+    padding: 0;
+    overflow: hidden;
+    background: none;
+    box-shadow: none;
+  }
+  .ft-stage--mill::before,
+  .ft-stage--mill::after { display: none; }
+  .ft-stage--mill .feature-exhibit {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    display: block;
+  }
+  .ft-stage--mill .feature-exhibit .demo-desktop-only {
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+/* Older engines without container query units keep the original full-bleed
+   geometry. Each owner clips only horizontal scenery/pseudo overhang inside
+   its own padded section; interactive controls remain in their content box. */
+@supports not (width: 1cqw) {
+  .hero::before,
+  .ft-scene--castle::before,
+  .ft-scene--mill::before,
+  #projects::before { width: 100vw; }
+  #journey::before,
+  #achievements::before,
+  .tb-stage,
+  .ach-hall { left: calc(50% - 50vw); width: 100vw; }
+  .hero, #selected, #projects, #skills, #journey, #achievements { overflow-x: clip; }
+  @media (min-width: 1440px) {
+    .ft-scene--mill {
+      width: 100vw;
+      margin-inline: calc((100% - 100vw) / 2);
+    }
+  }
+}
+
+/* ---- Task 11: keyboard, empty-batch, and reduced-motion states ---- */
+.dw button:focus-visible,
+.dw input[type="checkbox"]:focus-visible,
+.ft-scene--mill .ft-story:focus-visible {
+  outline: 2px solid #24180b;
+  outline-offset: 2px;
+}
+.dw .dw-add:focus-visible,
+.dw .dw-run:focus-visible,
+.dw .dw-rules-tab:focus-visible,
+.dw .dw-sticky:focus-visible {
+  outline-color: #fff1a8;
+}
+.dw .dw-rules-tab:focus-visible {
+  /* The tab crosses both pale console brass and the dark desk. Two separate
+     2px bands keep one edge visible against either painted surface. */
+  outline-offset: 4px;
+  box-shadow: 0 0 0 2px #24180b;
+}
+.dw-run-hint {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 90.5%;
+  margin: 0;
+  padding: .08rem .2rem;
+  border-radius: .15rem;
+  color: #fff1a8;
+  background: rgba(42, 24, 8, .82);
+  font-size: .68em;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+}
+.dw-run-hint[hidden] { display: none; }
+.dw.is-reduced-motion .dw-needle,
+.dw.is-reduced-motion .dw-meter-bar i,
+.dw.is-reduced-motion .dw-stage { transition: none; }
+
+/* Final QA: seven native 36px queue controls need their own full-height
+   lane. Keep the prop strip beside that lane and inside the painted desk. */
+@media (min-width: 1100px) and (max-width: 1799px) {
+  .ft-stage--mill { min-height: 37rem; }
+  .dw-crate { grid-row: 1 / span 2; }
+  .dw-file { padding-block: 0; }
+  /* The faint scan's override footer needs the last few pixels at 1280px. */
+  .dw-paper { padding-block: .1rem; }
+  /* The painted Rules tab extends past the console into the adjacent lane. */
+  .dw-console { z-index: 2; }
+}
+@media (min-width: 1800px) {
+  .dw-crate { grid-row: 1 / span 2; align-self: stretch; }
+  .dw-file { padding-block: 0; }
+  .dw-paper { padding-block: .1rem; }
+  .dw-console { z-index: 2; }
+}
+@media (min-width: 1180px) and (max-width: 1439px) {
+  .dw-gauge { margin-left: calc(clamp(.35rem, .5vw, .55rem) * -1); }
+}
+
+/* Compact scans wrap more lines than the artwork's aspect ratio allows.
+   Reserve paper height while keeping the clipboard in its assigned track. */
+@media (min-width: 1100px) and (max-width: 1279px) {
+  /* The old 17.5rem floor made the clipboard substantially taller than the
+     console and pipeline. This remains tall enough for every mock document
+     while restoring their shared lower baseline. */
+  .dw-glass { width: 100%; min-height: 15.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dw-needle,
+  .dw-meter-bar i,
+  .dw-stage { transition: none; }
+}
+
+/* ---- 2026-09-17 desk polish: run ledger fills the prop strip ----
+   Row 2 was 5rem of bare wood under the instruments. The ledger takes that
+   row from the viewer column to the gauge column and stretches to the desk's
+   bottom edge. 2026-09-22 (E1): it is a framed instrument like its neighbours
+   - the brass-cornered card from the projects page, a riveted nameplate, ruled
+   paper inside the frame, a stamp for the empty state - and the three props
+   sit on the frame's right end at their painted size. Appended last on
+   purpose: the "Task 10" and "Final QA" blocks above re-declare the same
+   selectors and later rules win. */
+@media (min-width: 1100px) {
+  .dw {
+    grid-template-rows: auto minmax(5rem, 1fr);
+    grid-template-areas:
+      "queue viewer console pipeline status"
+      "queue ledger ledger ledger ledger";
+    align-items: start;
+  }
+  .dw-crate { grid-area: queue; grid-row: 1 / span 2; }
+  .dw-ledger {
+    grid-area: ledger;
+    align-self: stretch;
+    min-height: 0;
+    position: relative;
+    /* the viewer is scaled ~1.2x at runtime (scene-layout viewer.sy) and
+       overflows its row downwards: it sits ON the ledger's top rail, so the
+       ledger stays under it in the stack instead of giving up the height */
+    z-index: 0;
+    margin-top: .35rem;
+    display: flex;
+    flex-direction: column;
+    /* border-WIDTH must equal the border-image slash widths (see .pjs-shot) */
+    border-style: solid;
+    border-width: 16px 17px 17px 17px;
+    border-image: url("../assets/projects/frame-gold.webp") 55 57 58 57 fill / 16px 17px 17px 17px / 0 stretch;
+    padding: 0 .4rem 0;
+    padding-right: 10.5rem;          /* only the sticky lives on the right end */
+    background: none;
+    box-shadow: 0 3px 6px rgba(30, 18, 4, .35);
+    color: #3b2a12;
+    font-size: .8em;
+    overflow: visible;
+  }
+  /* nameplate riveted to the top rail, like the crate's */
+  .dw-ledger .dw-zone-title {
+    position: absolute;
+    top: -1.35rem;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    padding: .1rem .9rem;
+    font-size: .95em;
+    white-space: nowrap;
+    z-index: 2;
+  }
+  /* the narration log shows its latest tick, right of the clipboard that
+     overlaps the frame's left end; earlier ticks stay in the a11y tree */
+  .dw-ledger .dw-progress-log {
+    position: relative;
+    width: auto;
+    height: auto;
+    clip-path: none;
+    white-space: nowrap;
+    margin: 0;
+    padding: 0 .1rem;
+    list-style: none;
+    display: block;
+    text-align: right;
+    color: #7b6a49;
+    font-size: .8em;
+    line-height: 1rem;
+    border-bottom: 1px solid rgba(120, 90, 40, .45);
+  }
+  .dw-ledger .dw-progress-log li:last-child { overflow: hidden; text-overflow: ellipsis; }
+  .dw-ledger .dw-progress-log li:not(:last-child) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  /* ruled paper: one rule per row, drawn on the list so they stay in step */
+  .dw-ledger-rows {
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+    padding: 0 .1rem;
+    list-style: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* two columns of rows: seven orders fit the frame at 1280 without scrolling */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 1rem;
+    align-content: start;
+    background: repeating-linear-gradient(transparent 0 calc(1.35rem - 1px), rgba(120, 90, 40, .22) calc(1.35rem - 1px) 1.35rem);
+  }
+  .dw-ledger-row {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    align-items: baseline;
+    gap: .4rem;
+    height: 1.35rem;
+    line-height: 1.35rem;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .dw-ledger-doc { font-family: ui-monospace, Consolas, "Courier New", monospace; font-weight: 700; }
+  .dw-ledger-stamp {
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    font-size: .8em;
+    letter-spacing: .08em;
+    padding: 0 .3em;
+    border: 1px solid currentColor;
+    border-radius: .15em;
+    transform: rotate(-2deg);
+    color: #3f9c5a;
+  }
+  .dw-ledger-row.is-review .dw-ledger-stamp { color: #b5462f; }
+  .dw-ledger-row.is-deleted .dw-ledger-stamp { color: #7b6a49; }
+  .dw-ledger-remark { color: #5b4a2c; overflow: hidden; text-overflow: ellipsis; }
+  /* empty state: a faint inked stamp, so the blank page reads as intended */
+  .dw-ledger-rows:has(.dw-ledger-empty) { grid-template-columns: 1fr; place-items: center; align-content: center; }
+  .dw-ledger-empty {
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    font-size: 1.15em;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: rgba(120, 90, 40, .42);
+    border: 1.5px solid rgba(120, 90, 40, .38);
+    border-radius: .25rem;
+    padding: 0 .6rem;
+    line-height: 1.15;
+    /* no rotation: at 1920 the rows area is only ~24px tall and a tilted
+       stamp's bounding box overflowed it (measured 2026-09-22) */
+  }
+  .dw-ledger-row { animation: dw-ink .25s ease-out; }
+  @keyframes dw-ink { from { opacity: 0; } to { opacity: 1; } }
+  .dw.is-reduced-motion .dw-ledger-row { animation: none; }
+
+  /* the sticky is pinned over the frame's corner */
+  .dw-sticky {
+    grid-area: ledger; grid-column: 2 / -1; justify-self: end; align-self: end; z-index: 7;
+    margin: 0 .2rem .3rem 0;
+    width: 10rem; height: 7.1rem;        /* wide enough for "Exceptions" at the 9px floor */
+  }
+
+  /* status line lives in the screen now: static flex child pinned to the
+     bottom by margin-top:auto; the old absolute brass-band placement is off */
+  .dw-screen .dw-boot {
+    position: static;
+    top: auto;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    height: auto;
+    margin-top: auto;
+    padding-top: .12rem;
+    border-top: 1px solid rgba(198, 232, 198, .28);
+    justify-content: flex-start;
+    color: #cfe8cf;
+    text-shadow: none;
+    font-size: .72em;
+  }
+  .dw-gauge {
+    align-self: stretch;
+    display: grid;
+    align-content: end;
+    justify-items: center;
+  }
+  .dw-gauge::before { content: none; }         /* art moves to the wrapper */
+  .dw-gauge-art {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 200 / 326;
+    max-height: 100%;
+  }
+  .dw-gauge-art::before {
+    content: "";
+    display: block;
+    width: 100%;
+    aspect-ratio: 200 / 326;
+    background: url("../assets/selected/web/lever.webp") center / contain no-repeat;
+  }
+
+  .dw-sticky-text { overflow-wrap: normal; word-break: normal; }
+}
+
+/* ---- 2026-09-17 desk polish: the parchment brief shares the desk's edges ----
+   The brief is a grid sibling of the stage; stretching it makes its box the
+   row height, and a zero top/bottom inset keeps the painted parchment inside
+   that box instead of bleeding .6rem past it. */
+@media (min-width: 1100px) {
+  .ft-scene--mill .ft-brief {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: 0;
+  }
+  /* The visible DESK is the exhibit inset 10% / 11% inside the stage
+     (.ft-stage--mill .feature-exhibit { inset: 10% 8% 11% }); the parchment
+     art takes the same band so its top and bottom meet the desk's, and the
+     copy is centred inside that band. The brief's box still spans the whole
+     stage, which is what the probe's edge check measures. */
+  .ft-scene--mill .ft-brief::before { inset: 10% -.7rem 11%; }
+  .ft-scene--mill .ft-brief > * { position: relative; }
+}
+
+/* ---- 2026-09-18: the console floor may only give way to the gauge from 1280 up.
+   At 1180 the console's shrink pulled the main row's bottoms 90px apart
+   (measured), so the wider gauge track is scoped to widths that can afford it. */
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .dw {
+    grid-template-columns:
+      minmax(8.5rem, 1.35fr)
+      minmax(12.5rem, 2fr)
+      minmax(15rem, 2.47fr)
+      minmax(8.5rem, 1.33fr)
+      minmax(7rem, 1.15fr);
+  }
+}
+
+/* ---- 2026-09-22: magnifier lightbox (decision M1) ----
+   The magnifier sits on the clipboard's lower band and opens the current
+   order at readable size; the −/+/↻ ovals it replaces are gone. */
+@media (min-width: 1100px) {
+  .dw-magnify {
+    position: absolute;
+    /* overhangs the board's lower-right corner so it never covers the
+       customer chop box printed at the paper's lower-right */
+    right: -10%;
+    bottom: -11%;
+    width: 4rem;
+    aspect-ratio: 250 / 183;
+    z-index: 3;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    background: url("../assets/selected/web/desk-magnifier.webp") center / contain no-repeat;
+    filter: drop-shadow(0 3px 4px rgba(35, 22, 8, .45));
+    transition: transform .18s ease;
+  }
+  .dw-magnify:hover { transform: translateY(-2px) rotate(-6deg); }
+  .dw .dw-magnify:focus-visible { outline: 2px solid #c8a24e; outline-offset: 3px; border-radius: 50%; }
+  .dw-magnify:disabled { cursor: default; opacity: .6; }
+  .dw.is-reduced-motion .dw-magnify { transition: none; }
+
+  .dw-lightbox {
+    position: absolute;
+    inset: 0;
+    z-index: 12;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: rgba(28, 16, 6, .55);
+    animation: dw-lightbox-in .15s ease-out;
+  }
+  .dw-lightbox[hidden] { display: none; }
+  @keyframes dw-lightbox-in { from { opacity: 0; } to { opacity: 1; } }
+  .dw.is-reduced-motion .dw-lightbox { animation: none; }
+  .dw-lightbox-sheet {
+    width: min(90vw, 40rem);
+    max-height: 88%;
+    overflow: auto;
+    padding: 1rem 1.4rem;
+    background: #f4e8cd;
+    border-radius: .15rem;
+    box-shadow: 0 18px 40px rgba(28, 16, 6, .55), inset 0 0 40px rgba(150, 120, 70, .25);
+    /* the clipboard renders .dw-paper at ~10px; ~2.4x reads at desk distance */
+    font-size: clamp(.95rem, 1.25vw, 1.3rem);
+    line-height: 1.2;
+  }
+  .dw-lightbox-sheet .dw-paper { height: auto; overflow: visible; background: transparent; box-shadow: none; padding: 0; font-size: 1em; }
+  .dw-lightbox-actions {
+    display: flex;
+    gap: .6rem;
+    margin-top: .7rem;
+  }
+  .dw-lightbox-rescan, .dw-lightbox-close {
+    font: inherit;
+    font-weight: 700;
+    padding: .4rem 1rem;
+    border-radius: .3rem;
+    border: 1px solid #16304f;
+    color: #fbf1dc;
+    background: linear-gradient(#2e7a4f, #1f5a38);
+    cursor: pointer;
+  }
+  .dw-lightbox-rescan:disabled { opacity: .5; cursor: default; }
+  .dw-lightbox-close { background: linear-gradient(#8a6a34, #6d5127); border-color: #4e3a1c; }
+  .dw .dw-lightbox-rescan:focus-visible, .dw .dw-lightbox-close:focus-visible { outline: 2px solid #c8a24e; outline-offset: 2px; }
+
+  /* the marks must enlarge with the sheet: the base rules are rem-sized for
+     the clipboard, so re-express them in em inside the lightbox */
+  .dw-lightbox-sheet .dw-chop { min-height: 5.5em; flex: 0 0 55%; }
+  .dw-lightbox-sheet .dw-chop-ring { font-size: 1em; width: 4.2em; height: 4.2em; top: .4em; border-width: .18em; }
+  .dw-lightbox-sheet .dw-chop-sign { top: 3em; height: 1.4em; border-bottom-width: .15em; }
 }

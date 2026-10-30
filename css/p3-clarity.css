@@ -1,0 +1,22 @@
+/* Approved P3 Pass 1: larger ivory map guide and five-second sample feedback. */
+.wm-legend {
+  width: min(300px,82vw); padding: 22px 20px;
+  border: 1px solid #a58c59; border-radius: 5px; border-image: none;
+  background: #f3e7cb url('../assets/selected/header-ivory-surface-v1.webp') center/cover;
+  box-shadow: 0 6px 20px #1116; color: #3b2a12;
+  font-size: 14px; line-height: 1.5;
+}
+.wm-legend :is(.wm-leg-row,.wm-glyph,.wm-leg-row span,.wm-legend-x) { color: #3b2a12; opacity: 1; }
+.wm-legend .wm-leg-h { color: #644019; }
+.wm-legend .wm-leg-row { gap: 12px; margin: 14px 0; }
+.wm-legend .wm-legend-x { min-width: 44px; min-height: 44px; top: 0; right: 0; }
+.wm-legend .wm-legend-x:focus-visible { outline: 2px solid #344a31; outline-offset: -4px; }
+.ft-scene--mill > .dw-sample-feedback {
+  grid-column: 1/-1; grid-row: 1; min-height: calc(3em + 28px);
+  margin: 0 22px 14px; padding: 13px 18px; box-sizing: border-box;
+  background: #fff1d1; color: #34472e; border: 1px solid #a58b52;
+  border-radius: 4px; font: 500 15px/1.5 var(--sans); box-shadow: 0 2px 8px #16271922;
+}
+.ft-scene--mill:has(> .dw-sample-feedback) > :is(.ft-brief,.ft-stage) { grid-row: 2; }
+.dw-sample-feedback:not(.is-visible) { visibility: hidden; }
+@media(max-width:760px) { .ft-scene--mill > .dw-sample-feedback { margin-inline: 12px; font-size: 14px; } }

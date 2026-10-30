@@ -1,0 +1,34 @@
+﻿/* The image and links share a proportional stage: never crop this painting. */
+#castle.castle-farewell { margin:4rem 0 0; position:relative; background:#081a29; isolation:isolate; scroll-margin-top:72px; }
+.castle-night-stage { width:100%; aspect-ratio:2/1; position:relative; background:url('../assets/selected/castle-rain-night-v2.webp') center/100% 100% no-repeat; }
+.castle-invitation { position:absolute; left:15%; top:22%; width:27%; aspect-ratio:4/3; background:url('../assets/selected/castle-invitation-paper-v1.webp') center/contain no-repeat; filter:drop-shadow(0 6px 12px #0008); display:grid; place-items:center; }
+.castle-invitation-copy { width:73%; padding-top:3%; text-align:center; color:#39442a; }
+.castle-invitation-kicker { margin:0 0 9px; text-transform:uppercase; letter-spacing:.14em; font:600 clamp(.57rem,.75vw,.78rem)/1.3 var(--label); color:#64603f; }
+.castle-invitation h2 { font:500 clamp(1.1rem,2.15vw,2.5rem)/1.1 var(--display); margin:0 0 12px; color:#34422a; }
+.castle-invitation-copy > p:not(.castle-invitation-kicker):not(.castle-glow-hint) { font:400 clamp(.75rem,1.05vw,1.1rem)/1.5 var(--display); margin:0 0 14px; }
+.castle-enter-button { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:40px; width:100%; padding:8px 10px; border:1px solid #aa8844; border-radius:4px; background:#f4e7c7 url('../assets/selected/workshop-button-parchment-v1.webp') center/cover; color:#34462c; font:600 clamp(.7rem,.95vw,1rem)/1.25 var(--display); text-decoration:none; box-shadow:0 2px 0 #9b7c3933; }
+.castle-enter-button:hover { border-color:#4a6337; color:#263c1f; box-shadow:0 3px 9px #4c472436; }
+.castle-glow-hint { font:400 clamp(.55rem,.7vw,.72rem)/1.35 var(--display); margin:10px 0 0; color:#686043; }
+.castle-glow-link { position:absolute; display:block; width:4.8%; height:12%; min-width:44px; min-height:44px; transform:translate(-50%,-50%); border:1px solid transparent; border-radius:48% 48% 20% 20%; background:radial-gradient(ellipse,#ffd98322,transparent 72%); box-shadow:0 0 18px 5px #ffb94924; animation:castle-lantern-breathe 4s ease-in-out infinite; z-index:2; }
+.castle-entrance-link { left:67%; top:62%; }
+.castle-window-link { left:90.5%; top:39%; width:3.6%; height:11%; animation-delay:-1.8s; }
+.castle-hotspot-label { position:absolute; left:50%; bottom:calc(100% + 9px); transform:translateX(-50%); white-space:nowrap; padding:6px 9px; border:1px solid #c7aa64; border-radius:3px; background:#142a2fee; color:#fff0cd; font:500 .75rem/1.3 var(--display); opacity:0; pointer-events:none; transition:opacity .2s; }
+.castle-glow-link:hover,.castle-glow-link:focus-visible { border-color:#ffe3a2; background:radial-gradient(ellipse,#ffe3a24d,transparent 75%); box-shadow:0 0 28px 9px #ffd16d70; }
+.castle-glow-link:hover .castle-hotspot-label,.castle-glow-link:focus-visible .castle-hotspot-label { opacity:1; }
+.castle-glow-link:focus-visible,.castle-enter-button:focus-visible { outline:3px solid #fff0b6; outline-offset:4px; }
+.castle-enter-button:focus-visible { outline-color:#435b32; }
+@keyframes castle-lantern-breathe { 0%,100% { box-shadow:0 0 15px 4px #ffb94926; } 50% { box-shadow:0 0 24px 7px #ffd16d55; } }
+@media(max-width:900px) {
+ #castle.castle-farewell { display:flex; flex-direction:column; align-items:center; padding-top:24px; margin-top:2.5rem; }
+ .castle-invitation { position:relative; left:auto; top:auto; width:min(92%,440px); order:0; margin-bottom:16px; }
+ .castle-night-stage { order:1; }
+ .castle-invitation-kicker { font-size:.68rem; }
+ .castle-invitation h2 { font-size:clamp(1.5rem,6vw,2rem); }
+ .castle-invitation-copy > p:not(.castle-invitation-kicker):not(.castle-glow-hint) { font-size:clamp(.82rem,3.4vw,1rem); }
+ .castle-enter-button { min-height:44px; font-size:clamp(.8rem,3.2vw,1rem); }
+ .castle-glow-hint { font-size:.65rem; }
+}
+@media(prefers-reduced-motion:reduce) { .castle-glow-link { animation:none; } .castle-hotspot-label { transition:none; } }
+body:has(#castle:hover) #sprite,body:has(#castle:focus-within) #sprite { opacity:0; pointer-events:none; }
+@media(min-width:901px) { .castle-invitation { left:12%; top:20%; width:30%; } }
+@media(max-width:900px) { .castle-window-link .castle-hotspot-label { transform:translateX(-85%); } }

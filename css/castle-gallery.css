@@ -1,0 +1,47 @@
+/* Option 4: Rain on the Gallery. Skin only; the puzzle retains its own layout. */
+@media(min-width:761px) {
+  .ft-scene--castle { grid-template-columns:minmax(0,1.5fr) minmax(17rem,.66fr); }
+  .ft-scene--castle .ft-stage { grid-column:1; grid-row:1; }
+  .ft-scene--castle .ft-brief { grid-column:2; grid-row:1; }
+}
+.ft-scene--castle::before {
+  background-image:url('../assets/selected/kellie-fyp/gallery-background-v1.webp');
+  background-size:cover;
+  background-position:center;
+}
+.ft-scene--castle .ft-brief::before {
+  background-image:url('../assets/selected/kellie-fyp/gallery-paper-v1.webp');
+  /* Compensate for the master's transparent rim so painted edges align. */
+  background-size:108% 108.5%;
+  filter:drop-shadow(0 9px 12px #07132366);
+}
+#selected .section-head h2,#selected .section-head p {
+  color:#fff1cf;
+  text-shadow:0 2px 5px #101c2e,0 0 16px #101c2e;
+}
+.castle-experience {
+  --cx-ink:#fff0d1;
+  --cx-muted:#d4c7ad;
+  --cx-gold:#d4b575;
+  background:#172c3b;
+  padding:30px;
+  box-shadow:0 12px 28px #070f2459;
+}
+.castle-experience::after {
+  border-width:34px;
+  border-image:url('../assets/selected/kellie-fyp/heritage-niche-frame-v1.webp') 160 / 34px / 0 stretch;
+}
+.cx-message-layer { inset:30px; }
+.cx-header { background:#213c4b; border-color:#b49a6155; }
+.cx-context,.cx-footer { background:#172d3c; border-color:#b49a6155; }
+.cx-mode,.cx-room-button,.cx-button { background:#203b4a; border-color:#af945e; color:#f4e5c5; }
+.cx-mode[aria-pressed="true"],.cx-room-button[aria-pressed="true"] { background:#e0c58f; color:#283b42; border-color:#f0dba9; }
+.cx-primary { background:#ddc087; color:#253943; border-color:#f0dba9; }
+.ft-scene--castle .ft-story { background:#274451; border-color:#b69c64; color:#fff1cf; }
+.ft-scene--castle .film-btn { color:#2e4550; border-color:#ad945b; }
+@media(max-width:760px) {
+  .ft-scene--castle::before { background-size:cover; background-position:center; }
+  .castle-experience { padding:22px; }
+  .castle-experience::after { border-width:26px; border-image-width:26px; }
+  .cx-message-layer { inset:22px; }
+}

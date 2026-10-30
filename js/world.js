@@ -1,9 +1,8 @@
 /* ============================================================
    world.js - the painted valley (v3 "Painted Valley" shell).
-   One fixed canvas behind the whole page paints a Ghibli-
-   inspired scene where SCROLLING MOVES TIME: dawn at the hero,
-   noon over the work systems, golden hour over the academics,
-   and night at the bottom - where Kellie's Castle appears.
+   A transparent foreground canvas carries rain, festival lanterns,
+   leaves and fireflies over the portfolio's illustrated backgrounds.
+   Scroll-time drives particle/night lighting only; CSS owns fixed reading colours.
    Also owns: paper-grain overlay, the sprite companion, and
    the hand-painted hero vignette. All original art, in code.
    Respects prefers-reduced-motion (static paint, no creature).
@@ -68,38 +67,7 @@
   var scrollPar = 0;                    // scroll parallax for hills
   var rand = makeRand(20260714);
 
-  var stars = [];
-  for (var s = 0; s < 110; s++) stars.push([rand(), rand() * 0.62, 0.4 + rand() * 1.1, rand() * 6.28]);
-
-  function makeCloudSprite(seedN, dark) {
-    var r = makeRand(seedN);
-    var c = document.createElement("canvas");
-    c.width = 280; c.height = 130;
-    var g = c.getContext("2d");
-    g.fillStyle = dark ? "#3a4560" : "#ffffff";
-    for (var i = 0; i < 8; i++) {
-      var cx = 40 + r() * 200, cy = 55 + r() * 40, rx = 26 + r() * 46, ry = 14 + r() * 22;
-      g.globalAlpha = 0.5 + r() * 0.4;
-      g.beginPath();
-      g.ellipse(cx, cy, rx, ry, 0, 0, 6.29);
-      g.fill();
-    }
-    return c;
-  }
-  var clouds = [];
-  for (var cN = 0; cN < 7; cN++) {
-    clouds.push({
-      lite: makeCloudSprite(100 + cN, false),
-      dark: makeCloudSprite(100 + cN, true),
-      x: rand(), y: 0.06 + rand() * 0.38,
-      v: 0.004 + rand() * 0.012,          // viewport-widths per second
-      sc: 0.55 + rand() * 1.15
-    });
-  }
-
-  /* particles: one pool, leaves by day / fireflies by night (clear weather);
-     re-tinted to red-gold petals in festival; the same pool rises as sky
-     lanterns after dusk in festival */
+  /* One pool: clear-weather leaves/fireflies, or floating festival lanterns. */
   var parts = [];
   for (var pN = 0; pN < 22; pN++) {
     parts.push({ x: rand(), y: rand(), r: rand(), ph: rand() * 6.28, v: 0.35 + rand() * 0.65 });
@@ -112,9 +80,8 @@
     rain.push({ x: rand(), y: rand(), len: 9 + rand() * 15, sp: 0.55 + rand() * 0.7, w: rand() });
   }
 
-  /* ---------- weather over the scroll-time sky ----------
-     A layer ON TOP of the day: the sky/sun/moon still move with the scroll,
-     weather only adds rain or festival particles + a mood wash. Mode is
+  /* ---------- weather over the illustrated section backgrounds ----------
+     Transparent rain/particles only; the paintings supply their own scenery. Mode is
      auto | clear | rain | festival; auto is deterministic from the calendar
      so every visitor sees the same valley on the same day. */
   var WMODES = ["auto", "clear", "rain", "festival"];
@@ -169,8 +136,7 @@
     setWeather(saved);
   }
 
-  /* rain: slanted streaks (skipped under reduced-motion - the grey wash alone
-     becomes the "static haze") */
+  /* Rain: falling streaks, or one static frame under reduced motion. */
   function drawRain(now) {
     ctx.strokeStyle = "rgba(188,202,220,.5)";
     ctx.lineWidth = 1.1;
@@ -199,143 +165,62 @@
     ctx.globalAlpha = 1;
   }
 
-  function drawHill(baseY, amp, phase, color, par) {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(0, H);
-    var y0 = baseY + par;
-    for (var i = 0; i <= 26; i++) {
-      var x = (i / 26) * W;
-      var y = y0 + Math.sin(i * 0.55 + phase) * amp + Math.sin(i * 0.21 + phase * 1.7) * amp * 1.6;
-      ctx.lineTo(x, y);
-    }
-    ctx.lineTo(W, H);
-    ctx.closePath();
-    ctx.fill();
+  /* Ambient darkness only controls the reading-lantern effect, never text ink. */
+  var ambientLast = -1, ambientNight = 0;
+  function syncAmbient(lum) {
+    var dark = lum < 152 ? 1 : 0;
+    if (dark === ambientLast) return;
+    ambientLast = dark;
+    ambientNight = dark;
+    syncDisc();
   }
 
-  /* text sitting directly on the canvas re-inks itself as the sky darkens,
-     so the journey / section copy stays readable at dusk and night even in
-     the light theme (styles.css consumes these as --scene-ink*) */
-  var inkLast = -1, inkK = 0;
-  function syncInk(lum) {
-    // ink follows the painted sky's actual luminance - immune to sections
-    // being added or removed shifting where dusk lands on the page.
-    // SNAP, never mix: a half-mixed grey ink always crosses the sky's own
-    // luminance somewhere and vanishes into it (the blurry mid-dusk text).
-    // 152 is the contrast crossover where light-ink+halo beats dark ink;
-    // the CSS color/text-shadow transition turns the flip into a soft fade.
-    var k = lum < 152 ? 1 : 0;
-    if (k === inkLast) return;
-    inkLast = k;
-    var st = document.documentElement.style;
-    st.setProperty("--scene-ink", mix("#191712", "#f6f1e6", k));
-    st.setProperty("--scene-ink-2", mix("#5c564a", "#cdc5b6", k));
-    st.setProperty("--scene-ink-3", mix("#9a9284", "#a7b0c4", k));
-    st.setProperty("--scene-paper", mix("#faf7f2", "#12100d", k));
-    // dark halo behind the light text - keeps it readable even when a white
-    // cloud drifts behind a line. k-squared so it stays OFF while the text
-    // is still dark (a glow behind dark text just reads as blur)
-    st.setProperty("--scene-halo", "rgba(12,16,28," + (0.62 * k * k).toFixed(3) + ")");
-    inkK = k;
-    syncDisc();
+  // Cache visible text/control rectangles; clearing them keeps atmosphere off ink.
+  // Child-list observation and scroll/resize invalidation avoid layout reads per particle.
+  var protectedRects = [], maskDirty = true, maskScroll = -1, maskWidth = 0, maskHeight = 0, lastMaskRead = -Infinity;
+  var protectedSelector = "h1,h2,h3,h4,h5,p,button,a,summary,input,select,textarea,label," +
+    ".hero-stats,.ft-facts,.tag,.badge,[role='status'],.about-signature,.about-monogram," +
+    ".contact-meta,.now-list,.footer-brand,.footer-signature,.ja-sign,.dw-paper,.dw-console,.dw-stage,.dw-gauge";
+  function protectInterface(now) {
+    var moved = maskScroll !== window.scrollY || maskWidth !== W || maskHeight !== H;
+    if ((maskDirty || moved) && now - lastMaskRead >= 100) {
+      protectedRects = [];
+      document.querySelectorAll(protectedSelector).forEach(function (node) {
+        var r = node.getBoundingClientRect();
+        if (r.width && r.height && r.bottom > 0 && r.top < H && r.right > 0 && r.left < W) {
+          protectedRects.push({ x: r.left - 4, y: r.top - 4, w: r.width + 8, h: r.height + 8 });
+        }
+      });
+      maskScroll = window.scrollY; maskWidth = W; maskHeight = H;
+      maskDirty = false; lastMaskRead = now;
+    }
+    protectedRects.forEach(function (r) { ctx.clearRect(r.x, r.y, r.w, r.h); });
   }
 
   function paint(now) {
     paintCount++;
     var st = sample(tCur);
-    syncInk(st.lum);
-    // sky
-    var sky = ctx.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0, st.sky[0]);
-    sky.addColorStop(0.55, st.sky[1]);
-    sky.addColorStop(1, st.sky[2]);
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, W, H);
-
-    // stars (fade in after dusk)
-    var starA = clamp((tCur - 0.72) / 0.22, 0, 1);
-    if (starA > 0) {
-      for (var i = 0; i < stars.length; i++) {
-        var stp = stars[i];
-        var tw = reduced ? 1 : (0.55 + 0.45 * Math.sin(now / 750 + stp[3]));
-        ctx.globalAlpha = starA * tw * 0.9;
-        ctx.fillStyle = "#e8eeff";
-        ctx.beginPath();
-        ctx.arc(stp[0] * W, stp[1] * H, stp[2], 0, 6.29);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
-    }
-
-    // sun (dawn -> dusk) and moon (night)
-    if (tCur < 0.86) {
-      var sunK = clamp(tCur / 0.86, 0, 1);
-      var sx = W * (0.12 + sunK * 0.78);
-      var sy = H * (0.58 - Math.sin(sunK * Math.PI) * 0.4);
-      var warm = tCur > 0.55 ? mixN("#ffd98a", "#ff9a5c", clamp((tCur - 0.55) / 0.3, 0, 1)) : mixN("#fff3c4", "#ffd98a", clamp(tCur / 0.55, 0, 1));
-      var glow = ctx.createRadialGradient(sx, sy, 4, sx, sy, H * 0.26);
-      glow.addColorStop(0, "rgba(" + warm[0] + "," + warm[1] + "," + warm[2] + ",.95)");
-      glow.addColorStop(0.25, "rgba(" + warm[0] + "," + warm[1] + "," + warm[2] + ",.35)");
-      glow.addColorStop(1, "rgba(" + warm[0] + "," + warm[1] + "," + warm[2] + ",0)");
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, W, H);
-    }
-    var moonA = clamp((tCur - 0.78) / 0.18, 0, 1);
-    if (moonA > 0) {
-      var mx = W * 0.78, my = H * 0.2;
-      ctx.globalAlpha = moonA;
-      var mglow = ctx.createRadialGradient(mx, my, 2, mx, my, H * 0.16);
-      mglow.addColorStop(0, "rgba(228,234,255,.6)");
-      mglow.addColorStop(1, "rgba(228,234,255,0)");
-      ctx.fillStyle = mglow;
-      ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = "#e9edfa";
-      ctx.beginPath(); ctx.arc(mx, my, 26, 0, 6.29); ctx.fill();
-      ctx.fillStyle = st.sky[0];
-      ctx.beginPath(); ctx.arc(mx - 10, my - 6, 22, 0, 6.29); ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-
-    // clouds (rain pulls the darker sprites in even by day, and thickens them)
+    syncAmbient(st.lum);
+    // Artwork owns the scenery. This canvas paints only transparent atmosphere.
+    ctx.clearRect(0, 0, W, H);
     var raining = weatherActive === "rain";
-    for (var ci = 0; ci < clouds.length; ci++) {
-      var cl = clouds[ci];
-      var img = (tCur > 0.8 || raining) ? cl.dark : cl.lite;
-      var cw = cl.sc * W * 0.24, ch = cw * 0.46;
-      var cx = ((cl.x % 1) + 1) % 1 * (W + cw * 2) - cw;
-      var cy = cl.y * H + scrollPar * (0.25 + cl.sc * 0.2) * -40;
-      ctx.globalAlpha = Math.min(1, st.cloud * (0.5 + cl.sc * 0.3) * (raining ? 1.5 : 1));
-      ctx.drawImage(img, cx, cy, cw, ch);
-      ctx.globalAlpha = 1;
-    }
-
-    // rain mood wash: dims sky/sun/clouds toward overcast grey (this is also
-    // the "static haze" reduced-motion visitors get in place of streaks)
-    if (raining) {
-      ctx.fillStyle = reduced ? "rgba(96,104,118,.3)" : "rgba(96,104,118,.22)";
-      ctx.fillRect(0, 0, W, H);
-    }
-
-    // hills (three parallax layers)
-    drawHill(H * 0.68, 9, 1.3, st.hills[0], scrollPar * -18);
-    drawHill(H * 0.78, 12, 4.1, st.hills[1], scrollPar * -34);
-    drawHill(H * 0.88, 14, 7.7, st.hills[2], scrollPar * -55);
 
     // weather particles (rain streaks always; festival & clear only in motion)
     if (raining) {
-      if (!reduced) drawRain(now);
-    } else if (!reduced) {
+      // Reduced motion uses a static rain frame, never a full-page grey wash.
+      drawRain(reduced ? 0 : now);
+    } else if (!reduced || weatherActive === "festival") {
       var leafA = tCur > 0.1 && tCur < 0.6 ? 1 : 0;
       var flyA = clamp((tCur - 0.72) / 0.18, 0, 1);
       var festival = weatherActive === "festival";
       for (var pi = 0; pi < parts.length; pi++) {
         var p = parts[pi];
-        if (festival && flyA > 0) { // festival dusk/night: paper lanterns rise
-          var lnx = p.x * W + Math.sin(now / 2600 * p.v + p.ph) * 22;
-          var lny = H - ((p.y + now / 9000 * p.v) % 1.15) * H * 0.95;
-          var lnP = 0.55 + 0.45 * Math.abs(Math.sin(now / 1400 * p.v + p.ph));
-          drawLantern(lnx, lny, flyA * lnP);
+        if (festival) { // lantern mode stays visible over daylight and night artwork
+          var lanternTime = reduced ? 0 : now;
+          var lnx = p.x * W + Math.sin(lanternTime / 2600 * p.v + p.ph) * 22;
+          var lny = H - ((p.y + lanternTime / 9000 * p.v) % 1.15) * H * 0.95;
+          var lnP = reduced ? 0.7 : 0.55 + 0.45 * Math.abs(Math.sin(now / 1400 * p.v + p.ph));
+          drawLantern(lnx, lny, (0.6 + flyA * 0.4) * lnP);
         } else if (flyA > 0) { // clear night: fireflies wander + pulse
           var fx = p.x * W + Math.sin(now / 1400 * p.v + p.ph) * 46;
           var fy = H * 0.45 + p.y * H * 0.5 + Math.cos(now / 1700 * p.v + p.ph) * 30;
@@ -363,6 +248,7 @@
       }
       ctx.globalAlpha = 1;
     }
+    protectInterface(now);
   }
 
   /* ---------- scroll -> time of day ---------- */
@@ -382,24 +268,32 @@
 
   var lastW = 0, tallestH = 0, resizeCount = 0, paintCount = 0;
 
+  function layoutWidth() {
+    return document.documentElement.clientWidth || window.innerWidth;
+  }
+
   function resize() {
     /* Phones report DPR 3; 1.5 halves the pixels pushed per repaint and a
        painted gradient shows no difference. */
     var coarse = window.matchMedia("(pointer: coarse)").matches;
     DPR = Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 2);
-    W = window.innerWidth; H = window.innerHeight;
+    /* The canvas CSS box and backing store use the same scrollbar-free layout
+       width. `innerWidth` would draw a wider bitmap than the cqw scenery box. */
+    W = layoutWidth(); H = window.innerHeight;
     /* On phones the viewport grows when the URL bar retracts. Since we no
        longer reallocate on that (see the resize listener), the canvas is sized
        to the TALLEST height seen - otherwise hiding the bar would expose an
        unpainted strip along the bottom. */
     if (coarse) { tallestH = Math.max(tallestH, H); H = tallestH; }
+    maskDirty = true;
+    lastMaskRead = -Infinity;
     canvas.width = Math.round(W * DPR);
     canvas.height = Math.round(H * DPR);
     canvas.style.width = W + "px";
     canvas.style.height = H + "px";
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     resizeCount++;
-    lastW = window.innerWidth;
+    lastW = W;
     if (reduced) { tCur = tTarget; paint(0); }
   }
 
@@ -409,7 +303,6 @@
     tCur += (tTarget - tCur) * 0.07;
     if (Math.abs(tTarget - tCur) < 0.0004) tCur = tTarget;
     syncNight();
-    for (var i = 0; i < clouds.length; i++) clouds[i].x += clouds[i].v * 0.016;
     paint(now);
     spriteFrame(now);
     lanternFrame();
@@ -439,7 +332,7 @@
 
     // Suu hops when you greet a project card
     document.addEventListener("mouseover", function (ev) {
-      if (ev.target.closest && ev.target.closest(".grid-card, .feature, .castle-scene")) {
+      if (ev.target.closest && ev.target.closest(".ar-card, .feature, .castle-scene")) {
         hopUntil = performance.now() + 620;
       }
     });
@@ -525,7 +418,7 @@
   }
   function syncDisc() {
     if (!discPaper) return;
-    var g = clamp((inkK - 0.35) / 0.3, 0, 1);
+    var g = clamp((ambientNight - 0.35) / 0.3, 0, 1);
     discPaper.style.opacity = (1 - g).toFixed(2);
     discGlass.style.opacity = g.toFixed(2);
   }
@@ -587,9 +480,11 @@
   function boot() {
     canvas = document.createElement("canvas");
     canvas.id = "valley";
+    canvas.setAttribute("data-layer", "atmosphere");
     canvas.setAttribute("aria-hidden", "true");
     document.body.insertBefore(canvas, document.body.firstChild);
     ctx = canvas.getContext("2d");
+    new MutationObserver(function () { maskDirty = true; }).observe(document.body, { childList: true, subtree: true });
 
     var grain = document.createElement("div");
     grain.className = "grain";
@@ -610,7 +505,7 @@
        on phones. React to width and orientation changes only; a height-only
        change is the URL bar and is ignored. */
     window.addEventListener("resize", function () {
-      if (window.innerWidth === lastW) return;
+      if (layoutWidth() === lastW) return;
       resize();
     });
     window.addEventListener("orientationchange", function () {
@@ -644,10 +539,11 @@
   window.PORTFOLIO_WORLD = {
     repaint: function () { readScroll(); if (reduced) { tCur = tTarget; paint(performance.now()); } },
     lantern: setLantern,
-    /* probe hook: proves the URL-bar resize loop is gone and the sky still paints */
-    stats: function () { return { dpr: DPR, resizes: resizeCount, paints: paintCount }; },
+    /* Probe hook: URL-bar resize budget and foreground paint activity. */
+    stats: function () { return { dpr: DPR, resizes: resizeCount, paints: paintCount,
+      width: W, cssWidth: canvas.clientWidth }; },
     /* presentation mode: pin the sky to a time of day (0 dawn .. 1 night);
-       the rAF loop eases toward it, so slide changes get a free sky transition */
+       the rAF loop eases particle lighting toward it */
     holdTime: function (t) {
       tHold = t == null ? null : clamp(t, 0, 1);
       readScroll();

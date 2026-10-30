@@ -166,9 +166,14 @@
     });
     }
 
-    // projects: controls live on the grid cards (the grid shows every project)
-    if (!wired($("#grid"))) {
-    $all("#grid .grid-card").forEach(function (card) {
+    /* projects: controls live on the ARCHIVE cards now (Task 8 deleted the
+       grid). The deck pages 4 at a time and re-renders in place, so the
+       wired() guard reads .ar-cards - the box archive.js empties on every
+       page turn - while the "+ add project" row hangs off the section host,
+       which survives. archive.js calls rewire() after each page so the cards
+       on page 2 get their controls too. */
+    if (!wired($(".ar-cards"))) {
+    $all("#projects-inline .ar-card").forEach(function (card) {
       var id = card.getAttribute("data-project");
       var i = c.projects.findIndex(function (p) { return p.id === id; });
       if (i === -1) return;
@@ -216,7 +221,7 @@
       }));
       card.appendChild(ctl);
     });
-    addRowButton($("#grid"), "+ add project", function () {
+    addRowButton($("#projects-inline"), "+ add project", function () {
       c.projects.push({
         id: "proj-" + Date.now(), title: "New project", subtitle: "One line about it",
         period: "2026", year: "2026", status: "DONE", category: "academic", featured: false,
@@ -228,7 +233,7 @@
     });
     }
 
-    // stack tags (feature blocks + open grid detail): infer project from data-pi
+    // stack tags (feature blocks + the open detail scroll): infer project from data-pi
     $all(".feature-stack").forEach(function (stack) {
       if (wired(stack)) return;
       var i = parseInt(stack.getAttribute("data-pi"), 10);
@@ -245,23 +250,39 @@
 
     // skills
     if (!wired($("#skills-grid"))) {
-    $all("#skills-grid .skill-group").forEach(function (box, gi) {
+    /* Edit mode renders the LIST (.tb-li), never the workshop scene - see
+       renderSkills. These selectors said .skill-group, which the reshape
+       deleted, so every control here silently matched nothing: no remove,
+       no add tag, and the only survivor pushed the pre-reshape shape. */
+    $all("#skills-grid .tb-li").forEach(function (box, gi) {
       var ctl = controlsSpan();
       ctl.appendChild(miniBtn("x", "Remove this group", function () {
         c.skills.splice(gi, 1); refresh();
       }));
       box.querySelector("h3").appendChild(ctl);
-      $all("li", box).forEach(function (li, ii) {
-        li.appendChild(miniBtn("x", "Remove", function () {
-          c.skills[gi].items.splice(ii, 1); refresh();
+      // tags carry their tier and index, so a remove hits the right array
+      $all(".tag", box).forEach(function (tag) {
+        var path = tag.getAttribute("data-edit");       // skills.<g>.<tier>.<i>.name
+        if (!path) return;
+        var bits = path.split(".");
+        var tier = bits[2], ti = +bits[3];
+        tag.appendChild(miniBtn("x", "Remove", function () {
+          (c.skills[gi][tier] || []).splice(ti, 1); refresh();
         }));
       });
-      addRowButton(box.querySelector("ul"), "+", function () {
-        c.skills[gi].items.push("new skill"); refresh();
+      addRowButton(box, "+ tool", function () {
+        c.skills[gi].core = c.skills[gi].core || [];
+        c.skills[gi].core.push({ name: "new tool", card: "card2_blank", note: "" });
+        refresh();
       });
     });
     addRowButton($("#skills-grid"), "+ add group", function () {
-      c.skills.push({ group: "New group", items: ["skill"] }); refresh();
+      // the full shape: a group without chest/core renders a broken image
+      c.skills.push({
+        group: "New group", chest: "chest-data-reporting", blurb: "",
+        core: [{ name: "new tool", card: "card2_blank", note: "" }], also: []
+      });
+      refresh();
     });
     }
 
@@ -549,9 +570,10 @@
     editing = true;
     document.body.classList.add("editing");
     $("#editbar").hidden = false;
-    App.renderAll(); // re-render so the All filter's grid + now strip show everything
-    var firstChip = $("#filters .chip");
-    if (firstChip && !firstChip.classList.contains("on")) firstChip.click();
+    App.renderAll(); // re-render so the now strip shows everything
+    // the chip bar became the archive's filter tabs in Task 8
+    var allTab = $("#projects-inline .pj-tab[data-cat=\"all\"]");
+    if (allTab && !allTab.classList.contains("on")) allTab.click();
     rewire();
     App.toast("Edit mode - click any outlined text. Everything saves to this browser instantly.");
   }

@@ -1,0 +1,134 @@
+/* Approved option 07: hanging walnut sign without a lantern; all lettering stays live. */
+:root {
+ --section-sign:url('../assets/selected/section-wood-sign-v1.png');
+ --section-title-size:clamp(1.5rem,2.6vw,2.6rem);
+ --section-description-size:clamp(.9rem,1.15vw,1rem);
+}
+:is(#selected,#journey,#skills,#achievements) > .section-head { width:min(100%,640px); padding:0; background:none; text-align:left; }
+/* Keep the artwork's proportions; top padding lowers text below the chains. */
+html[data-theme] :is(#selected,#projects,#journey,#skills,#achievements) > .section-head h2,
+#skills .tb-head h2 {
+ box-sizing:border-box; position:relative; display:flex; align-items:center; justify-content:center;
+ width:min(100%,520px); aspect-ratio:2172/724; margin:0; padding:clamp(22px,3vw,38px) 10% 0;
+ background:var(--section-sign) center/100% 100% no-repeat; color:#fff0cf;
+ font:600 var(--section-title-size)/1.12 var(--display); text-align:center; text-wrap:balance;
+ text-shadow:0 2px 2px #160c08; letter-spacing:-.015em;
+}
+html[data-theme] :is(#selected,#projects,#journey,#skills,#achievements) > .section-head p:not(.ach-tally),
+#skills .tb-head p {
+ max-width:36rem; margin:12px 0 0; padding:0; font-size:var(--section-description-size);
+ line-height:1.5; text-align:left; text-wrap:balance;
+}
+:is(#selected,#projects,#journey,#skills,#achievements) > .section-head .u-hand::after,
+#selected > .section-head h2::before,#selected > .section-head h2::after { display:none; }
+html[data-theme] #selected > .section-head p:not(.ach-tally) { color:#fff0cf; text-shadow:0 1px 3px #10202b,0 0 8px #10202b; }
+/* The taller hanging title needs more of the same painting above the exhibit. */
+.ft-scene--castle::before { top:-24rem; }
+/* Preserve the archive's independent view-toggle column and keyboard order. */
+#projects > .section-head { padding:0; background:none; align-items:center; }
+#projects > .section-head::before { content:none; }
+#projects > .section-head h2 { min-width:0; }
+#projects > .section-head p { margin-left:0!important; margin-right:0!important; }
+#projects-view-toggle { position:relative; z-index:1; }
+/* Desktop workshop heading stays registered to its existing scene position. */
+#skills .tb-head { padding:0; min-width:0; background:none; text-align:left; }
+#skills .tb-head::before { display:none; }
+#skills .tb-head h2 { width:100%; font-size:clamp(1.4rem,2.2vw,2.4rem); padding:6% 10% 0; }
+#skills .tb-head p { max-width:100%; color:#3d442d; font-size:clamp(.75rem,1vw,.95rem); }
+/* Leave clearance between the longer hall title and the entry button. */
+#achievements.hall-closed > .section-head { left:6%; top:5%; width:44%; padding:0; background:none; }
+html[data-theme] #achievements.hall-closed > .section-head h2 { font-size:clamp(1.4rem,2.5vw,2.6rem); }
+html[data-theme] #achievements.hall-closed > .section-head p:not(.ach-tally) { color:#303a24; text-shadow:0 1px 3px #fff0cf; }
+#achievements.hall-closed .hall-enter { top:48%; }
+/* Compact signs for the existing letter and castle invitation headings. */
+#about .about-kicker,#castle-farewell-heading { box-sizing:border-box; background:var(--section-sign) center/100% 100% no-repeat; color:#fff0cf; text-shadow:0 2px 2px #160c08; justify-content:center; text-align:center; }
+#about .about-kicker { top:-9%; left:25%; width:50%; aspect-ratio:2172/724; padding:6% 6% 0; font-size:clamp(1rem,1.4vw,1.4rem); }
+#about .about-kicker::before,#about .about-kicker::after,#castle-farewell-heading::before { display:none; }
+#castle-farewell-heading { display:flex; align-items:center; width:100%; aspect-ratio:2172/724; margin:0 auto 12px; padding:7% 9% 0; font-size:clamp(1.2rem,2vw,1.8rem); }
+/* The invitation has a fixed paper area: trade excess gaps for the sign's height. */
+.castle-invitation-copy { padding-top:0; }
+.castle-invitation-copy .castle-invitation-kicker { margin-bottom:4px; }
+.castle-invitation-copy #castle-farewell-heading { margin-bottom:4px; }
+.castle-invitation-copy > p:not(.castle-invitation-kicker):not(.castle-glow-hint) { margin-bottom:8px; }
+.castle-invitation-copy .castle-glow-hint { margin-top:6px; }
+#journey > .section-head p { white-space:pre-line; }
+:is(#selected,#projects,#journey) { scroll-margin-top:6rem; }
+@media(max-width:900px) {
+ #about .about-kicker { top:2%; left:25%; width:50%; padding:6% 6% 0; font-size:clamp(1rem,4vw,1.25rem); }
+}
+@media(max-width:760px) {
+ html[data-theme] :is(#selected,#projects,#journey,#skills,#achievements) > .section-head h2 { padding:7% 10% 0; font-size:clamp(1.4rem,6.5vw,2rem); }
+ #projects > .section-head p { width:100%; }
+ #achievements.hall-closed > .section-head { position:relative; left:auto; top:auto; width:100%; padding:24px 20px 18px; background:#f4e6cf; }
+ #achievements.hall-closed .hall-enter { top:calc(100% + 12px); }
+ #castle-farewell-heading { font-size:clamp(1.2rem,5vw,1.7rem); }
+}
+
+/* Owner-specified dimensions at 1280 / 1920 / 390 CSS-pixel viewports.
+   Keep headings in their original scenes; size boards independently of their slots. */
+:root {
+ --section-board-width:clamp(310px,24.21875vw,465px);
+ --section-board-height:clamp(103px,calc(8.125vw - 1px),155px);
+ --section-title-size:clamp(28px,calc(8px + 1.5625vw),38px);
+ --castle-title-size:clamp(25px,calc(19px + .46875vw),28px);
+ --about-title-size:clamp(17px,calc(7px + .78125vw),22px);
+}
+html[data-theme] :is(#selected,#projects,#journey,#skills,#achievements) > .section-head h2,
+html[data-theme] #achievements.hall-closed > .section-head h2,
+html[data-theme] #skills .tb-head h2 {
+ width:var(--section-board-width); height:var(--section-board-height);
+ min-height:0; aspect-ratio:auto; font-size:var(--section-title-size);
+ padding:calc(var(--section-board-height) * .14) calc(var(--section-board-width) * .05) 0;
+}
+#skills .tb-head { width:var(--section-board-width); }
+/* Approved larger Hall sign; keep the shared fonts and phone dimensions. */
+@media(min-width:761px) {
+ #achievements {
+  --section-board-width:clamp(360px,28.125vw,540px);
+  --section-board-height:clamp(120px,9.375vw,180px);
+ }
+}
+/* Plain paper headings use dark ink and no sign-sized padding or fixed ratio. */
+html[data-theme] #castle-farewell-heading,
+html[data-theme] #about .about-kicker {
+ background:none; aspect-ratio:auto; height:auto; min-height:0;
+ padding:0; text-shadow:none;
+}
+html[data-theme] #castle-farewell-heading { color:#34422a; font-size:var(--castle-title-size); }
+html[data-theme] #about .about-kicker {
+ top:4%; left:0; width:100%; color:#514325; font-size:var(--about-title-size);
+}
+@media(max-width:900px) {
+ html[data-theme] #about .about-kicker { top:13.5%; left:25%; width:50%; }
+}
+@media(max-width:760px) {
+ :root {
+  --section-board-width:min(345px,calc(100vw - 45px));
+  --section-board-height:calc(var(--section-board-width) / 3);
+  --section-title-size:25px;
+  --castle-title-size:19px;
+  --about-title-size:16px;
+ }
+}
+
+/* Owner-specified board left edges; lettering centered within each board. */
+:root {
+ --section-board-x:clamp(60px,calc(9.375vw - 60px),120px);
+}
+/* Ordinary sections are centered in a 1200px box with 1.4rem side padding. */
+:is(#selected,#projects,#journey,#skills) > .section-head {
+ margin-left:calc(var(--section-board-x) - max(0px,calc((100vw - 1200px) / 2)) - 1.4rem);
+}
+#skills .tb-head { left:var(--section-board-x); }
+@media(min-width:761px) {
+ #achievements.hall-closed > .section-head { left:var(--section-board-x); }
+}
+html[data-theme] :is(#selected,#projects,#journey,#skills,#achievements) > .section-head h2,
+html[data-theme] #achievements.hall-closed > .section-head h2,
+html[data-theme] #skills .tb-head h2 {
+ justify-content:center; text-align:center;
+ padding-inline:calc(var(--section-board-width) * .05);
+}
+@media(max-width:760px) {
+ :root { --section-board-x:20px; }
+}

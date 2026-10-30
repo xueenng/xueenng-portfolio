@@ -74,7 +74,10 @@
   /* ---------- 3D tilt on cards ---------- */
   function wireTilt() {
     if (reduced || !canHover) return;
-    document.querySelectorAll(".grid-card").forEach(function (card) {
+    /* the archive cards inherited this from the grid cards Task 8 deleted -
+       the inline transform ends in the same translateY(-2px) the CSS hover
+       applies, so the tilt reads as a deeper version of the same lift */
+    document.querySelectorAll(".ar-card").forEach(function (card) {
       if (card._tilt) return;
       card._tilt = true;
       card.addEventListener("pointermove", function (ev) {

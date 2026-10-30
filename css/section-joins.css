@@ -1,0 +1,36 @@
+﻿/* Approved v2: tight section edges and one reusable, narrow leafy seam. */
+html:not([data-theme="dark"]) body { background-color:#e4e7d5; }
+.section-join { --join-height:32px; position:relative; z-index:3; width:100%; height:0; margin:0; padding:0; pointer-events:none; }
+.section-join::before { content:none; }
+.section-join::after { content:''; position:absolute; left:0; top:calc(var(--join-height) / -2); width:100%; height:var(--join-height); pointer-events:none; background:url('../assets/selected/section-leafy-strip-v2.webp') center / auto calc(var(--join-height) * 6.4) repeat-x; opacity:.86; -webkit-mask-image:linear-gradient(transparent,#000 3px, #000 calc(100% - 3px),transparent); mask-image:linear-gradient(transparent,#000 3px,#000 calc(100% - 3px),transparent); }
+.section-join--journey-hall::after { filter:brightness(.6) saturate(.65); }
+.section-join--hall-castle::after { filter:brightness(.38) saturate(.6); opacity:.9; }
+/* Paintings meet directly; there is no broad canvas-era fade or wash band. */
+.hero { padding-bottom:1.5rem; }
+.hero::before,.ft-scene--castle::before { -webkit-mask-image:none; mask-image:none; }
+#selected { padding-top:2.5rem; }
+#selected::before { content:''; position:absolute; inset:0 auto 0 calc(50% - 50cqw); width:100cqw; z-index:-1; pointer-events:none; background:#e5dfc5; }
+#about { padding-top:2rem; padding-bottom:1.25rem; }
+#skills { position:relative; padding-top:0; padding-bottom:0; }
+#skills::before { content:''; position:absolute; inset:0 auto 0 calc(50% - 50cqw); width:100cqw; z-index:-1; pointer-events:none; background:#b5bf9b; }
+.tb-stage { -webkit-mask-image:none; mask-image:none; }
+#journey,#achievements { padding-top:3rem; }
+#journey::before,#achievements::before { -webkit-mask-image:none; mask-image:none; }
+#castle.castle-farewell { margin-top:0; }
+html[data-theme="dark"] .section-join::after { filter:brightness(.5) saturate(.7); }
+html[data-theme="dark"] #skills::before { background:#334638; }
+body.presenting .section-join { display:none; }
+@media(min-width:761px) { .tb-stage { margin-top:0; overflow:clip; } }
+@media(max-width:760px) {
+ .section-join { --join-height:20px; }
+ #selected { padding-top:2rem; }
+ #about { padding-top:1.5rem; padding-bottom:1.25rem; }
+ #skills { padding-top:1.5rem; }
+ #journey,#achievements { padding-top:2.5rem; }
+}
+/* Keep each scene's paint on its own side of the seam, including full-bleed art. */
+#selected { clip-path:inset(0 calc(50% - 50cqw) 0); }
+@media(max-width:760px) {
+ /* Keep the background's timber trim out from behind the section heading. */
+ .ft-scene--castle::before { background-size:auto calc(100% + 64px); background-position:center -64px; }
+}

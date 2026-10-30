@@ -8,7 +8,7 @@
    letter (PORTFOLIO_WORLD.holdTime). Suu walks a painted road
    in the HUD as the progress bar; station dots jump chapters
    (also number keys 1-9). Autoplay chip = kiosk loop (8s).
-   Presenter clock in the HUD. Exhibits stay interactive.
+   Presenter clock in the HUD. Featured slides carry no mini game.
    Esc exits and hands the sky back to the scroll.
    ============================================================ */
 (function () {
@@ -145,19 +145,11 @@
     };
   }
 
-  function exhibitCopy(p) {
-    var px = {}, k;
-    for (k in p) if (p.hasOwnProperty(k)) px[k] = p[k];
-    var ex = p.exhibit || {}, ex2 = {};
-    for (k in ex) if (ex.hasOwnProperty(k)) ex2[k] = ex[k];
-    ex2.images = [];              // no gallery weight on a slide
-    px.exhibit = ex2;
-    return px;
-  }
+  /* no mini game on a slide: the deck is for telling, the page is for playing */
   function slideFeatured(p) {
     return function () {
       var s = el("div", "present-slide");
-      var panel = panelEl("ps-two ps-feature");
+      var panel = panelEl("ps-feature");
       var left = el("div");
       left.appendChild(el("p", "ps-kicker", (App.CATEGORY_LABELS[p.category] || p.category) + " · " + (p.year || "")));
       left.appendChild(el("h2", null, p.title));
@@ -176,9 +168,6 @@
       left.appendChild(box);
       if (p.impact) left.appendChild(el("p", "ps-quote", p.impact));
       panel.appendChild(left);
-      var right = el("div", "ps-exhibit");
-      panel.appendChild(right);
-      try { window.PORTFOLIO_EXHIBITS.render(right, exhibitCopy(p)); } catch (e) {}
       s.appendChild(panel);
       return s;
     };
@@ -220,7 +209,14 @@
       var tray = el("div", "ps-tray");
       tray.appendChild(el("b", null, g.group));
       var ul = el("ul");
-      g.items.forEach(function (it) { ul.appendChild(el("li", "tag", it)); });
+      /* skills[] carries {core,also} of {name,card,note} since 2026-08-12.
+         `items` is the pre-reshape shape and can still arrive from a saved
+         localStorage copy, so read both rather than throwing mid-slide. */
+      var tools = (g.core || []).concat(g.also || []);
+      if (!tools.length && g.items) tools = g.items;
+      tools.forEach(function (it) {
+        ul.appendChild(el("li", "tag", (it && it.name) || it));
+      });
       tray.appendChild(ul);
       grid.appendChild(tray);
     });
@@ -240,7 +236,8 @@
     s._after = function () {
       var done = false;
       try {
-        if (App.buildAdventure) { App.buildAdventure(App.content, host); done = !!host.firstChild; }
+        // the parked "All chapters" train, not the ride: click a carriage to read it
+        if (App.buildOverview) { App.buildOverview(App.content, host); done = !!host.firstChild; }
       } catch (e) { done = false; }
       if (!done) {   // quiet fallback: compact timeline
         host.innerHTML = "";

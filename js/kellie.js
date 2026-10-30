@@ -196,13 +196,16 @@
       mat.appendChild(img);
       fig.appendChild(mat);
       fig.appendChild(el("figcaption", null, s[1]));
-      fig.addEventListener("click", function () {
-        var lb = el("div", "lightbox");
-        var big = document.createElement("img");
-        big.src = s[0]; big.alt = s[1];
-        lb.appendChild(big);
-        lb.addEventListener("click", function () { lb.remove(); });
-        document.body.appendChild(lb);
+      fig.tabIndex = 0;
+      fig.setAttribute("role", "button");
+      fig.setAttribute("aria-label", "Enlarge " + s[1]);
+      fig.setAttribute("aria-haspopup", "dialog");
+      function enlarge() {
+        window.PORTFOLIO_EXHIBITS.lightbox(s[0], { alt: s[1], trigger: fig });
+      }
+      fig.addEventListener("click", enlarge);
+      fig.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") { event.preventDefault(); enlarge(); }
       });
       g.appendChild(fig);
     });
@@ -227,16 +230,16 @@
 
     /* 1 - words: why this one is not playable in a browser */
     var intro = el("div", "k-play-intro");
-    intro.appendChild(el("h3", null, "Why this one isn't playable here"));
+    intro.appendChild(el("h3", null, "The original VR game and a browser teaser"));
     intro.appendChild(el("p", null,
       "Echoes in Kellie's Castle was built for Meta Quest 2 - room-scale " +
       "teleportation, grabbable objects, haptic feedback and hand tracking through " +
-      "OpenXR. Take the headset away and none of that survives; a flat browser " +
-      "version would be a different, lesser game wearing this one's name."));
+      "OpenXR. The painted browser teaser below adapts the core puzzles for " +
+      "mouse and keyboard; it is a companion to the original VR project."));
     intro.appendChild(el("p", null,
-      "So watch it instead. The film below is the real thing, recorded in the " +
-      "headset - the escape room played end to end. Under it, a browser-sized " +
-      "version of the same puzzles you can play right now, and the poster this " +
+      "The film below shows the original game played end to end. Under it, " +
+      "try the diary, message sequence, hidden clues and floor-plan puzzles " +
+      "in the illustrated browser version, then see the poster this " +
       "project was presented with."));
     host.appendChild(intro);
 
@@ -292,7 +295,9 @@
     pwrap.appendChild(el("p", "k-poster-cap", "The project poster - tap to enlarge."));
     host.appendChild(pwrap);
     pbtn.addEventListener("click", function () {
-      window.PORTFOLIO_EXHIBITS.lightbox("assets/fyp/poster.jpg");
+      window.PORTFOLIO_EXHIBITS.lightbox("assets/fyp/poster.jpg", {
+        alt: "Echoes in Kellie's Castle - project poster", trigger: pbtn
+      });
     });
   }
 

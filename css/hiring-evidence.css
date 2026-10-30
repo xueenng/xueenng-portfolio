@@ -1,0 +1,31 @@
+/* Approved CR-006 A: concise evidence before optional exploration. */
+.pjs-evidence { margin:12px 0 14px; display:grid; gap:11px; }
+.pjs-evidence > div { border-left:2px solid #a88447; padding-left:12px; }
+.pjs-evidence dt { font:700 11px/1.4 var(--label); letter-spacing:.07em; text-transform:uppercase; color:#795225; }
+.pjs-evidence dd { margin:3px 0 0; font:400 14px/1.5 var(--sans); color:#3a3021; }
+.pjs-meta { font:500 12px/1.5 var(--sans); color:#665236; margin:10px 0; }
+.is-evidence-overview .pjs-tools h4 { margin-top:8px; }
+.is-evidence-overview .pjs-toolrow { margin-bottom:0; }
+.is-evidence-overview .pjs-pg1 { align-items:start; }
+.is-evidence-overview .pjs-pg:focus-visible { outline:2px solid #526a39; outline-offset:-3px; }
+.is-evidence-overview .pjs-pager { flex-wrap:wrap; gap:10px; padding:10px 12px; }
+.is-evidence-overview :is(.pjs-prev,.pjs-next) { width:auto; height:auto; min-height:40px; padding:8px 12px; border-radius:4px; font:600 12px/1.3 var(--label); }
+.is-evidence-overview :is(.pjs-prev,.pjs-next)[hidden] { display:none; }
+.is-evidence-overview .pjs-count { font:500 12px/1.4 var(--label); }
+.pjs-story-title { margin:0 0 18px; color:#3f472d; font:500 clamp(22px,2.4vw,30px)/1.15 var(--display); }
+.journey-work-summary { box-sizing:border-box; margin:0 0 22px; padding:20px 24px; color:#3a3929; background:linear-gradient(115deg,#fff8e6,#f2e6c7); border:1px solid #ad9865; border-radius:3px; box-shadow:0 3px 12px #26362118; }
+.journey-work-summary > h3 { font:500 23px/1.2 var(--display); margin:0 0 16px; color:#31482f; }
+.journey-work-record h4 { font:600 19px/1.2 var(--display); margin:0 0 6px; color:#31482f; }
+.journey-work-org { margin:0; font:500 14px/1.5 var(--sans); }
+.journey-work-period { margin:3px 0 8px; font:500 12px/1.5 var(--label); color:#665236; }
+.journey-work-record ul { margin:0; padding-left:20px; font:400 14px/1.6 var(--sans); }
+.journey-work-summary + #journey-view { margin-top:12px; }
+@media(max-width:760px) {
+ .pjs-scroll.is-evidence-overview { border-width:8px 12px 8px 32px; border-image-width:8px 12px 8px 32px; width:96vw; max-width:96vw; }
+ .is-evidence-overview .pjs-pg { padding:18px 14px; }
+ .is-evidence-overview .pjs-pg1 .pjs-shot { order:2; }
+ .is-evidence-overview .pjs-pg1 .pjs-col { order:1; }
+ .is-evidence-overview .pjs-count { flex-basis:100%; text-align:center; order:3; }
+ .is-evidence-overview :is(.pjs-prev,.pjs-next) { min-height:44px; }
+ .journey-work-summary { padding:18px 16px; }
+}

@@ -32,6 +32,17 @@ window.PORTFOLIO_CONTENT = {
       }
     ]
   },
+  "aboutLetter": {
+    "statement": "Business System Analyst at Golden Pet Industries.",
+    "day": "I build AI document pipelines, ERP integrations and reporting systems.",
+    "night": "Outside work, I build a VR escape room at Kellie’s Castle.",
+    "signoff": "Systems and stories, made with care.",
+    "notes": [
+      { "title": "Building", "text": "AI document workflows and ERP integrations." },
+      { "title": "Creating", "text": "An escape room inside Kellie’s Castle." },
+      { "title": "Learning", "text": "Scroll animations and interactive 3D for the web." }
+    ]
+  },
   "hero": {
     "kicker": "XE Studio - portfolio of Ng Xue En",
     "headline": "Systems by day.\nWorlds by night.",
@@ -59,7 +70,7 @@ window.PORTFOLIO_CONTENT = {
       },
       {
         "value": "800",
-        "label": "hours spent vibe-coding with AI",
+        "label": "hours of AI-assisted engineering",
         "live": { "kind": "hours", "startDate": "2026-04-26", "asOf": "2026-07-21", "asOfValue": 800 }
       },
       {
@@ -77,11 +88,11 @@ window.PORTFOLIO_CONTENT = {
   "sections": {
     "selected": {
       "heading": "Selected work",
-      "sub": "The two projects that best show both sides - run them, do not just read them."
+      "sub": "These are not screenshots — run the adventures."
     },
     "projects": {
-      "heading": "All projects",
-      "sub": "Every card runs: work systems as safe simulations with mock data, game and academic work as light playable demos - source on GitHub where public."
+      "heading": "All Projects",
+      "sub": "Every place in the valley is a story I built."
     },
     "skills": {
       "heading": "Toolbox",
@@ -89,20 +100,25 @@ window.PORTFOLIO_CONTENT = {
     },
     "journey": {
       "heading": "Journey",
-      "sub": "From 10 straight As at SPM to production automation systems - where I have been and what I shipped along the way."
+      "sub": "From 10 straight As at SPM to production automation systems.\nWhere I have been and what I shipped along the way."
     },
     "achievements": {
       "heading": "Hall of Achievements",
-      "sub": "Every honour, certificate and moment worth keeping - collected era by era, from primary school to the present."
+      "sub": "Milestones, memories and moments worth keeping."
     },
     "contact": {
-      "heading": "Let's talk",
-      "sub": "Open to conversations about automation, data, AI-assisted operations and interactive 3D."
+      "heading": "Connect",
+      "sub": "Have an automation challenge or an interactive idea? I’d love to hear it."
     }
   },
   "projects": [
     {
       "id": "vr-escape-room",
+      "overview": {
+        "problem": "Traditional heritage tours offered limited interaction for young visitors.",
+        "contribution": "Solo project: historical research, Blender modelling, Unity gameplay and VR interactions.",
+        "outcome": "Built and tested a VR escape room that teaches heritage through play."
+      },
       "title": "Echoes in Kellie's Castle",
       "subtitle": "A VR escape room inside a real Malaysian heritage site - my final year project, built solo from Blender vertices to Unity gameplay",
       "period": "Jun 2024 - Dec 2025 - final year project, UTAR",
@@ -156,8 +172,13 @@ window.PORTFOLIO_CONTENT = {
     },
     {
       "id": "do-pipeline",
+      "overview": {
+        "problem": "Scanned delivery orders needed manual checking, ERP lookup, renaming and filing.",
+        "contribution": "Built the AI extraction, ERP cross-checks, business rules, automated filing and run reporting.",
+        "outcome": "Document filing became a zero-touch process; humans only see the exceptions."
+      },
       "title": "Delivery Order Intelligence Pipeline",
-      "subtitle": "Vision-AI reads, verifies and files every scanned delivery order",
+      "subtitle": "From anonymous scans to verified, correctly filed delivery orders.",
       "period": "2026 - live in production",
       "year": "2026",
       "status": "LIVE",
@@ -208,7 +229,7 @@ window.PORTFOLIO_CONTENT = {
     {
       "id": "notify-hub",
       "title": "Shared Notification Hub",
-      "subtitle": "One routing brain decides who hears about which failure, where",
+      "subtitle": "One routing brain decides who hears about which failure, and where it lands",
       "period": "2026 - live in production",
       "year": "2026",
       "status": "LIVE",
@@ -615,65 +636,105 @@ window.PORTFOLIO_CONTENT = {
   "skills": [
     {
       "group": "Data & Reporting",
-      "items": [
-        "SQL",
-        "SSRS",
-        "Power BI",
-        "Excel automation",
-        "QNE ERP",
-        "AutoCount",
-        "FIFO stock valuation"
+      "chest": "chest-data-reporting",
+      "blurb": "Where the numbers come from, and how they end up readable.",
+      "core": [
+        { "name": "SQL / SSMS", "card": "card2_sql_ssms", "note": "Queries, stored procedures, tuning" },
+        { "name": "SSRS", "card": "card2_ssrs", "note": "Scheduled report-server delivery" },
+        { "name": "Power BI", "card": "card2_power_bi", "note": "Dashboards and visual analysis" },
+        { "name": "QNE", "card": "card2_qne", "note": "The live ERP the reports read" },
+        { "name": "Excel", "card": "card2_excel", "note": "Driven by COM and openpyxl" },
+        { "name": "FIFO Stock Valuation", "card": "card4_fifo_stock_valuation", "note": "The costing method behind stock reporting" }
+      ],
+      "also": [
+        { "name": "AutoCount", "card": "card2_autocount", "note": "Accounting and POS system testing" },
+        { "name": "Epicor ERP", "card": "card2_epicor_erp", "note": "Enterprise system testing and UAT" },
+        { "name": "Word", "card": "card2_word", "note": "Documents generated to a house style" },
+        { "name": "PowerPoint", "card": "card2_powerpoint", "note": "Decks generated to brand" }
       ]
     },
     {
       "group": "Automation",
-      "items": [
-        "n8n (self-hosted)",
-        "PowerShell",
-        "Office COM",
-        "REST APIs",
-        "Microsoft Graph",
-        "SharePoint",
-        "Docker"
+      "chest": "chest-automation",
+      "blurb": "What keeps the back office running without me.",
+      "core": [
+        { "name": "n8n", "card": "card2_n8n", "note": "Self-hosted workflow platform" },
+        { "name": "PowerShell", "card": "card4_powershell", "note": "Scripting the Windows estate" },
+        { "name": "Office COM", "card": "card4_office_com", "note": "Driving Word and Excel from code" },
+        { "name": "REST APIs", "card": "card4_rest_apis", "note": "Integration and connectivity" },
+        { "name": "Microsoft Graph", "card": "card4_microsoft_graph", "note": "SharePoint and mail access" },
+        { "name": "SharePoint", "card": "card2_sharepoint", "note": "Document storage and worklists" }
+      ],
+      "also": [
+        { "name": "Docker", "card": "card2_docker", "note": "Containerised self-hosting" },
+        { "name": "Power Automate", "card": "card2_power_automate", "note": "Cloud process automation" },
+        { "name": "Power Apps", "card": "card2_power_apps", "note": "Internal form front-ends" },
+        { "name": "Teams", "card": "card2_teams", "note": "Where the alerts land" }
       ]
     },
     {
       "group": "Programming",
-      "items": [
-        "Python",
-        "JavaScript",
-        "Java",
-        "C++",
-        "C#",
-        "HTML / CSS"
+      "chest": "chest-programming",
+      "blurb": "The languages I reach for to build the rest.",
+      "core": [
+        { "name": "Python", "card": "card3_python", "note": "Pipelines, tooling, data work" },
+        { "name": "JavaScript", "card": "card3_javascript", "note": "Browser interfaces and demos" },
+        { "name": "C#", "card": "card3_csharp", "note": "Unity gameplay and tooling" },
+        { "name": "HTML / CSS", "card": "card3_html_css", "note": "Hand-built layouts and scenes" },
+        { "name": "GitHub", "card": "card2_github", "note": "Version control and releases" }
+      ],
+      "also": [
+        { "name": "Java", "card": "card3_java", "note": "Object-oriented coursework" },
+        { "name": "C++", "card": "card3_cpp", "note": "Systems and algorithms" },
+        { "name": "C", "card": "card3_c", "note": "Fundamentals" },
+        { "name": "PHP", "card": "card3_php", "note": "Server-side web work" },
+        { "name": "Flutter", "card": "card3_flutter", "note": "Cross-platform mobile builds" }
       ]
     },
     {
       "group": "AI Engineering",
-      "items": [
-        "LLM vision OCR pipelines",
-        "Prompt engineering",
-        "Claude / GPT / Gemini APIs",
-        "AI fallback chains"
+      "chest": "chest-ai-engineering",
+      "blurb": "Making models do real work, reliably.",
+      "core": [
+        { "name": "LLM Vision OCR", "card": "card3_ocr", "note": "Reading scanned documents" },
+        { "name": "Prompt Engineering", "card": "card4_prompt_engineering", "note": "Consistent, structured output" },
+        { "name": "AI Fallback Chains", "card": "card4_ai_fallback_chains", "note": "A second model when the first fails" },
+        { "name": "Claude", "card": "card3_claude", "note": "Primary reasoning model" }
+      ],
+      "also": [
+        { "name": "ChatGPT", "card": "card3_chatgpt", "note": "Drafting and comparison" },
+        { "name": "OpenAI", "card": "card3_openai", "note": "API access" },
+        { "name": "Gemini", "card": "card3_gemini", "note": "Alternate vision model" },
+        { "name": "AI", "card": "card2_ai", "note": "Applied machine learning generally" }
       ]
     },
     {
       "group": "Game & 3D",
-      "items": [
-        "Unity",
-        "VR interaction design",
-        "Blender",
-        "Puzzle & level design"
+      "chest": "chest-game-3d",
+      "blurb": "The interactive side, from coursework to shipped demos.",
+      "core": [
+        { "name": "Unity", "card": "card2_unity", "note": "Game and AR application engine" },
+        { "name": "VR", "card": "card3_vr", "note": "Immersive interaction design" },
+        { "name": "AR", "card": "card3_ar", "note": "Marker-based mobile AR training" },
+        { "name": "Puzzle & Level Design", "card": "card4_puzzle_level_design", "note": "Pacing, hinting, difficulty" }
+      ],
+      "also": [
+        { "name": "Blender", "card": "card2_blender", "note": "3D modelling and asset prep" },
+        { "name": "Android", "card": "card3_android", "note": "The mobile build target" },
+        { "name": "Canva", "card": "card2_canva", "note": "Quick visual assets" }
       ]
     },
     {
       "group": "Languages",
-      "items": [
-        "English",
-        "Malay",
-        "Mandarin",
-        "Cantonese"
-      ]
+      "chest": "chest-languages",
+      "blurb": "How I work with people across the floor.",
+      "core": [
+        { "name": "English", "card": "card4_english", "note": "Professional working proficiency" },
+        { "name": "Malay", "card": "card4_malay", "note": "Conversational" },
+        { "name": "Mandarin", "card": "card4_mandarin", "note": "Native" },
+        { "name": "Cantonese", "card": "card4_cantonese", "note": "Native" }
+      ],
+      "also": []
     }
   ],
   "timeline": [
@@ -881,10 +942,20 @@ window.PORTFOLIO_CONTENT = {
   },
   "footer": "Hand-built with plain HTML, CSS and JavaScript - no frameworks, no build step, edited live from the site itself. There is one secret in here for those who remember the code.",
   "resume": {
-    "headline": "Business System Analyst | Computer Science Student | Applied AI & Automation",
-    "graduation": "Graduation: Jan 2026",
-    "objective": "Aspiring business system analyst with hands-on experience in requirements documentation (DRD), business process analysis, system testing, and SQL. I design AI-driven document automation and ERP data integrations that turn manual, repetitive work into self-running systems — supporting faster, data-informed decisions across the business.",
+    "headline": "Business System Analyst | Applied AI & Automation",
+    "graduation": "Graduated January 2026",
+    "objective": "Business System Analyst at Golden Pet Industries with experience in AI document automation, ERP integrations, SQL/SSRS reporting and system testing. I translate business needs into practical workflows, document requirements and support reliable day-to-day operations.",
     "experience": [
+      {
+        "role": "Business System Analyst",
+        "org": "Golden Pet Industries Sdn Bhd, Ipoh",
+        "period": "Mar 2026 - Present",
+        "bullets": [
+          "Own the company's self-hosted automation platform end to end",
+          "Shipped the AI delivery-order pipeline, exchange-rate sync, notification hub and report-server watchdog into production",
+          "Design SQL / SSRS reporting: FIFO stock valuation, month-end stock reports, anomaly detection"
+        ]
+      },
       {
         "role": "Information Technology Intern",
         "org": "Chuan Sin Sdn Bhd, Taiping, Perak",

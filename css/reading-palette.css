@@ -1,0 +1,45 @@
+/* Stable reading ink belongs to the painted surface, never scroll progress. */
+:root {
+ --scene-ink:#2f3b27;
+ --scene-ink-2:#49533f;
+ --scene-ink-3:#5c644f;
+ --scene-paper:#fff4d7;
+ --scene-halo:transparent;
+}
+#top,#projects,#skills,#journey,#about {
+ --scene-ink:#2f3b27; --scene-ink-2:#49533f; --scene-ink-3:#5c644f;
+ --scene-paper:#fff4d7; --scene-halo:transparent;
+}
+#projects {
+ --ink:#2f3b27; --ink-2:#49533f; --ink-3:#5c644f;
+}
+#top .hero-headline,#top .stat b { color:#293c27; }
+#top .hero-subline,#top .stat span { color:#3c4b34; }
+#top .hero-kicker { color:#49533f; }
+#top .tour-link { color:#30452c; font-weight:600; text-shadow:0 1px 2px #fff5dc; }
+#journey .section-head h2 { color:#2f3b27; }
+#journey .section-head p,#journey .ja-btn { color:#49533f; }
+#journey .ja-progress,#journey .ov-hint { color:#614729; }
+#skills .tb-head h2 { color:#302e20; }
+#skills .tb-head p { color:#4a4934; }
+/* Parchment areas keep dark ink even when surrounding scenery is night. */
+#about .about-body p,#about .about-summary,#about .about-note-copy { color:#49432e; }
+/* Dark painted surfaces already have their own cream palette; retain it. */
+#selected > .section-head h2,#selected > .section-head p { color:#fff1cf; }
+#achievements:not(.hall-closed) {
+ --scene-ink:#fff1d2; --scene-ink-2:#eedfc2; --scene-ink-3:#dcc9a7;
+ --scene-halo:rgba(10,19,25,.45);
+}
+/* The explicit theme switch can darken artwork; it is independent of scrolling. */
+html[data-theme="dark"] #top,html[data-theme="dark"] #journey,
+html[data-theme="dark"] #skills:not(.tb-scene) {
+ --scene-ink:#fff1d2; --scene-ink-2:#eedfc2; --scene-ink-3:#dcc9a7;
+ --scene-paper:#1b2c28; --scene-halo:rgba(10,19,25,.45);
+}
+html[data-theme="dark"] #top .hero-headline,html[data-theme="dark"] #top .stat b,
+html[data-theme="dark"] #journey .section-head h2 { color:#fff1d2; }
+html[data-theme="dark"] #top .hero-subline,html[data-theme="dark"] #top .stat span,
+html[data-theme="dark"] #top .hero-kicker,
+html[data-theme="dark"] #journey .section-head p,html[data-theme="dark"] #journey .ja-btn,
+html[data-theme="dark"] #journey .ja-progress,html[data-theme="dark"] #journey .ov-hint { color:#eedfc2; }
+html[data-theme="dark"] #top .tour-link { color:#eedfc2; text-shadow:0 1px 3px #101c25; }

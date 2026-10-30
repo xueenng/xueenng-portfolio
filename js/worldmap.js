@@ -5,9 +5,12 @@
    the works district runs the mills and towers, the school
    quarter holds the academic projects - and the binary search
    tree is, of course, an actual tree.
-   Entry: the "Explore the valley" signpost (hero) or #map.
-   Same data as the scroll site (PORTFOLIO_APP.content); project
-   details open in-map and mount their real exhibits/demos.
+   Entry: the "Explore the valley" signpost (hero) or #map, both
+   of which now open the All Projects destination on its Map view -
+   this file registers itself as that view and paints into the
+   shell's .pj-stage. Same data as the scroll site
+   (PORTFOLIO_APP.content); clicking a building opens the shared
+   project scroll (js/proj-scroll.js), which mounts the exhibits.
    Layout lives HERE (presentation), keyed by project id -
    projects without a place are seated along the south meadow.
    The camera is clamped inside WORLD so the page background can
@@ -652,6 +655,9 @@
 
   /* ---------- state ---------- */
   var open = false, overlay = null, panG = null, suuG = null, svgEl = null;
+  var legendEl = null, legendBtnEl = null, zoomEl = null, hoverEl = null, hoverProject = null;
+  var legendAutoFolded = false; // one-shot per page-load session, not per mount
+  var hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   var tx = 0, ty = 0, scale = 1;
   /* The world is a FIXED design space; the plate's pixel size is only a quality
      knob. Deriving world units from plate pixels meant that re-exporting the art
@@ -893,47 +899,14 @@
     if (el) el.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
   }
 
-  /* ---------- detail panel (same data, in-map) ---------- */
+  /* ---------- detail panel ----------
+     The map no longer draws its own panel. Every view of the projects
+     destination opens the SAME parchment scroll (js/proj-scroll.js), so a
+     project reads identically whether you arrived by clicking its building or
+     by picking it out of the list. */
   function openDetail(p) {
-    closeDetail();
-    var panel = el("div", "wm-detail");
-    panel.id = "wm-detail";
-    var close = el("button", "wm-x", "×");
-    close.addEventListener("click", closeDetail);
-    panel.appendChild(close);
-    panel.appendChild(el("p", "wm-d-cat", (window.PORTFOLIO_APP.CATEGORY_LABELS[p.category] || p.category) + " · " + (p.year || "")));
-    panel.appendChild(el("h3", null, p.title));
-    panel.appendChild(el("p", "wm-d-sub", p.subtitle));
-    [["THE PROBLEM", "problem"], ["WHAT I BUILT", "action"], ["THE RESULT", "outcome"]].forEach(function (pair) {
-      var para = el("p", "wm-d-case");
-      para.appendChild(el("b", null, pair[0]));
-      para.appendChild(el("span", null, p[pair[1]]));
-      panel.appendChild(para);
-    });
-    var tags = el("div", "feature-stack");
-    (p.stack || []).forEach(function (t) { tags.appendChild(el("span", "tag", t)); });
-    panel.appendChild(tags);
-    if (p.links && p.links.length) {
-      var lr = el("div", "proj-links");
-      p.links.forEach(function (l) {
-        if (!l.url) return;
-        var a = document.createElement("a");
-        a.className = "tag proj-link";
-        a.textContent = l.label + " ↗";
-        a.href = l.url;
-        if (!/^[a-z-]+\.html/.test(l.url)) { a.target = "_blank"; a.rel = "noopener"; }
-        lr.appendChild(a);
-      });
-      panel.appendChild(lr);
-    }
-    var ex = el("div", "feature-exhibit");
-    panel.appendChild(ex);
-    overlay.appendChild(panel);
-    window.PORTFOLIO_EXHIBITS.render(ex, p);
-  }
-  function closeDetail() {
-    var d = document.getElementById("wm-detail");
-    if (d) d.remove();
+    if (p.id === "vr-escape-room") { window.location.href = "kellie.html"; return; }
+    window.PORTFOLIO_PROJ_SCROLL.open(p);
   }
 
   /* ---------- pan / zoom (camera clamped inside WORLD) ---------- */
@@ -1002,6 +975,7 @@
     panG.setAttribute("transform", "translate(" + tx + "," + ty + ") scale(" + scale + ")");
   }
   function zoomAt(factor, cx, cy) {
+    maybeAutoFoldLegend();
     var s0 = scale, s1 = Math.min(2.6, Math.max(0.2, s0 * factor));
     tx = cx - (cx - tx) * (s1 / s0);
     ty = cy - (cy - ty) * (s1 / s0);
@@ -1023,6 +997,7 @@
       var r = svg.getBoundingClientRect();
       var k = 1 / (Math.min(r.width / 1600, r.height / 1000) || 1);   // css px -> viewBox units
       if (ids.length === 1) {
+        maybeAutoFoldLegend();
         tx += (ev.clientX - prev[0]) * k;
         ty += (ev.clientY - prev[1]) * k;
         moved += Math.abs(ev.clientX - prev[0]) + Math.abs(ev.clientY - prev[1]);
@@ -1131,38 +1106,9 @@
     kbRaf = requestAnimationFrame(kbStep);
   }
 
-  /* ---------- list fallback ---------- */
-  function toggleList() {
-    var ex = document.getElementById("wm-list");
-    if (ex) { ex.remove(); return; }
-    var box = el("div", "wm-detail wm-list");
-    box.id = "wm-list";
-    var close = el("button", "wm-x", "×");
-    close.addEventListener("click", function () { box.remove(); });
-    box.appendChild(close);
-    box.appendChild(el("h3", null, "Every place in the valley"));
-    var cats = window.PORTFOLIO_APP.CATEGORY_LABELS;
-    Object.keys(cats).forEach(function (cat) {
-      var any = projects().some(function (p) { return p.category === cat; });
-      if (!any) return;
-      box.appendChild(el("p", "wm-d-cat", cats[cat]));
-      var ul = el("ul", "wm-list-ul");
-      projects().forEach(function (p) {
-        if (p.category !== cat) return;
-        var li = el("li");
-        var a = el("button", "wm-list-item", (LAYOUT[p.id] ? LAYOUT[p.id].label + " - " : "") + p.title);
-        a.addEventListener("click", function () {
-          box.remove();
-          if (p.id === "vr-escape-room") { window.location.href = "kellie.html"; return; }
-          openDetail(p);
-        });
-        li.appendChild(a);
-        ul.appendChild(li);
-      });
-      box.appendChild(ul);
-    });
-    overlay.appendChild(box);
-  }
+  /* The list fallback that used to live here is gone: the shell's List View is
+     the one list now, so a second one would be a second thing to keep in step
+     with the content. */
 
   /* ---------- open / close ---------- */
   /* Hovering a building brightens its label. They are separate groups now, so
@@ -1200,28 +1146,211 @@
     applyPan();
     wirePanZoom(svgEl);
     wireLabelHover(svgEl);
+    wireHoverCard(svgEl);
     startFlight(svgEl);
   }
-  function openMap() {
+
+  /* ---------- legend card ----------
+     Task 5 deleted the old wm-bar, which carried the only hint that the map
+     had controls at all ("drag to wander - scroll to zoom - WASD / arrows
+     walk Suu - click a building"). This restores that hint as a painted card
+     instead of a text strip. The mouse-with-scroll-wheel and the four WASD
+     keycaps are drawn inline - the library has no such icons - kept small,
+     as glyphs rather than scenery. */
+  function glyphMouse() {
+    return '<svg class="wm-glyph" viewBox="0 0 24 24" width="19" height="19" ' +
+      'aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="7" ' +
+      'fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+      '<line x1="12" y1="2" x2="12" y2="9" stroke="currentColor" stroke-width="1.6"/>' +
+      '<rect x="10.4" y="4.5" width="3.2" height="5.4" rx="1.6" fill="currentColor"/></svg>';
+  }
+  function glyphKeys() {
+    function key(x, y, label) {
+      return '<g transform="translate(' + x + ',' + y + ')">' +
+        '<rect width="9.5" height="9.5" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.3"/>' +
+        '<text x="4.75" y="7" text-anchor="middle" font-size="5.6" font-weight="700" ' +
+        'fill="currentColor">' + label + "</text></g>";
+    }
+    return '<svg class="wm-glyph" viewBox="0 0 35 22" width="30" height="19" aria-hidden="true">' +
+      key(12.5, 0, "W") + key(1, 11.5, "A") + key(12.5, 11.5, "S") + key(24, 11.5, "D") + "</svg>";
+  }
+  function legendRow(iconHtml, text) {
+    var row = el("div", "wm-leg-row");
+    row.insertAdjacentHTML("beforeend", iconHtml);
+    row.appendChild(el("span", null, text));
+    return row;
+  }
+  /* Collapsible per Task 11: a full legend permanently over the valley reads
+     as a header band by another name. `pf-legend-open` in localStorage
+     ("0"/"1") remembers the user's own choice; setLegendOpen() is the only
+     writer, so it is also the single place a re-render must call from. */
+  function setLegendOpen(isOpen) {
+    if (legendEl) legendEl.classList.toggle("is-collapsed", !isOpen);
+    try { localStorage.setItem("pf-legend-open", isOpen ? "1" : "0"); } catch (e) { /* private mode */ }
+  }
+  function buildLegend() {
+    var lg = el("div", "wm-legend");
+    var saved = null;
+    try { saved = localStorage.getItem("pf-legend-open"); } catch (e) { /* private mode */ }
+    if (saved === "0") lg.classList.add("is-collapsed");
+    var xBtn = el("button", "wm-legend-x", "×");
+    xBtn.type = "button";
+    xBtn.setAttribute("aria-label", "Hide the guide");
+    xBtn.addEventListener("click", function () { setLegendOpen(false); });
+    lg.appendChild(xBtn);
+    lg.appendChild(el("h4", "wm-leg-h", "Explore the Valley"));
+    /* assets/projects/, NOT art-source/. That tree is gitignored - zero files
+       tracked - and publish-site.ps1 copies only css/, assets/ and js/. An
+       <img> pointing into art-source/ renders on the authoring machine and 404s
+       on a fresh clone and on the live site alike. The builder emits these two
+       as glyph-*.webp for exactly this reason. */
+    if (!hoverCapable) {
+      /* Touch device: no hover, no keyboard - the mouse-drag and WASD rows
+         below would describe affordances this device does not have. */
+      lg.appendChild(legendRow(glyphMouse(), "Drag to explore"));
+      lg.appendChild(legendRow(
+        '<img class="wm-glyph" src="assets/projects/glyph-click.webp" alt="" width="19" height="19">',
+        "Tap a place to open it"));
+      return lg;
+    }
+    lg.appendChild(legendRow(glyphMouse(), "Drag to wander"));
+    lg.appendChild(legendRow(
+      '<img class="wm-glyph" src="assets/projects/glyph-click.webp" alt="" width="19" height="19">',
+      "Click a building to open it"));
+    lg.appendChild(legendRow(
+      '<img class="wm-glyph" src="assets/projects/glyph-zoom.webp" alt="" width="19" height="19">',
+      "Scroll to zoom"));
+    lg.appendChild(legendRow(glyphKeys(), "WASD / arrows walk Suu"));
+    return lg;
+  }
+  /* Sibling of .wm-legend rather than a child of it, so it stays clickable
+     while the legend itself is display:none - the CSS shows it only via
+     `.wm-legend.is-collapsed ~ .wm-legend-btn`. */
+  function buildLegendReopenBtn() {
+    var btn = el("button", "wm-legend-btn", "?");
+    btn.type = "button";
+    btn.setAttribute("aria-label", "Show the guide");
+    btn.addEventListener("click", function () { setLegendOpen(true); });
+    return btn;
+  }
+  /* First pan or zoom of the SESSION (not per mount - legendAutoFolded lives
+     outside mountMap/unmountMap): if the legend is still open and the user
+     has never explicitly toggled it, fold it out of the way once. One-shot
+     via the flag, so a user who reopens it can pan freely afterward without
+     it snapping shut on them again. */
+  function maybeAutoFoldLegend() {
+    if (legendAutoFolded) return;
+    legendAutoFolded = true;
+    var saved = null;
+    try { saved = localStorage.getItem("pf-legend-open"); } catch (e) { /* private mode */ }
+    if (saved !== null) return;
+    if (legendEl && !legendEl.classList.contains("is-collapsed")) setLegendOpen(false);
+  }
+
+  /* ---------- zoom stack ---------- */
+  function buildZoom() {
+    var z = el("div", "wm-zoom");
+    var zin = el("button", null, "+"); zin.type = "button"; zin.dataset.z = "in";
+    zin.setAttribute("aria-label", "Zoom in");
+    var zout = el("button", null, "−"); zout.type = "button"; zout.dataset.z = "out";
+    zout.setAttribute("aria-label", "Zoom out");
+    var zreset = el("button", "wm-zoom-reset", "Reset"); zreset.type = "button"; zreset.dataset.z = "reset";
+    zreset.setAttribute("aria-label", "Reset view");
+    z.appendChild(zin); z.appendChild(zout); z.appendChild(zreset);
+    z.addEventListener("click", function (ev) {
+      var b = ev.target.closest && ev.target.closest("button[data-z]");
+      if (!b) return;
+      var act = b.dataset.z;
+      if (act === "reset") { frameBuildings(); return; }
+      if (!svgEl) return;
+      var v = viewRect(svgEl);
+      zoomAt(act === "in" ? 1.25 : 0.8, v.x + v.w / 2, v.y + v.h / 2);
+    });
+    return z;
+  }
+
+  /* ---------- hover card ----------
+     Gated entirely behind (hover: hover) and (pointer: fine) - a
+     pointermove-driven transform breaks taps on touch, a trap this codebase
+     has hit before. On a coarse pointer wireHoverCard() never attaches, so
+     hoverEl simply never shows. */
+  function buildHoverCard() {
+    var h = el("div", "wm-hover");
+    h.addEventListener("click", function () {
+      if (hoverProject) openDetail(hoverProject);
+    });
+    return h;
+  }
+  function positionHover(clientX, clientY) {
+    if (!hoverEl || !overlay) return;
+    var r = overlay.getBoundingClientRect();
+    var x = clientX - r.left + 18, y = clientY - r.top + 18;
+    var maxX = r.width - hoverEl.offsetWidth - 10, maxY = r.height - hoverEl.offsetHeight - 10;
+    hoverEl.style.left = Math.max(10, Math.min(maxX, x)) + "px";
+    hoverEl.style.top = Math.max(10, Math.min(maxY, y)) + "px";
+  }
+  function showHover(p, clientX, clientY) {
+    if (!hoverEl) return;
+    hoverProject = p;
+    var labels = (window.PORTFOLIO_APP && window.PORTFOLIO_APP.CATEGORY_LABELS) || {};
+    hoverEl.innerHTML = "";
+    hoverEl.appendChild(el("div", "wm-hov-kicker", (labels[p.category] || p.category) +
+      (p.year ? " · " + p.year : "")));
+    hoverEl.appendChild(el("div", "wm-hov-title", p.title));
+    if (p.subtitle) hoverEl.appendChild(el("div", "wm-hov-sub", p.subtitle));
+    hoverEl.appendChild(el("div", "wm-hov-cta", "View project →"));
+    hoverEl.style.display = "block";
+    positionHover(clientX, clientY);
+  }
+  function hideHover() {
+    if (!hoverEl) return;
+    hoverEl.style.display = "none";
+    hoverProject = null;
+  }
+  function wireHoverCard(svg) {
+    if (!hoverCapable) return;
+    svg.addEventListener("mousemove", function (ev) {
+      var b = ev.target.closest && ev.target.closest(".wm-b");
+      if (!b || b.getAttribute("data-id") === STATION_ID) { hideHover(); return; }
+      var id = b.getAttribute("data-id"), p = null;
+      projects().forEach(function (x) { if (x.id === id) p = x; });
+      if (!p) { hideHover(); return; }
+      if (hoverProject !== p) showHover(p, ev.clientX, ev.clientY);
+      else positionHover(ev.clientX, ev.clientY);
+    });
+    svg.addEventListener("mouseleave", hideHover);
+  }
+  /* ---------- the map as a mounted view ----------
+     The valley used to own a full-screen overlay of its own, with its own title
+     band, Back button and List view button. It is one VIEW of the projects
+     destination now, so the shell (js/projects.js) owns all of that chrome -
+     plus Escape, the hash and body.overflow. What is left here is the valley
+     itself, painted into whatever box the shell hands over.
+
+     .worldmap is still the class, because the whole night grading / lamp /
+     sprite stylesheet keys off it. Only its POSITIONING is wrong inside a
+     host: the class says `position: fixed; inset: 0`, which would cover the
+     shell's own title band. .pj-stage is position:relative + overflow:hidden,
+     so absolute + the class's own inset:0 fills exactly the stage. */
+  function mountMap(host) {
     if (open) return;
     open = true;
     overlay = el("div", "worldmap");
-    overlay.id = "worldmap";
-    var bar = el("div", "wm-bar");
-    var back = el("button", "btn btn-small", "← Back to the story");
-    back.addEventListener("click", closeMap);
-    bar.appendChild(back);
-    bar.appendChild(el("span", "wm-title", "The valley - drag to wander · scroll to zoom · WASD / arrows walk Suu · click a building"));
-    var list = el("button", "btn btn-small", "List view");
-    list.addEventListener("click", toggleList);
-    bar.appendChild(list);
-    overlay.appendChild(bar);
-    document.body.appendChild(overlay);
-    document.body.style.overflow = "hidden";
+    overlay.id = "wm-view";
+    overlay.setAttribute("data-view", "map");
+    overlay.style.position = "absolute";
+    host.appendChild(overlay);
     tx = 0; ty = 0; scale = 1;
     suuX = 1050; suuY = 890; suuFace = 1;
     keys.up = keys.down = keys.left = keys.right = 0;
     renderValley();
+    legendEl = buildLegend(); overlay.appendChild(legendEl);
+    legendBtnEl = buildLegendReopenBtn(); overlay.appendChild(legendBtnEl);
+    zoomEl = buildZoom(); overlay.appendChild(zoomEl);
+    /* Coarse-pointer devices never wire the hover card (see wireHoverCard),
+       so on those devices don't even mount the empty element - a phone
+       should show no trace of a hover card, not a hidden one. */
+    if (hoverCapable) { hoverEl = buildHoverCard(); overlay.appendChild(hoverEl); }
     // Framing needs the svg's real size, but clientWidth is still 0 in the tick
     // it is inserted, so viewRect falls back to assumed dimensions and the fit
     // comes out slightly off. Frame once now (so nothing flashes at the wrong
@@ -1229,26 +1358,60 @@
     // so the second pass cannot fight the user.
     frameBuildings();
     setTimeout(frameBuildings, 0);
-    if (!reduced) {
-      overlay.classList.add("wm-wipe");
-      setTimeout(function () { overlay.classList.remove("wm-wipe"); }, 900);
-    }
-    if (location.hash !== "#map") history.pushState(null, "", "#map");
+    // The shell's own .pj-wipe already plays this overlay in; a second wipe
+    // here just replayed the same reveal twice.
   }
-  function closeMap() {
-    if (!open) return;
+  function unmountMap() {
     open = false;
     stopFlight();          // nothing animates behind a closed map
-    overlay.remove();
+    if (overlay) overlay.remove();
     overlay = null;
     panG = suuG = svgEl = null;
+    legendEl = legendBtnEl = zoomEl = hoverEl = null;
+    hoverProject = null;
     keys.up = keys.down = keys.left = keys.right = 0;
-    document.body.style.overflow = "";
-    if (location.hash === "#map") history.pushState(null, "", location.pathname);
+  }
+  /* Dim, never remove. Emptying the valley of 17 of its 18 buildings leaves
+     bare painted meadow where a village was - the map stops being a map. A
+     dimmed building keeps the composition intact and reads as "not this one",
+     which is what a filter means. The label board fades with its building, and
+     the station dims with them: it is not a project, so no category matches it. */
+  function setMapFilter(cat) {
+    if (!svgEl) return;
+    var byId = {};
+    projects().forEach(function (p) { byId[p.id] = p; });
+    [].forEach.call(svgEl.querySelectorAll(".wm-b"), function (g) {
+      var id = g.getAttribute("data-id");
+      var p = byId[id];
+      var on = cat === "all" || (p && p.category === cat);
+      g.classList.toggle("is-dim", !on);
+      var lab = svgEl.querySelector('#wm-labels .wm-board[data-id="' + id + '"]');
+      if (lab) lab.classList.toggle("is-dim", !on);
+    });
+  }
+
+  /* Kept as the public entry the hero CTA, the nav's "Valley map" links and the
+     #map hash have always used. The valley is no longer a destination of its
+     own - it is one view of the projects destination - so this now opens that,
+     on the map view. */
+  function openMap() {
+    window.PORTFOLIO_PROJECTS.open("map");
+  }
+  function closeMap() {
+    window.PORTFOLIO_PROJECTS.close();
   }
 
   /* ---------- boot ---------- */
   document.addEventListener("DOMContentLoaded", function () {
+    /* worldmap.js loads BEFORE projects.js, so this handler runs first and the
+       real map is registered before the shell's placeholder views check
+       whether a name is already taken. */
+    window.PORTFOLIO_PROJECTS.registerView("map", {
+      mount: mountMap,
+      unmount: unmountMap,
+      setFilter: setMapFilter
+    });
+
     var cta = document.querySelector(".hero-cta");
     if (cta) {
       var b = el("a", "btn btn-ghost magnetic", "🗺 Explore the valley");
@@ -1257,34 +1420,40 @@
       b.addEventListener("click", function (ev) { ev.preventDefault(); openMap(); });
       cta.appendChild(b);
     }
+    /* The shell owns the hash, Escape and body.overflow - it writes #projects
+       and closes on its own listeners, and a second copy here would be two
+       handlers fighting over one piece of state. What survives is the OPEN
+       direction of #map only: the two nav "Valley map" links are plain
+       anchors with no JS behind them, so a hashchange is the only signal they
+       give. It never closes anything, so it cannot fight the shell. */
     window.addEventListener("hashchange", function () {
       if (location.hash === "#map") openMap();
-      else closeMap();
     });
-    document.addEventListener("keydown", function (ev) {
-      if (ev.key === "Escape" && open) {
-        if (document.getElementById("wm-detail") || document.getElementById("wm-list")) {
-          closeDetail();
-          var l = document.getElementById("wm-list");
-          if (l) l.remove();
-        } else closeMap();
-      }
-    });
-    // WASD / arrow keys walk Suu (only in map mode, and not while a panel is open)
-    document.addEventListener("keydown", function (ev) {
-      if (!open) return;
-      var k = KEYMAP[(ev.key || "").toLowerCase()];
-      if (!k) return;
-      if (document.getElementById("wm-detail") || document.getElementById("wm-list")) return;
-      ev.preventDefault();
-      if (suuAnim) { cancelAnimationFrame(suuAnim); suuAnim = null; }
-      keys[k] = 1;
-      if (!kbRaf) { kbLast = performance.now(); kbRaf = requestAnimationFrame(kbStep); }
-    });
-    document.addEventListener("keyup", function (ev) {
-      var k = KEYMAP[(ev.key || "").toLowerCase()];
-      if (k) keys[k] = 0;
-    });
+    // WASD / arrow keys walk Suu (only in map mode, and not while the scroll is open).
+    // Coarse-pointer devices have no keyboard worth binding to, so skip it
+    // entirely there rather than wire a listener nothing will ever fire. Below
+    // the 760px phone tier (the same breakpoint --ar-cols and the deck arrows
+    // already key off) there is no room for a keyboard walk either, even on a
+    // device that reports a mouse - so the two conditions are ANDed rather
+    // than relying on hover-capability alone.
+    var wasdCapable = hoverCapable && !window.matchMedia("(max-width: 760px)").matches;
+    if (wasdCapable) {
+      document.addEventListener("keydown", function (ev) {
+        if (!open) return;
+        var k = KEYMAP[(ev.key || "").toLowerCase()];
+        if (!k) return;
+        if (window.PORTFOLIO_PROJ_SCROLL && window.PORTFOLIO_PROJ_SCROLL.isOpen()) return;
+        ev.preventDefault();
+        if (suuAnim) { cancelAnimationFrame(suuAnim); suuAnim = null; }
+        keys[k] = 1;
+        if (!kbRaf) { kbLast = performance.now(); kbRaf = requestAnimationFrame(kbStep); }
+      });
+      document.addEventListener("keyup", function (ev) {
+        var k = KEYMAP[(ev.key || "").toLowerCase()];
+        if (k) keys[k] = 0;
+      });
+      window.PORTFOLIO_WORLDMAP.__wasdBound = true;
+    }
     window.addEventListener("blur", function () {
       keys.up = keys.down = keys.left = keys.right = 0;
     });

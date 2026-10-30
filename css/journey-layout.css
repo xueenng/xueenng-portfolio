@@ -1,0 +1,14 @@
+/* Keep the reading/actions cluster clear of the orchard's left branches. */
+#journey { --journey-inset:clamp(32px,4.5vw,72px); }
+#journey > .section-head { margin-left:var(--journey-inset); }
+#journey > .section-head p { max-width:38rem; text-wrap:balance; line-height:1.55; }
+#journey-view { margin-left:var(--journey-inset); margin-top:18px; }
+#journey .ja-controls { margin-left:var(--journey-inset); margin-top:10px; width:calc(100% - var(--journey-inset)); gap:16px; align-items:center; }
+#journey .ja-btn { color:#39422c; text-shadow:none; font-size:.82rem; }
+#journey .ja-progress { margin-left:4px; }
+@media(max-width:760px) {
+ #journey { --journey-inset:0px; }
+ #journey > .section-head p { max-width:34rem; text-wrap:pretty; font-size:.95rem; }
+ #journey-view { margin-top:16px; }
+ #journey .ja-controls { gap:10px 16px; }
+}

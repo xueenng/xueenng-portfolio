@@ -1,0 +1,47 @@
+/* Shared ivory image-viewer toolbar (approved option 3B). */
+dialog.lightbox {
+  position: fixed; inset: 0; margin: auto; transform: none;
+  width: min(1180px, calc(100vw - 32px)); height: fit-content;
+  max-width: none; max-height: calc(100dvh - 32px); padding: 0;
+  border: 1px solid #756b53; border-radius: 6px; overflow: hidden;
+  background: #10151e; color: #f5e9d4; box-shadow: 0 20px 70px #0009;
+}
+dialog.lightbox:not([open]) { display: none; }
+dialog.lightbox[open] {
+  display: flex; flex-direction: column; align-items: stretch;
+  justify-content: flex-start; gap: 0;
+}
+dialog.lightbox::backdrop { background: #05080de6; }
+.lightbox .lightbox-header {
+  display: flex; justify-content: space-between; align-items: center;
+  flex: none; gap: 24px; padding: 16px 20px;
+  border-bottom: 1px solid #b7a783;
+  background: #f2e6cc url('../assets/selected/header-ivory-surface-v1.webp') center/cover;
+}
+.lightbox .lightbox-header h2 { margin: 0; color: #2e3d30; font: 500 18px/1.4 var(--display); }
+.lightbox .lightbox-close {
+  position: static; inset: auto; flex: none; width: auto; height: auto;
+  min-width: 88px; min-height: 44px; padding: 8px 16px;
+  border: 1px solid #314b37; border-radius: 4px;
+  background: #314b37; color: #fff1d3; font: 600 15px/1.4 var(--sans);
+  cursor: pointer; box-shadow: none;
+}
+.lightbox .lightbox-close:hover { color: #fff1d3; background: #243c2a; border-color: #243c2a; }
+.lightbox .lightbox-close:focus-visible { outline: 3px solid #8c6615; outline-offset: 3px; }
+.lightbox .lightbox-media {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 0; padding: 16px; overflow: auto;
+}
+.lightbox .lightbox-media img {
+  display: block; max-width: 100%; max-height: calc(100dvh - 156px);
+  width: auto; height: auto; object-fit: contain; border-radius: 0; box-shadow: none;
+}
+.k-frame[role="button"]:focus-visible, .gallery img[role="button"]:focus-visible {
+  outline: 3px solid #d3aa4d; outline-offset: 5px;
+}
+@media (max-width:650px) {
+  .lightbox .lightbox-header { padding: 12px; gap: 12px; }
+  .lightbox .lightbox-header h2 { font-size: 16px; }
+  .lightbox .lightbox-media { padding: 8px; }
+  .lightbox .lightbox-media img { max-height: calc(100dvh - 170px); }
+}

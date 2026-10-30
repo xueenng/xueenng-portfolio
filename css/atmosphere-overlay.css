@@ -1,0 +1,4 @@
+﻿/* Scenery is supplied by the section paintings; atmosphere passes through input. */
+#valley[data-layer="atmosphere"] { z-index:30; pointer-events:none; background:transparent; }
+/* Soft-light preserves the illustration and glyph detail while lighting the artwork. */
+body #lantern-disc { z-index:29; pointer-events:none; mix-blend-mode:soft-light; }

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="480" viewBox="0 0 960 480">
+ <rect width="960" height="480" fill="#f0e3bb"/>
+ <g stroke="#513c25" stroke-width="4" fill="none">
+  <circle cx="112" cy="124" r="49"/><path d="M112 173v50h730V63H164v160M164 140h678M248 63v77m126-77v77m120-77v77m116-77v77m116-77v77M248 164v59m126-59v59m120-59v59m116-59v59m116-59v59"/>
+  <circle cx="112" cy="353" r="49"/><path d="M112 402v40h730V292H164v150M164 369h678M294 292v77m156-77v77m156-77v77m118-77v77M294 395v47m156-47v47m156-47v47m118-47v47"/>
+ </g>
+ <g font-family="Georgia,serif" fill="#513c25" text-anchor="middle">
+  <text x="480" y="36" font-size="22">KELLIE'S CASTLE · ILLUSTRATED PLAN</text>
+  <text x="112" y="120" font-size="12">Round</text><text x="112" y="136" font-size="12">tower</text>
+  <text x="207" y="104" font-size="13">Hall</text><text x="311" y="104" font-size="13">Living room</text><text x="434" y="104" font-size="13">Dining</text><text x="554" y="104" font-size="13">Reading room</text><text x="668" y="104" font-size="13">Study</text><text x="782" y="104" font-size="13">Stairs</text>
+  <text x="493" y="156" font-size="12">GROUND FLOOR · LONG GALLERY</text>
+  <text x="480" y="266" font-size="18">FIRST FLOOR</text>
+  <text x="112" y="350" font-size="12">Round</text><text x="112" y="366" font-size="12">tower</text>
+  <text x="226" y="334" font-size="13">Bedroom</text><text x="369" y="334" font-size="13">Children's room</text><text x="528" y="334" font-size="13">Guest room</text><text x="665" y="334" font-size="13">Linen</text><text x="782" y="334" font-size="13">Stairs</text>
+  <text x="493" y="387" font-size="12">GALLERY · BALCONY</text>
+ </g>
+ <path d="M880 436v-50l-7 14m7-14 7 14" stroke="#513c25" stroke-width="2" fill="none"/><text x="880" y="379" text-anchor="middle" font-family="Georgia" font-size="13" fill="#513c25">N</text>
+</svg>

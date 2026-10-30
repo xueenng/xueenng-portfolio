@@ -1,0 +1,819 @@
+/* Document Mill: approved 1774 x 887 cutout. One proportional coordinate
+   system for artwork and controls. The existing compact/touch fallback stays
+   outside these fine-pointer desktop rules. */
+@media (min-width:1100px) and (pointer:fine) {
+  .ft-scene--mill {
+    width: min(96vw, 112rem);
+    margin-inline: calc((100% - min(96vw, 112rem)) / 2);
+    grid-template-columns: minmax(0, 1fr) 18rem;
+    gap: 1rem;
+    align-items: center;
+    /* Reserve equal painted space above and below the complete two-column
+       group instead of extending the backdrop mainly into the prior scene. */
+    padding-block: clamp(2rem, 3vw, 4rem);
+    box-sizing: border-box;
+  }
+  .ft-scene--mill::before {
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    right: auto;
+    width: 100cqw;
+    transform: translateX(-50%);
+    background-position: center;
+  }
+  .ft-stage--mill {
+    container-type: inline-size;
+    min-height: 0;
+    border-radius: 0;
+    background: url('../assets/selected/document-mill-painted-v3-transparent.png') center / 100% 100% no-repeat;
+    aspect-ratio: 2 / 1;
+    box-shadow: none;
+    filter: drop-shadow(0 10px 12px #18291d55);
+  }
+  .ft-stage--mill::before, .ft-stage--mill::after {
+    display: none;
+  }
+  .ft-stage--mill .feature-exhibit .demo { --dw-scale: 1; }
+  .ft-stage--mill .feature-exhibit {
+    inset: 0;
+  }
+  .ft-stage--mill .dw {
+    display: block;
+    padding: 0;
+    font-size: clamp(11px, 1cqw, 15px);
+  }
+  .ft-stage--mill .dw-crate, .ft-stage--mill .dw-viewer, .ft-stage--mill .dw-console, .ft-stage--mill .dw-pipe, .ft-stage--mill .dw-gauge, .ft-stage--mill .dw-ledger {
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-image: none;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    aspect-ratio: auto;
+  }
+  .ft-stage--mill .dw-crate {
+    display: block;
+    left: 6.6%;
+    top: 25.8%;
+    width: 18.1%;
+    height: 46.1%;
+  }
+  .ft-stage--mill .dw-zone-title {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: #422809;
+    text-shadow: none;
+  }
+  .ft-stage--mill .dw-crate > .dw-zone-title {
+    margin: 0;
+    position: absolute;
+    top: -19%;
+    width: 100%;
+    height: 10%;
+    color: #e6cf9c;
+    font-size: 1em;
+  }
+  .ft-stage--mill .dw-batch-summary {
+    position: absolute;
+    left: 22.85%;
+    top: 92%;
+    width: 54.85%;
+    margin: 0;
+    font-size: calc(12px / var(--dw-scale));
+    line-height: 1.15;
+    font-weight: 700;
+    color: #f4e3b7;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .ft-stage--mill .dw-inbox {
+    position: absolute;
+    min-height: 0;
+    background: none;
+    inset: 0;
+    height: 100%;
+  }
+  .ft-stage--mill .dw-files {
+    height: 100%;
+    min-height: 0;
+    padding: 4px;
+    gap: 0;
+    overflow-y: auto;
+    justify-content: start;
+    scrollbar-width: thin;
+    scrollbar-color: #967746 transparent;
+    scroll-snap-type: y proximity;
+  }
+  .ft-stage--mill .dw-file {
+    flex: 0 0 calc(100% / 7);
+    min-height: 0;
+    width: 100%;
+    padding: 0 .2em;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    gap: .1em;
+    flex-basis: calc(100% / 3);
+    scroll-snap-align: start;
+    padding-inline: 5%;
+  }
+  .ft-stage--mill .dw-file.is-focus {
+    background: rgba(150, 109, 24, .18);
+    box-shadow: inset 3px 0 #8c611f;
+  }
+  .ft-stage--mill .dw-pick-hit {
+    flex-basis: calc(28px / var(--dw-scale));
+    width: calc(28px / var(--dw-scale));
+    height: calc(28px / var(--dw-scale));
+    margin: 0;
+  }
+  .ft-stage--mill .dw-file-pick {
+    width: 13px;
+    height: 13px;
+    translate: none;
+  }
+  .ft-stage--mill .dw-file-open {
+    min-inline-size: 0;
+    min-block-size: 0;
+    letter-spacing: -.04em;
+    font-size: 14px;
+    height: calc(100% - 12px);
+  }
+  .ft-stage--mill .dw-stamp.is-on {
+    bottom: 15%;
+    right: 5%;
+    font-size: .75em;
+  }
+  .ft-stage--mill .dw-badge {
+    position: absolute;
+    font-size: .6em;
+    top: 12%;
+    right: 4%;
+  }
+  .ft-stage--mill .dw-add {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    min-height: calc(28px / var(--dw-scale));
+    margin: 0;
+    padding: 0;
+    background: #694013;
+    border-color: #c38b31;
+    top: 106%;
+    height: 10%;
+    font-size: calc(11px / var(--dw-scale));
+  }
+  .ft-stage--mill .dw-viewer {
+    left: 32.2%;
+    top: 20.2%;
+    width: 23.7%;
+    height: 55.5%;
+  }
+  .ft-stage--mill .dw-glass {
+    height: 100%;
+    min-height: 0;
+    aspect-ratio: auto;
+  }
+  .ft-stage--mill .dw-viewer-bg {
+    background: none;
+  }
+  .ft-stage--mill .dw-paper-space {
+    inset: 0;
+  }
+  .ft-stage--mill .dw-viewer .dw-paper {
+    overflow: auto;
+    font-size: max(12px, calc(9px / var(--dw-scale)));
+    padding: .25em;
+  }
+  .ft-stage--mill .dw-doc-head {
+    flex-wrap: wrap;
+  }
+  .ft-stage--mill .dw-viewer .dw-doc-meta {
+    font-size: .8em;
+    gap: .35em .45em;
+    margin-block: .65em;
+  }
+  .ft-stage--mill .dw-viewer .dw-doc-items {
+    font-size: .8em;
+  }
+  .ft-stage--mill .dw-doc-items th:nth-child(1) {
+    width: 12%;
+  }
+  .ft-stage--mill .dw-doc-items th:nth-child(2) {
+    width: 48%;
+  }
+  .ft-stage--mill .dw-doc-items th:nth-child(3), .ft-stage--mill .dw-doc-items th:nth-child(4) {
+    width: 20%;
+  }
+  .ft-stage--mill .dw-viewer .dw-doc-foot {
+    margin-top: .9em;
+  }
+  .ft-stage--mill .dw-magnify {
+    right: 0;
+    width: auto;
+    aspect-ratio: auto;
+    background: #344239;
+    color: #fff3d4;
+    border: 1px solid #b78a36;
+    border-radius: 3px;
+    padding: 0 .7em;
+    filter: none;
+    bottom: -5%;
+    height: 7%;
+    min-height: 22px;
+    font-size: .8em;
+  }
+  .ft-stage--mill .dw-magnify::after {
+    content: 'Enlarge ↗';
+  }
+  .ft-stage--mill .dw-console {
+    left: 61.5%;
+    top: 18%;
+    width: 35%;
+    height: 63%;
+  }
+  .ft-stage--mill .dw-screen {
+    gap: .2em;
+    inset: 18.5% 8% 30% 11.7%;
+    padding: .7em;
+    font-size: 1.1em;
+    line-height: 1.2;
+  }
+  .ft-stage--mill .dw-screen-head {
+    padding-right: 0;
+    font-size: .85em;
+  }
+  .ft-stage--mill .dw-lamps {
+    display: none;
+  }
+  .ft-stage--mill .dw-checks {
+    position: static;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .12em;
+  }
+  .ft-stage--mill .dw-check {
+    min-height: 0;
+    flex-shrink: 0;
+    grid-template-columns: 1em minmax(0, 1fr) .72rem;
+    padding: .18em 0;
+  }
+  .ft-stage--mill .dw-check-icon {
+    width: 1em;
+    height: 1em;
+    flex-basis: 1em;
+  }
+  .ft-stage--mill .dw-check-text b {
+    font-size: max(1em, calc(10px / var(--dw-scale)));
+  }
+  .ft-stage--mill .dw-check-text small {
+    font-size: .78em;
+  }
+  .ft-stage--mill .dw-meter {
+    position: static;
+    width: 100%;
+    margin: 0;
+    font-size: .8em;
+  }
+  .ft-stage--mill .dw-screen .dw-boot {
+    white-space: normal;
+    font-size: .72em;
+  }
+  .ft-stage--mill .dw-run {
+    bottom: auto;
+    min-height: calc(28px / var(--dw-scale));
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #edffe6;
+    box-shadow: none;
+    text-shadow: 0 1px 2px #15342a;
+    left: 22.85%;
+    top: 79.8%;
+    width: 54.85%;
+    height: 9.85%;
+    font-size: calc(13px / var(--dw-scale));
+  }
+  .ft-stage--mill .dw-rules-tab {
+    right: auto;
+    min-height: 0;
+    aspect-ratio: auto;
+    background: none;
+    font-size: .85em;
+    font-weight: 700;
+    left: 11%;
+    top: 4%;
+    width: 52%;
+    height: 8%;
+    color: #ebd3a0;
+    font: 600 1em Georgia,serif;
+    text-shadow: 0 1px 3px #21170b;
+  }
+  .ft-stage--mill .dw-pipe {
+    left: 5.5%;
+    top: 85.5%;
+    width: 68%;
+    height: 8%;
+    display: grid;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    gap: .7em;
+  }
+  .ft-stage--mill .dw-pipe-title {
+    inset: 0 0 auto;
+    font-size: .9em;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .ft-stage--mill .dw-stage {
+    left: 0;
+    right: 0;
+    position: relative;
+    height: 100%;
+    padding: .1em .5em;
+    grid-template-columns: 1.2em minmax(0,1fr);
+    font-size: calc(12px / var(--dw-scale));
+    border-top: 1px solid #b39a6380;
+      appearance: none;
+    background: transparent;
+    border-inline: 0;
+    border-bottom: 0;
+    border-radius: .2rem;
+    font-family: inherit;
+    text-align: left;
+    cursor: help;
+    overflow: visible;
+}
+  .ft-stage--mill .dw-stage-text {
+    min-height: 0;
+    line-height: 1.15;
+  }
+  .ft-stage--mill .dw-stage-text small {
+    font-size: max(9px, .7em);
+    display: none;
+  }
+  .ft-stage--mill .dw-stage-state {
+    font-size: calc(10px / var(--dw-scale));
+  }
+  .ft-stage--mill .dw-gauge {
+    display: block;
+    left: 80%;
+    top: 85.5%;
+    width: 13%;
+    height: 8%;
+  }
+  .ft-stage--mill .dw-gauge-art {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    display: grid;
+    place-items: center;
+  }
+  .ft-stage--mill .dw-gauge-art::before {
+    display: none;
+  }
+  .ft-stage--mill .dw-needle {
+    left: 50%;
+    top: 18%;
+    height: 15%;
+  }
+  .ft-stage--mill .dw-plate {
+    left: 9%;
+    top: 57%;
+    padding: 0;
+    align-items: center;
+    position: static;
+    width: 100%;
+    height: auto;
+    color: #e2c997;
+    text-shadow: none;
+  }
+  .ft-stage--mill .dw-plate-val {
+    font-size: calc(12px / var(--dw-scale));
+  }
+  .ft-stage--mill .dw-ledger {
+    position: fixed;
+    inset: 50% auto auto 50%;
+    width: min(760px, calc(100vw - 48px));
+    height: min(480px, calc(100dvh - 96px));
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    transform: translate(-50%, -50%);
+    zoom: calc(1 / var(--dw-scale));
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+    z-index: 15;
+    padding: 24px;
+    border: 2px solid #9b8050;
+    border-radius: 5px;
+    background: linear-gradient(#f8efd9, #ecdcb6);
+    box-shadow: 0 15px 45px #18251b99;
+    font-size: 14px;
+  }
+  .ft-stage--mill .dw-ledger .dw-zone-title {
+    position: static;
+    transform: none;
+    text-align: left;
+    line-height: 1.2;
+    font-size: 1.25em;
+    padding-right: 6rem;
+  }
+  .ft-stage--mill .dw-ledger .dw-progress-log {
+    position: absolute;
+    top: 0;
+    right: 18%;
+    max-width: 65%;
+    font-size: .75em;
+    line-height: 1.2;
+    border: 0;
+  }
+  .ft-stage--mill .dw-ledger-rows {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: minmax(46px, max-content);
+    align-content: start;
+    align-items: start;
+    justify-items: stretch;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    padding: 0;
+    margin: 22px 0 0;
+    list-style: none;
+    background: none;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+  }
+  .ft-stage--mill .dw-ledger-row {
+    display: grid;
+    grid-template-columns: 140px 95px minmax(0, 1fr);
+    min-height: 46px;
+    height: auto;
+    width: 100%;
+    line-height: 1.4;
+    align-items: start;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #bfa57b66;
+    animation: none;
+  }
+  .ft-stage--mill .dw-sticky {
+    position: absolute;
+    left: auto;
+    bottom: auto;
+    margin: 0;
+    padding: 0 .4em;
+    border: 1px solid #94703d;
+    border-radius: 3px;
+    transform: none;
+    filter: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4em;
+    top: 96%;
+    right: 8%;
+    width: 19%;
+    height: 4%;
+    min-height: calc(28px / var(--dw-scale));
+    color: #f3e3be;
+    background: #3b4932;
+    border-color: #a38a55;
+  }
+  .ft-stage--mill .dw-sticky:hover {
+    transform: none;
+    background: #d9bd83;
+  }
+  .ft-stage--mill .dw-sticky:disabled {
+    filter: none;
+    opacity: .65;
+  }
+  .ft-stage--mill .dw-sticky-text, .ft-stage--mill .dw-sticky-count {
+    position: static;
+    width: auto;
+    max-height: none;
+    transform: none;
+  }
+  .ft-stage--mill .dw-sticky-text {
+    font-size: calc(10px / var(--dw-scale));
+  }
+  .ft-stage--mill .dw-sticky-count {
+    font-size: .7em;
+  }
+  /* The painted inner rules sit ~12% inside the parchment. Keep the copy
+     within a 40px inset at the fixed 18rem desktop column width. */
+  .ft-scene--mill .ft-brief {
+    align-self: stretch;
+    padding-inline: 2.5rem;
+    box-sizing: border-box;
+  }
+  .ft-scene--mill .ft-brief > * {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .ft-scene--mill .ft-brief h3 {
+    font-size: 1.25rem;
+    line-height: 1.15;
+    max-width: 100%;
+  }
+  .ft-stage--mill .dw::after {
+    content: none;
+  }
+  .ft-stage--mill .dw-stage:nth-of-type(n) {
+    top: auto;
+  }
+  .ft-stage--mill .dw-needle,.ft-stage--mill .dw-leds {
+    display: none;
+  }
+  .ft-stage--mill .dw-ledger-toggle {
+    position: absolute;
+    top: 96%;
+    left: 7%;
+    width: 19%;
+    height: 4%;
+    min-height: calc(28px / var(--dw-scale));
+    padding: 0 .5em;
+    border: 1px solid #a38a55;
+    border-radius: 3px;
+    background: #3b4932;
+    color: #f3e3be;
+    font: inherit;
+    font-size: calc(11px / var(--dw-scale));
+    cursor: pointer;
+  }
+  .ft-stage--mill .dw-ledger-toggle:focus-visible {
+    outline-color: #fff1c7;
+  }
+  .ft-stage--mill .dw-ledger[hidden] {
+    display: none;
+  }
+  .ft-stage--mill .dw-ledger-close {
+    position: absolute;
+    right: 1rem;
+    top: .8rem;
+    margin: 0;
+  }
+  .ft-stage--mill .dw-ledger-remark {
+    white-space: normal;
+  }
+  .ft-stage--mill .dw-live-progress {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .ft-stage--mill .dw-board-title {
+    position: absolute; left: 39.7%; top: 3.2%; width: 20.3%; height: 6.6%;
+    margin: 0; display: grid; place-items: center; text-align: center;
+    color: #3d2c14; font: 600 1.2em/1 Georgia, serif; pointer-events: none;
+  }
+  .ft-stage--mill .dw-help {
+    position: absolute; right: 8%; top: 9.5%; width: 18%; height: 5.5%;
+    min-height: calc(28px / var(--dw-scale)); padding: 0 .6em;
+    border: 1px solid #b19763; border-radius: 3px;
+    background: #e6d2a5; color: #382b19; font: inherit;
+    font-size: calc(12px / var(--dw-scale)); font-weight: 700; cursor: pointer;
+  }
+  .ft-stage--mill .dw-help-panel {
+    position: fixed; inset: 50% auto auto 50%; margin: 0;
+    width: min(760px, calc(100vw - 48px)); height: min(480px, calc(100dvh - 96px));
+    max-width: none; max-height: none; transform: translate(-50%, -50%);
+    zoom: calc(1 / var(--dw-scale)); padding: 26px;
+    border: 2px solid #9b8050; border-radius: 5px;
+    background: linear-gradient(#f8efd9, #ecdcb6); color: #3b2a12;
+    box-shadow: 0 15px 45px #18251b99; font-size: 14px;
+    overflow: auto;
+  }
+  .ft-stage--mill :is(.dw-ledger, .dw-help-panel)::backdrop { background: #14251dc4; }
+  .ft-stage--mill .dw-help-panel .dw-zone-title { font-size: 22px; text-align: left; line-height: 1.2; }
+  .ft-stage--mill .dw-help-steps { padding-left: 24px; margin: 16px 0; display: grid; gap: 10px; }
+  .ft-stage--mill .dw-help-steps strong { font-size: 15px; }
+  .ft-stage--mill .dw-help-steps p { margin: 3px 0 0; line-height: 1.5; }
+  .ft-stage--mill .dw-help-note { margin: 0; font-size: 12px; color: #786447; }
+  .ft-stage--mill .dw-help-close { padding: 9px 16px; margin-top: 10px; background: #36573e; color: #fff1d4; border: 1px solid #223e29; border-radius: 3px; font: inherit; cursor: pointer; }
+  .ft-stage--mill .dw-ledger-rows:has(.dw-ledger-empty) { grid-template-columns: minmax(0,1fr); align-content: start; place-items: stretch; }
+  .ft-stage--mill .dw-ledger-empty { padding: 30px 0; border: 0; text-align: center; }
+  .ft-stage--mill .dw-ledger .dw-ledger-stamp { justify-self: start; white-space: nowrap; }
+  .ft-stage--mill .dw-stage.is-live { background: #2e84606b; }
+  .ft-stage--mill .dw-stage-text b::after { content: ' ?'; font: 700 .8em Georgia,serif; opacity: .7; }
+  .ft-stage--mill .dw-stage-tooltip {
+    position: absolute; bottom: calc(100% + 10px); left: 0; z-index: 20;
+    width: calc(240px / var(--dw-scale)); padding: 12px;
+    border: 1px solid #b99a5a; border-radius: 4px; background: #f4e6c5;
+    color: #3b2a12; box-shadow: 0 5px 18px #15251b70;
+    font: 400 calc(12px / var(--dw-scale))/1.45 Arial,sans-serif;
+    text-align: left; white-space: normal; pointer-events: auto;
+  }
+  .ft-stage--mill .dw-run-hint { top: 103%; bottom: auto; }
+  .ft-stage--mill .dw :is(.dw-ledger, .dw-help-panel) button:focus-visible { outline-width: 2px; outline-offset: 2px; }
+
+}
+@media (min-width:1100px) and (max-width:1599px) and (pointer:fine) {
+  .ft-stage--mill .feature-exhibit .demo {
+    width: 1100px;
+    --dw-scale: calc(100cqw / 1100px);
+    zoom: var(--dw-scale);
+    height: 550px;
+  }
+  .ft-stage--mill .dw {
+    font-size: 11px;
+  }
+  .ft-stage--mill .dw :is(button, input):focus-visible {
+    outline-width: calc(2.1px / (100cqw / 1100px));
+    outline-offset: calc(2.1px / (100cqw / 1100px));
+  }
+  .ft-scene--mill .ft-brief {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 2.5rem;
+  }
+  .ft-scene--mill .ft-brief::before {
+    inset: 0;
+  }
+  .ft-scene--mill .ft-brief h3 {
+    font-size: 1.25rem;
+    margin-bottom: .5rem;
+  }
+  .ft-scene--mill .ft-brief .f-sub {
+    margin-top: .5rem;
+    font-size: .82rem;
+  }
+  .ft-scene--mill .ft-facts {
+    margin-top: .5rem;
+  }
+  .ft-scene--mill .ft-facts li {
+    padding-block: .35rem;
+    font-size: .78rem;
+  }
+  .ft-scene--mill .ft-story {
+    margin-top: .5rem;
+  }
+}
+
+/* One dialog frame, header and Close action throughout the Document Mill. */
+@media (min-width:1100px) and (pointer:fine) {
+  .ft-stage--mill .dw-modal {
+    position: fixed;
+    inset: 50% auto auto 50%;
+    width: min(760px, calc(100vw - 48px));
+    height: min(480px, calc(100dvh - 80px));
+    min-width: 0;
+    min-height: 0;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    transform: translate(-50%, -50%);
+    zoom: calc(1 / var(--dw-scale));
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+    overflow: hidden;
+    border: 2px solid #9b8050;
+    border-radius: 5px;
+    background: linear-gradient(#f8efd9, #ecdcb6);
+    color: #3b2a12;
+    box-shadow: 0 15px 45px #18251b99;
+    font-size: 14px;
+    line-height: 1.5;
+    animation: none;
+  }
+  .ft-stage--mill .dw-modal[hidden] { display: none; }
+  .ft-stage--mill .dw-modal::backdrop { background: #14251dc4; }
+  .ft-stage--mill .dw-modal-header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    min-height: 72px;
+    padding: 16px 22px;
+    border-bottom: 1px solid #bca77b;
+    background: #f5e8ca;
+  }
+  .ft-stage--mill .dw-modal .dw-modal-header > h4 {
+    position: static;
+    transform: none;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #3b2a12;
+    text-shadow: none;
+    font: 600 22px/1.2 Georgia, serif;
+    text-align: left;
+    white-space: normal;
+  }
+  .ft-stage--mill .dw-modal .dw-modal-close {
+    position: static;
+    inset: auto;
+    flex: 0 0 88px;
+    width: 88px;
+    height: 38px;
+    min-height: 38px;
+    margin: 0;
+    padding: 0 14px;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid #5e4726;
+    border-radius: 3px;
+    background: #725630;
+    color: #fff3d6;
+    box-shadow: none;
+    font: 600 14px/1.2 Arial, sans-serif;
+    cursor: pointer;
+  }
+  .ft-stage--mill .dw-modal .dw-modal-close:hover { background: #5f4526; }
+  .ft-stage--mill .dw .dw-modal button:focus-visible {
+    outline: 2.1px solid #3b2a12;
+    outline-offset: 3px;
+  }
+  .ft-stage--mill .dw-modal-body {
+    flex: 1;
+    min-height: 0;
+    padding: 20px 24px;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+  }
+  .ft-stage--mill .dw-ledger .dw-modal-body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .ft-stage--mill .dw-ledger-rows { margin-top: 0; }
+  .ft-stage--mill .dw-help-steps { margin-top: 0; }
+  .ft-stage--mill .dw-modal .dw-report-head { margin-bottom: 12px; }
+  .ft-stage--mill .dw-modal .dw-report-subject { margin: 0 0 6px; font-weight: 600; }
+  .ft-stage--mill .dw-modal .dw-sheet { font-size: 13px; }
+  .ft-stage--mill .dw-modal--document {
+    width: min(1000px, calc(100vw - 64px));
+    height: min(880px, calc(100dvh - 64px));
+  }
+  .ft-stage--mill .dw-modal--document .dw-modal-body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 20px 28px;
+  }
+  .ft-stage--mill .dw-modal--document .dw-lightbox-sheet {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    padding: 20px 24px;
+    overflow: auto;
+    border: 1px solid #c5b088;
+    background: #fff7e3;
+    box-shadow: none;
+    font-size: 18px;
+    line-height: 1.5;
+  }
+  .ft-stage--mill .dw-modal--document .dw-paper {
+    height: auto;
+    padding: 0;
+    font-size: 18px;
+    overflow: visible;
+  }
+  .ft-stage--mill .dw-modal--document .dw-doc-head h4 { font-size: 24px; }
+  .ft-stage--mill .dw-modal--document .dw-doc-ref { font-size: 14px; }
+  .ft-stage--mill .dw-modal--document .dw-doc-meta {
+    grid-template-columns: 145px minmax(0,1fr);
+    gap: 9px 16px;
+    margin: 22px 0;
+    font-size: 16px;
+  }
+  .ft-stage--mill .dw-modal--document .dw-doc-items { font-size: 16px; }
+  .ft-stage--mill .dw-modal--document :is(.dw-doc-items th, .dw-doc-items td) { padding: 9px 10px; }
+  .ft-stage--mill .dw-modal--document .dw-doc-foot { margin-top: 24px; }
+  .ft-stage--mill .dw-modal--document .dw-doc-stamp { font-size: 15px; }
+  .ft-stage--mill .dw-modal--document .dw-chop { min-height: 120px; }
+  .ft-stage--mill .dw-modal--document .dw-chop small { font-size: 13px; }
+  .ft-stage--mill .dw-modal--document .dw-lightbox-actions {
+    flex: none;
+    margin-top: 14px;
+    justify-content: flex-start;
+  }
+  .ft-stage--mill .dw-modal--document .dw-lightbox-rescan { min-height: 38px; font-size: 14px; }
+}

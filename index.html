@@ -36,7 +36,26 @@
   ]
 }
 </script>
-<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/styles.css?v=journey-orchard-v1.1">
+<link rel="stylesheet" href="css/do-board.css?v=painted-mill-v3.9">
+<link rel="stylesheet" href="css/do-workshop.css?v=workshop-v1.8">
+<link rel="stylesheet" href="css/castle-experience.css?v=castle-fyp-v3.5">
+<link rel="stylesheet" href="css/project-story.css?v=cr002-v1">
+<link rel="stylesheet" href="css/hiring-evidence.css?v=cr006-a-v1">
+<link rel="stylesheet" href="css/atmosphere-overlay.css?v=foreground-v1">
+<link rel="stylesheet" href="css/header-ivory.css?v=ivory-v1.2">
+<link rel="stylesheet" href="css/footer-stone.css?v=stone-v1">
+<link rel="stylesheet" href="css/castle-farewell.css?v=rain-night-v2">
+<link rel="stylesheet" href="css/about-journal.css?v=about-connect-v1.4">
+<link rel="stylesheet" href="css/section-joins.css?v=joins-v2.2">
+<link rel="stylesheet" href="css/castle-gallery.css?v=gallery-v1.3">
+<link rel="stylesheet" href="css/about-mailbox.css?v=mailbox-compact-v3.1">
+<link rel="stylesheet" href="css/hall-station.css?v=station-live-v3.1">
+<link rel="stylesheet" href="css/journey-layout.css?v=journey-layout-v1">
+<link rel="stylesheet" href="css/reading-palette.css?v=reading-v1.1">
+<link rel="stylesheet" href="css/section-headings.css?v=owner-title-centered-v4.1">
+<link rel="stylesheet" href="css/image-viewer.css?v=p2-approved-v1">
+<link rel="stylesheet" href="css/p3-clarity.css?v=p3-pass1-v1">
 </head>
 <body>
 
@@ -50,7 +69,7 @@
 <header class="nav" id="nav">
   <div class="nav-inner">
     <a class="nav-brand" href="#top"><span class="nav-mono" data-edit="identity.monogram"></span><span class="nav-name" data-edit="identity.name"></span></a>
-    <nav class="nav-links">
+    <nav class="nav-links" aria-label="Main navigation">
       <a href="#map">Valley map</a>
       <a href="#selected">Work</a>
       <a href="#projects">Projects</a>
@@ -61,15 +80,20 @@
     </nav>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu"
             aria-expanded="false" aria-controls="nav-overlay">
-      <span></span><span></span><span></span>
+      <span class="nav-menu-label">Menu</span><span class="nav-menu-bars" aria-hidden="true"><i></i><i></i><i></i></span>
     </button>
     <div class="nav-actions">
       <a class="nav-resume" id="nav-resume" href="resume.html" title="View &amp; download my r&eacute;sum&eacute;">R&eacute;sum&eacute;</a>
-      <button class="icon-btn" id="btn-weather" title="Weather over the valley">&#127782;</button>
-      <button class="icon-btn" id="btn-lantern" title="Suu's reading lantern (L)" aria-pressed="false">&#127982;</button>
-      <button class="icon-btn" id="btn-theme" title="Toggle light / dark">&#9681;</button>
-      <button class="icon-btn" id="btn-present" title="Presentation mode (P)">&#9654;</button>
-      <button class="icon-btn" id="btn-edit" title="Edit this site (Ctrl+E)">&#9998;</button>
+      <details class="nav-atmosphere" id="nav-atmosphere">
+        <summary>Atmosphere <span aria-hidden="true">&#9662;</span></summary>
+        <div class="atmosphere-panel" role="group" aria-label="Atmosphere and site tools">
+          <div class="atmosphere-row"><span>Valley weather</span><button class="icon-btn" id="btn-weather" aria-label="Change valley weather" title="Weather over the valley">&#127782;</button></div>
+          <div class="atmosphere-row"><span>Reading lantern</span><button class="icon-btn" id="btn-lantern" aria-label="Toggle reading lantern" title="Suu's reading lantern (L)" aria-pressed="false">&#127982;</button></div>
+          <div class="atmosphere-row"><span>Light / dark</span><button class="icon-btn" id="btn-theme" aria-label="Toggle light and dark" title="Toggle light / dark">&#9681;</button></div>
+          <div class="atmosphere-row"><span>Presentation</span><button class="icon-btn" id="btn-present" aria-label="Start presentation" title="Presentation mode (P)">&#9654;</button></div>
+          <div class="atmosphere-owner"><button class="icon-btn" id="btn-edit" title="Edit this site (Ctrl+E)">&#9998; Edit site</button></div>
+        </div>
+      </details>
     </div>
   </div>
 </header>
@@ -77,12 +101,12 @@
 <!-- ======== MOBILE NAV OVERLAY ========
      styles.css hides .nav-links below 900px, so without this a phone visitor
      had no section navigation at all - only scrolling. -->
-<div class="nav-overlay" id="nav-overlay" hidden aria-hidden="true">
+<div class="nav-overlay" id="nav-overlay" role="dialog" aria-modal="true" aria-label="Navigation menu" hidden aria-hidden="true">
   <div class="nav-overlay-top">
     <span class="nav-overlay-name" data-edit="identity.name"></span>
     <button class="nav-overlay-close" id="nav-overlay-close" aria-label="Close menu">&#10005;</button>
   </div>
-  <nav class="nav-overlay-links">
+  <nav class="nav-overlay-links" aria-label="Mobile navigation">
     <a href="#map">Valley map</a>
     <a href="#selected">Work</a>
     <a href="#projects">Projects</a>
@@ -93,9 +117,9 @@
   </nav>
   <a class="nav-overlay-resume" href="resume.html">&#8595;&nbsp; R&eacute;sum&eacute; (PDF)</a>
   <div class="nav-overlay-tools">
-    <button class="icon-btn" id="ov-weather" title="Weather over the valley">&#127782;</button>
-    <button class="icon-btn" id="ov-theme" title="Toggle light / dark">&#9681;</button>
-    <button class="icon-btn" id="ov-present" title="Presentation mode">&#9654;</button>
+    <button class="icon-btn" id="ov-weather" aria-label="Change valley weather" title="Weather over the valley">&#127782;</button>
+    <button class="icon-btn" id="ov-theme" aria-label="Toggle light and dark" title="Toggle light / dark">&#9681;</button>
+    <button class="icon-btn" id="ov-present" aria-label="Start presentation" title="Presentation mode">&#9654;</button>
   </div>
 </div>
 
@@ -105,6 +129,10 @@
     <div class="hero-text">
       <p class="hero-kicker" data-edit="hero.kicker"></p>
       <h1 class="hero-headline" id="hero-headline" data-edit="hero.headline"></h1>
+      <!-- The headline is a promise, not a job. An interviewer arriving from
+           the CV needs the plain fact right under it, and identity.title was
+           already in content.js without ever rendering above the fold. -->
+      <p class="hero-role" data-edit="identity.title"></p>
       <p class="hero-subline" data-edit="hero.subline"></p>
       <div class="hero-cta">
         <a class="btn btn-primary magnetic" href="#selected">See the work</a>
@@ -120,6 +148,7 @@
 </section>
 
 <!-- ======== SELECTED WORK (featured exhibits) ======== -->
+<div class="section-join section-join--leaf section-join--hero-work" aria-hidden="true" role="presentation"></div>
 <section class="section" id="selected">
   <div class="section-head reveal">
     <h2><span class="u-hand" data-edit="sections.selected.heading"></span></h2>
@@ -128,51 +157,47 @@
   <div class="features" id="features"></div>
 </section>
 
-<!-- ======== ALL PROJECTS (filterable grid) ======== -->
+<!-- ======== ALL PROJECTS (the archive deck, in the page) ========
+     js/projects.js mountInline() paints the shell chrome (view toggle +
+     filter tabs) and the archive card deck straight into #projects-inline.
+     The map is the only view worth a full screen; it opens over the page
+     at #map from the "Map View" button here. -->
+<div class="section-join section-join--leaf section-join--work-projects" aria-hidden="true" role="presentation"></div>
 <section class="section" id="projects">
   <div class="section-head reveal">
     <h2><span class="u-hand" data-edit="sections.projects.heading"></span></h2>
+    <div id="projects-view-toggle" aria-label="Project view"></div>
     <p data-edit="sections.projects.sub"></p>
   </div>
-  <div class="filters" id="filters" role="tablist" aria-label="project categories"></div>
-  <div class="grid" id="grid"></div>
-</section>
-
-<!-- ======== ABOUT ======== -->
-<section class="section about" id="about">
-  <div class="about-inner">
-    <div class="avatar-wrap reveal" id="avatar-wrap"></div>
-    <div class="about-text reveal">
-      <p class="about-summary" data-edit="identity.summary"></p>
-      <div class="now" id="now">
-        <span class="now-label">NOW</span>
-        <ul class="now-list" id="now-list"></ul>
-      </div>
-    </div>
-  </div>
+  <div id="projects-inline"></div>
 </section>
 
 <!-- ======== SKILLS ======== -->
+<div class="section-join section-join--leaf section-join--projects-workshop" aria-hidden="true" role="presentation"></div>
 <section class="section" id="skills">
   <div class="section-head reveal">
     <h2><span class="u-hand" data-edit="sections.skills.heading"></span></h2>
     <p data-edit="sections.skills.sub"></p>
   </div>
-  <div class="skills-grid" id="skills-grid"></div>
+  <!-- renderSkills sets the class: .tb-stage (workshop) or .tb-list (mobile/edit) -->
+  <div id="skills-grid"></div>
 </section>
 
 <!-- ======== JOURNEY ======== -->
+<div class="section-join section-join--leaf section-join--workshop-journey" aria-hidden="true" role="presentation"></div>
 <section class="section" id="journey">
   <div class="section-head reveal">
     <h2><span class="u-hand" data-edit="sections.journey.heading"></span></h2>
     <p data-edit="sections.journey.sub"></p>
   </div>
+  <section class="journey-work-summary" id="current-experience" aria-labelledby="current-experience-title" hidden></section>
   <div class="filters" id="journey-view" role="tablist" aria-label="journey views"></div>
   <div class="journey-adventure" id="journey-adventure" hidden></div>
   <div class="timeline" id="timeline"></div>
 </section>
 
 <!-- ======== ACHIEVEMENTS (Hall of Achievements) ======== -->
+<div class="section-join section-join--leaf section-join--journey-hall" aria-hidden="true" role="presentation"></div>
 <section class="section" id="achievements">
   <div class="section-head reveal">
     <h2><span class="u-hand" data-edit="sections.achievements.heading"></span></h2>
@@ -181,66 +206,86 @@
   </div>
   <div class="ach-hall" id="ach-hall" hidden></div>
   <div class="filters" id="ach-filters" role="tablist" aria-label="achievement categories"></div>
+  <!-- the room behind the doors is a full-screen destination (#hall), built by
+       app.js into an overlay; .ach-rail is the phone / reduced-motion / edit fallback -->
   <div class="ach-rail" id="ach-rail"></div>
 </section>
 
-<!-- ======== CONTACT ======== -->
-<section class="section contact" id="contact">
-  <div class="contact-card reveal">
-    <span class="contact-stamp" data-edit="identity.monogram"></span>
-    <h2 class="contact-heading"><span class="u-hand" data-edit="sections.contact.heading"></span></h2>
-    <p data-edit="sections.contact.sub"></p>
-    <p class="contact-message" data-edit="contact.message"></p>
-    <div class="contact-row" id="contact-row"></div>
+<!-- ======== RAINY NIGHT: a final invitation to Kellie's Castle ======== -->
+<div class="section-join section-join--leaf section-join--hall-castle" aria-hidden="true" role="presentation"></div>
+<section class="castle-scene castle-farewell" id="castle" aria-labelledby="castle-farewell-heading">
+  <div class="castle-night-stage" role="group" aria-label="Kellie's Castle in the rain, with a glowing entrance and window">
+    <a class="castle-glow-link castle-entrance-link" href="kellie.html" aria-label="Enter Kellie's Castle through the glowing main entrance" title="Enter through the glowing doorway"><span class="castle-hotspot-label">Enter the castle</span></a>
+    <a class="castle-glow-link castle-window-link" href="kellie.html" aria-label="Explore Kellie's Castle through the glowing window" title="Follow the glowing window"><span class="castle-hotspot-label">Follow the light</span></a>
+    <button type="button" class="mailbox-trigger castle-mailbox" id="about-mailbox-toggle" aria-expanded="false" aria-controls="about-reveal">
+      <span class="mailbox-art" aria-hidden="true"><img class="mailbox-closed" src="assets/selected/about-compact-post-closed-v1.webp" alt="" width="1536" height="1024" loading="lazy"><img class="mailbox-open" src="assets/selected/about-compact-post-open-v2.webp" alt="" width="1536" height="1024" loading="lazy"><span class="mailbox-envelope"></span></span>
+      <span class="mailbox-hint" aria-hidden="true">Click to get to know me</span><span class="mailbox-label">Open my letter →</span>
+    </button>
+  </div>
+  <article class="castle-invitation">
+    <div class="castle-invitation-copy">
+      <p class="castle-invitation-kicker">A light is still on</p>
+      <h2 id="castle-farewell-heading">One last adventure?</h2>
+      <p>Explore the night-time VR escape room at Kellie&#8217;s Castle.</p>
+      <a class="castle-enter-button" href="kellie.html">Enter Kellie&#8217;s Castle <span aria-hidden="true">&#8594;</span></a>
+      <p class="castle-glow-hint">Or follow the glowing doorway or window.</p>
+    </div>
+  </article>
+</section>
+
+<!-- ======== ABOUT ======== -->
+<div class="section-join section-join--leaf section-join--castle-about" aria-hidden="true" role="presentation"></div>
+<section class="section about" id="about" aria-labelledby="about-mailbox-heading">
+  <h2 id="about-mailbox-heading" class="castle-mailbox-accessible-heading">About Ng Xue En</h2>
+  <div class="about-reveal" id="about-reveal">
+  <div class="about-inner">
+    <article class="about-letter">
+      <h2 class="about-kicker" id="about-heading" tabindex="-1">About me</h2>
+      <h3 class="about-greeting">Hello, I’m <span data-edit="identity.name">Ng Xue En</span>.</h3>
+      <div class="about-body">
+        <p data-edit="aboutLetter.statement">Business System Analyst at Golden Pet Industries.</p>
+        <p data-edit="aboutLetter.day">I build AI document pipelines, ERP integrations and reporting systems.</p>
+        <p data-edit="aboutLetter.night">Outside work, I build a VR escape room at Kellie’s Castle.</p>
+      </div>
+      <footer class="about-signature-block"><div class="about-signature" data-edit="identity.name">Ng Xue En</div><p class="about-signoff" data-edit="aboutLetter.signoff">Systems and stories, made with care.</p></footer>
+      <div class="letter-seal" id="avatar-wrap" aria-hidden="true"></div>
+      <section class="about-detail" id="about-detail" role="region" aria-labelledby="about-detail-title" hidden>
+        <header class="about-detail-header"><h3 id="about-detail-title">A little about me.</h3><button type="button" class="about-detail-close">Close</button></header>
+        <div class="about-detail-body" tabindex="0" aria-label="About Me details">
+          <div data-about-panel="building" hidden><p class="about-summary" data-edit="identity.summary"></p><div class="about-links"><a href="#journey">Follow my journey →</a><a href="#contact">Say hello →</a></div></div>
+          <div data-about-panel="creating" hidden><p data-edit="aboutLetter.night">Outside work, I build a VR escape room at Kellie’s Castle.</p><p>My final year project brings Kellie’s Castle into a playable VR escape room, from Blender models to Unity gameplay.</p><div class="about-links"><a href="kellie.html">Explore Kellie’s Castle →</a><a href="#projects">Explore my projects →</a></div></div>
+          <div data-about-panel="learning" hidden><div class="now" id="now"><span class="now-label">WHAT I’M WORKING ON</span><ul class="now-list" id="now-list"></ul></div><div class="about-links"><a href="#journey">Follow my journey →</a></div></div>
+        </div>
+      </section>
+    </article>
+    <section class="about-connect" id="contact" aria-labelledby="connect-heading">
+      <h2 id="connect-heading" class="contact-heading"><span data-edit="sections.contact.heading"></span></h2>
+      <p class="connect-sub" data-edit="sections.contact.sub"></p>
+      <div class="contact-row" id="contact-row"></div>
+    </section>
+    <div class="about-notes" aria-label="Building, creating and learning">
+      <button type="button" class="about-note" data-about-view="building" aria-controls="about-detail" aria-expanded="false"><span class="about-note-title" data-edit="aboutLetter.notes.0.title">Building</span><span class="about-note-copy" data-edit="aboutLetter.notes.0.text">AI document workflows and ERP integrations.</span></button>
+      <button type="button" class="about-note" data-about-view="creating" aria-controls="about-detail" aria-expanded="false"><span class="about-note-title" data-edit="aboutLetter.notes.1.title">Creating</span><span class="about-note-copy" data-edit="aboutLetter.notes.1.text">An escape room inside Kellie’s Castle.</span></button>
+      <button type="button" class="about-note" data-about-view="learning" aria-controls="about-detail" aria-expanded="false"><span class="about-note-title" data-edit="aboutLetter.notes.2.title">Learning</span><span class="about-note-copy" data-edit="aboutLetter.notes.2.text">Scroll animations and interactive 3D for the web.</span></button>
+    </div>
+  </div>
+  <div class="mailbox-fold-row"><button type="button" class="mailbox-fold" id="about-mailbox-fold">Fold letter</button></div>
   </div>
 </section>
 
-<!-- ======== NIGHT FALLS: KELLIE'S CASTLE (door to the FYP experience) ======== -->
-<section class="castle-scene" id="castle" aria-label="Kellie's Castle - enter the final year project experience">
-  <a class="castle-link" href="kellie.html" title="A light is on in Kellie's Castle - step inside">
-    <svg viewBox="0 0 1200 430" role="img" aria-label="silhouette of Kellie's Castle at night, one window lit">
-      <defs>
-        <radialGradient id="cs-glow" cx=".5" cy=".5" r=".5">
-          <stop offset="0" stop-color="rgba(255,214,130,.55)"/><stop offset="1" stop-color="rgba(255,214,130,0)"/>
-        </radialGradient>
-      </defs>
-      <!-- far ridge -->
-      <path d="M0 330 Q 200 290 420 318 T 800 310 T 1200 322 L 1200 430 L 0 430 Z" fill="#0e1526" opacity=".85"/>
-      <!-- castle hill -->
-      <path d="M0 386 Q 300 330 600 356 Q 900 330 1200 380 L 1200 430 L 0 430 Z" fill="#090e1b"/>
-      <g class="castle-silhouette">
-        <!-- square tower (the icon of Kellie's Castle) -->
-        <rect x="452" y="96" width="86" height="270" fill="#0a101f"/>
-        <path d="M452 96 h86 v-10 h-12 v6 h-14 v-6 h-14 v6 h-14 v-6 h-14 v6 h-12 Z" fill="#0a101f"/>
-        <path d="M466 130 a9 9 0 0 1 18 0 v20 h-18 Z M496 130 a9 9 0 0 1 18 0 v20 h-18 Z" fill="#1a2440"/>
-        <path d="M466 250 a9 9 0 0 1 18 0 v20 h-18 Z M496 250 a9 9 0 0 1 18 0 v20 h-18 Z" fill="#141d36"/>
-        <!-- THE lit window -->
-        <path class="castle-window" d="M494 182 a10 10 0 0 1 20 0 v26 h-20 Z" fill="#ffd57e"/>
-        <circle class="castle-window-glow" cx="504" cy="196" r="46" fill="url(#cs-glow)"/>
-        <!-- main block with the arched verandah -->
-        <rect x="538" y="188" width="250" height="178" fill="#0a101f"/>
-        <path d="M556 214 a11 11 0 0 1 22 0 v26 h-22 Z M598 214 a11 11 0 0 1 22 0 v26 h-22 Z M640 214 a11 11 0 0 1 22 0 v26 h-22 Z M682 214 a11 11 0 0 1 22 0 v26 h-22 Z M724 214 a11 11 0 0 1 22 0 v26 h-22 Z" fill="#151f3a"/>
-        <path d="M556 290 a11 11 0 0 1 22 0 v28 h-22 Z M598 290 a11 11 0 0 1 22 0 v28 h-22 Z M640 290 a11 11 0 0 1 22 0 v28 h-22 Z M682 290 a11 11 0 0 1 22 0 v28 h-22 Z M724 290 a11 11 0 0 1 22 0 v28 h-22 Z" fill="#121a33"/>
-        <!-- round corner tower with its crown -->
-        <rect x="788" y="170" width="58" height="196" fill="#0a101f"/>
-        <path d="M788 170 a29 20 0 0 1 58 0 Z" fill="#0a101f"/>
-        <path d="M800 196 a8 8 0 0 1 16 0 v18 h-16 Z M826 196 a8 8 0 0 1 16 0 v18 h-16 Z" fill="#141d36"/>
-      </g>
-      <!-- trees -->
-      <path d="M330 366 q -4 -50 14 -74 q 18 24 12 74 Z" fill="#0b1120"/>
-      <path d="M912 372 q -6 -60 18 -88 q 22 28 14 88 Z" fill="#0b1120"/>
-      <!-- ground fog -->
-      <rect x="0" y="352" width="1200" height="60" fill="rgba(150,170,210,.08)"/>
-      <rect x="0" y="374" width="1200" height="56" fill="rgba(150,170,210,.1)"/>
-    </svg>
-    <p class="castle-caption">night has fallen - and a light is on in <b>Kellie's Castle</b>
-      <span>my final year project - step inside, if you dare</span></p>
-  </a>
-</section>
-
-<footer class="footer">
-  <div class="footer-mark" data-edit="identity.monogram"></div>
-  <p data-edit="footer"></p>
+<footer class="footer footer-stone" id="footer" aria-label="Portfolio footer">
+  <div class="footer-stone-inner">
+    <div class="footer-identity">
+      <div class="footer-brand"><span class="footer-mark" data-edit="identity.monogram">XE</span><span>XE Studio</span></div>
+      <div class="footer-signature" data-edit="identity.name">Ng Xue En</div>
+    </div>
+    <div class="footer-details">
+      <p class="footer-signoff" data-edit="aboutLetter.signoff">Systems and stories, made with care.</p>
+      <nav class="footer-links" id="footer-links" aria-label="Footer links"></nav>
+      <p class="footer-copyright">&#169; <span id="footer-year">2026</span> <span data-edit="identity.name">Ng Xue En</span></p>
+    </div>
+    <div class="footer-return"><a class="footer-top" href="#top">Back to top <span aria-hidden="true">&#8593;</span></a></div>
+  </div>
 </footer>
 
 <!-- ======== EDIT MODE UI ======== -->
@@ -279,33 +324,88 @@
 
 <div class="toast" id="toast" hidden></div>
 
-<script src="js/content.js"></script>
-<script src="js/app.js"></script>
+<script src="js/content.js?v=cr006-a-v1"></script>
+<script src="js/resume-content.js?v=p2-approved-v1"></script>
+<!-- natural sizes of assets/journey/*.webp, generated by tools/build-journey-assets.py;
+     must load BEFORE app.js, which lays the journey line out from them -->
+<script src="js/journey-art.js"></script>
+<!-- natural sizes of assets/hall/*.webp plus the room's measurements (clear
+     plaster, plank line, frame openings), generated by
+     tools/build-achievement-assets.py; must load BEFORE app.js, which lays the
+     Hall of Achievements out from them -->
+<script src="js/achievement-art.js"></script>
+<!-- natural sizes of assets/projects/*.webp plus each painted panel's measured
+     9-slice insets (a panel carries fallback:true when the builder could not
+     measure an edge), generated by tools/build-projects-assets.py; must load
+     BEFORE app.js, which sets border-image-slice from them -->
+<script src="js/projects-art.js"></script>
+<!-- layout overrides saved by the scene editor; must load BEFORE app.js -->
+<script src="js/scene-layout.js?v=workshop-counter-v1.6"></script>
+<script src="js/app.js?v=cr006-a-v1"></script>
+<script src="js/header-ivory.js?v=ivory-v1"></script>
 <script>
 /* The mini games are stood down on phones (exhibits.js renderDesktopOnly), so
    a phone has no reason to download the 151KB engine. Desktop still gets it,
    loaded async - DEMOS_READY lets exhibits.js mount an exhibit opened before
    the file has landed, instead of rendering an empty panel. */
 (function () {
-  if (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 700) return;
-  var s = document.createElement("script");
-  s.src = "js/demos.js";
-  window.DEMOS_READY = new Promise(function (resolve) {
-    s.onload = resolve;
-    s.onerror = resolve;
-  });
-  document.head.appendChild(s);
+  if (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 760) return;
+  /* do-workbench.js carries the DO exhibit; demos.js delegates to it. Both
+     are gated the same way and DEMOS_READY waits for both, so exhibits.js
+     never mounts the DO panel into a half-loaded pair. */
+  function grab(src) {
+    var s = document.createElement("script");
+    s.src = src;
+    var done = new Promise(function (resolve) {
+      s.onload = resolve;
+      s.onerror = resolve;
+    });
+    document.head.appendChild(s);
+    return done;
+  }
+  window.DEMOS_READY = Promise.all([
+    grab("js/do-workbench.js?v=p3-pass1-v1"),
+    Promise.all([grab("js/castle-story.js?v=castle-fyp-v2.4"), grab("js/castle-panorama.js?v=castle-fyp-v2.4")]).then(function () {
+      return grab("js/castle-experience.js?v=castle-fyp-v2.9");
+    }).then(function () {
+      return grab("js/demos.js?v=castle-fyp-v2.4");
+    })
+  ]);
 })();
 </script>
-<script src="js/exhibits.js"></script>
-<script src="js/world.js"></script>
+<script src="js/exhibits.js?v=p2-approved-v1"></script>
+<script src="js/world.js?v=fixed-reading-v1"></script>
 <script src="js/world-art.js"></script>
 <script src="js/worldmap.js"></script>
+<!-- The All Projects destination: a full-screen shell that owns the Map|List
+     toggle, the filter tabs and the hash, and mounts one view at a time into
+     .pj-stage. Loads AFTER worldmap.js so the map can register itself as a
+     view; until it does (Task 5), this file's own stub views stand in. -->
+<script src="js/projects.js"></script>
+<!-- The two-page detail scroll (Task 4), shared by both views: standalone
+     so it can be opened/tested on its own before Map (Task 5) and List
+     (Task 6) exist. -->
+<script src="js/proj-scroll.js?v=cr006-a-v1"></script>
+<!-- The List view: the PROJECT ARCHIVE card deck (Task 7). Registers itself
+     with the shell as the "list" view, overwriting projects.js's stub. -->
+<script src="js/archive.js"></script>
 <script src="js/motion.js"></script>
 <script src="js/editor.js"></script>
 <script src="js/origami.js"></script>
+<script src="js/about-mailbox.js?v=mailbox-compact-v3"></script>
 <script src="js/present.js"></script>
 <script src="js/tour.js"></script>
+<!-- Scene editor: OWNER-ONLY and deliberately absent from the public tree
+     (publish-site.ps1 deletes it and its safety scan blocks a leak), so this
+     is loaded only for ?editor=1 and must tolerate a 404. -->
+<script>
+if (location.search.indexOf('editor=1') !== -1) {
+  var _se = document.createElement("script");
+  _se.src = "js/scene-editor.js";
+  _se.onerror = function () { console.warn("scene editor not present in this tree"); };
+  document.head.appendChild(_se);
+}
+</script>
 <!-- GoatCounter: cookieless visitor analytics; feeds the live "visitors" hero stat -->
 <script data-goatcounter="https://xueenng.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>

@@ -35,13 +35,15 @@
     var hit = document.querySelector("#ach-hall .hall-hit");
     if (hit) hit.dispatchEvent(new MouseEvent("click", { bubbles: true }));
   }
+  /* The "open every box at once" latch went with the old drawn toolboxes -
+     the workshop opens ONE chest at a time. Open the Automation chest, which
+     is the fullest and the one the narration leans on. Silently does nothing
+     on the narrow list, which has no chests. */
   function openToolboxes() {
-    var latch = document.querySelector(".toolbox-all");
-    if (!latch) return;
-    var closed = Array.prototype.some.call(
-      document.querySelectorAll(".skill-group.toolbox"),
-      function (b) { return !b.classList.contains("open"); });
-    if (closed) latch.click();
+    var chests = document.querySelectorAll("#skills-grid .tb-station .tb-open");
+    if (chests.length < 2) return;
+    var st = chests[1].closest(".tb-station");
+    if (st && !st.classList.contains("open")) chests[1].click();
   }
   function showAdventureMap() {
     var chips = document.querySelectorAll("#journey-view .chip");
@@ -64,7 +66,7 @@
       { sel: "#achievements", act: openHall, dwell: 11000,
         say: "Watch - I'll push these doors open. Inside: President's List three semesters, Dean's List two, and 10 As at SPM, collected era by era." },
       { sel: "#skills", act: openToolboxes,
-        say: "The toolbox - let me flip every lid at once: SQL and SSRS, n8n automation, Python, AI pipelines, Unity and Blender." },
+        say: "My toolbox - a workshop bench of it. Watch the automation chest open: n8n, PowerShell, Microsoft Graph. There are six, and SQL, Python, Unity and the AI pipelines are all in there." },
       { sel: "#contact",
         say: "That's the short of it. Stay and run something - or send a letter, the email is right here. Thank you for walking with me!" }
     ],
@@ -76,7 +78,7 @@
       { sel: "#selected",
         say: "The selected work runs for real: press the wax-seal buttons and watch the pipelines think. Mock data, real logic." },
       { sel: "#projects",
-        say: "All the builds live here - filter with the chips. When a trail holds more than six, my signpost shows the way onward." },
+        say: "All the builds live here, as a deck of archive cards - filter by category, page through with the arrows, or press Map View and walk the valley instead." },
       { sel: "#btn-lantern", noscroll: true,
         say: "When dusk makes the words hard to read, press this lantern (or the L key) - I'll carry a reading light to your cursor." },
       { sel: "#journey", act: showTimeline,
@@ -86,7 +88,7 @@
       { sel: "#achievements", act: openHall, dwell: 11000,
         say: "The Hall of Achievements - stand back, I'll climb the steps and push the bronze doors open. Every honour is in there, era by era." },
       { sel: "#skills", act: openToolboxes,
-        say: "Six toolboxes of skills - here, every lid at once. Click any one again to close it." },
+        say: "Six chests of skills on one bench. I'll open the automation one - click any chest to open it, and its tools rise out." },
       { sel: ".castle-scene",
         say: "And when night falls... a light is on in Kellie's Castle. Step inside if you dare - the full story of the VR project lives in there." },
       { sel: "#contact",

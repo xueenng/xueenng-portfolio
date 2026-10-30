@@ -2,8 +2,7 @@
    resume.js - renders the ATS résumé from content.resume.
    Same load rule as app.js: localStorage override -> content.js
    default, so the admin portal's saved edits show here too.
-   "Download PDF" = window.print() (print CSS emits only the sheet)
-   - real selectable text, ATS-parseable, zero dependencies.
+   Download PDF uses pdf.js; Print uses the same approved content and print CSS.
    ============================================================ */
 (function () {
   "use strict";
@@ -19,7 +18,7 @@
         if (saved && saved.identity) {
           // résumé block was added after some saved edits - backfill from file
           if (!saved.resume && base.resume) saved.resume = base.resume;
-          return saved;
+          return window.PORTFOLIO_RESUME_CONTENT.upgrade(saved, base);
         }
       }
     } catch (e) {}
@@ -85,7 +84,7 @@
 
     // objective
     if (r.objective) {
-      section(sheet, "Career Objective");
+      section(sheet, "Professional Summary");
       sheet.appendChild(el("p", "r-objective", r.objective));
     }
 
@@ -195,7 +194,7 @@
       y += 14;
     }
 
-    if (r.objective) { section("Career Objective"); para(r.objective, { size: 9.5, color: INK }, 12.8); }
+    if (r.objective) { section("Professional Summary"); para(r.objective, { size: 9.5, color: INK }, 12.8); }
 
     if (r.experience && r.experience.length) {
       section("Working Experience");
