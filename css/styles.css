@@ -2630,9 +2630,8 @@ body.editing .ach-photo { cursor: pointer; }
 .ach-panel-desc { font-size: .92rem; line-height: 1.55; margin-top: .7rem; }
 .hall-stage.cert-open .ach-cert { filter: drop-shadow(0 6px 10px rgba(40, 30, 12, .45)) brightness(.82); }
 
-/* night: the window light is painted into the wall and cannot be relit, so
-   after dark the whole plate dims and warms - one pass over one image */
-body.night .ach-wall { filter: brightness(.62) saturate(.8) hue-rotate(-6deg); }
+/* The indoor gallery keeps its painted warm light, independent of outdoor night. */
+#hall-overlay .ach-wall { filter: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .ach-cert, .ach-panel { animation: none; }
