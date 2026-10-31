@@ -1162,36 +1162,9 @@
   }
   var jState = { visited: {}, at: 0, busy: false };
 
-  function renderCurrentExperience(content, editing) {
-    var summary = $("#current-experience");
-    if (!summary) return;
-    summary.innerHTML = "";
-    summary.hidden = true;
-    if (editing) return;
-    var current = (content.timeline || []).find(function (item) {
-      return item.role && /\b(present|current)\b/i.test(item.period || "");
-    });
-    if (!current) return;
-    var title = el("h3", null, "Current professional experience");
-    title.id = "current-experience-title";
-    summary.appendChild(title);
-    var record = el("article", "journey-work-record");
-    record.appendChild(el("h4", null, current.role));
-    record.appendChild(el("p", "journey-work-org", current.org || ""));
-    record.appendChild(el("p", "journey-work-period", current.period || ""));
-    if (Array.isArray(current.points) && current.points.length) {
-      var list = el("ul");
-      current.points.forEach(function (point) { list.appendChild(el("li", null, point)); });
-      record.appendChild(list);
-    }
-    summary.appendChild(record);
-    summary.hidden = false;
-  }
-
   function renderJourney(content) {
     var editing = document.body.classList.contains("editing");
     if (editing) journeyView = "timeline"; // editing always happens on the timeline
-    renderCurrentExperience(content, editing);
 
     // view switch chips
     var bar = $("#journey-view");
