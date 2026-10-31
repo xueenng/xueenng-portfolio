@@ -1,0 +1,30 @@
+/* Door crop shares the station's 2:1 frame and the existing native hit area. */
+.hall-door-visual{position:absolute;z-index:2;left:66.5%;top:43%;width:10%;height:32.5%;visibility:hidden;pointer-events:none}
+.hall-motion-aperture{position:absolute;inset:6.5% 0 0;border-radius:50% 50% 0 0 / 20% 20% 0 0;overflow:hidden;perspective:600px;background:#21170c;box-shadow:inset 0 0 10px #120c07}
+.hall-motion-interior{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 90%,#fff0b8 0%,#e9ad59 42%,#614323 100%);opacity:0}
+/* 5% wide leaves, top45.1125%, height30.3875% of the original station frame. */
+.hall-motion-leaf{position:absolute;top:0;bottom:0;width:50%;background-image:url('../assets/hall/station-text-free-v3.webp');background-repeat:no-repeat;background-size:2000% 329.082682%;backface-visibility:hidden;transform:rotateY(0deg)}
+.hall-motion-left{left:0;background-position:70% 64.805171%;border-radius:100% 0 0 0 / 20% 0 0 0;transform-origin:left center}
+.hall-motion-right{right:0;background-position:75.263158% 64.805171%;border-radius:0 100% 0 0 / 0 20% 0 0;transform-origin:right center}
+.hall-motion-seam{position:absolute;left:49.4%;top:0;bottom:0;width:1.2%;min-width:1px;background:#ffe5a0;box-shadow:0 0 6px 2px #ffca6b88;opacity:0}
+.hall-motion-spill{position:absolute;z-index:1;left:61%;top:74.7%;width:21%;height:7.5%;pointer-events:none;opacity:0;filter:blur(clamp(1px,.22vw,4px));transform-origin:50% 0}
+.hall-motion-floor{position:absolute;inset:0;clip-path:polygon(47% 0,53% 0,100% 100%,0 100%);background:radial-gradient(ellipse at 50% 0,#ffdf9799 0%,#efb85255 46%,#f4b34c00 92%)}
+.hall-approved.has-door-motion.opening .hall-painted-door{background:none;box-shadow:none;transition:none}
+.hall-approved.has-door-motion.opening .hall-door-visual{visibility:visible}
+.hall-approved[aria-busy="true"] button{cursor:progress}
+.hall-approved.opening .hall-motion-left{animation:hallLeafLeft 550ms cubic-bezier(.4,0,.2,1) 150ms both}
+.hall-approved.opening .hall-motion-right{animation:hallLeafRight 550ms cubic-bezier(.4,0,.2,1) 175ms both}
+.hall-approved.opening .hall-motion-interior{animation:hallWarmInterior 650ms ease-out 150ms both}
+.hall-approved.opening .hall-motion-seam{animation:hallSeamLight 700ms ease-out both}
+.hall-approved.opening .hall-motion-spill{animation:hallThresholdLight 600ms ease-out 200ms both}
+@keyframes hallLeafLeft{from{transform:rotateY(0deg);filter:brightness(1)}to{transform:rotateY(78deg);filter:brightness(.63)}}
+@keyframes hallLeafRight{from{transform:rotateY(0deg);filter:brightness(1)}to{transform:rotateY(-78deg);filter:brightness(.63)}}
+@keyframes hallWarmInterior{from{opacity:0}to{opacity:.95}}
+@keyframes hallSeamLight{0%{opacity:0}20%{opacity:.95}70%{opacity:.5}100%{opacity:0}}
+@keyframes hallThresholdLight{from{opacity:0;transform:scale(.2,.3)}to{opacity:.72;transform:scale(1,1)}}
+.hall-overlay.hall-door-reveal,.hall-rail-reveal{animation:hallDoorReveal 300ms ease-out both}
+@keyframes hallDoorReveal{from{opacity:0}to{opacity:1}}
+.hall-approved.hall-opening-reduced .hall-door-visual,.hall-approved.hall-opening-reduced .hall-motion-spill{display:none}
+.hall-approved.hall-opening-reduced{animation:hallQuietFade 120ms ease-out both!important}
+@keyframes hallQuietFade{from{opacity:1}to{opacity:.75}}
+@media(prefers-reduced-motion:reduce){.hall-rail-reveal{animation:hallDoorReveal 120ms ease-out both!important}}

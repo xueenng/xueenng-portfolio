@@ -1764,26 +1764,43 @@
       '<button type="button" class="hall-enter">Enter the hall <span aria-hidden="true">→</span></button>' +
       '<button type="button" class="hall-suu" aria-label="Let Suu open the hall"></button>' +
       '<p class="hall-painted-caption">Follow the warm light. Click the doors or enter the hall.</p>';
+    if (window.PORTFOLIO_HALL_DOOR) window.PORTFOLIO_HALL_DOOR.mount(hall);
     hall._suuWalk = {x:75.3,y0:23,y1:23};
     var suu = hall.querySelector(".hall-suu");
     suu.style.left = "75.3%";suu.style.bottom = "23%";suu.style.width = "3%";
     hall.querySelectorAll("button").forEach(function(button){
-      button.addEventListener("click",function(){openHall(hall,content);});
+      button.addEventListener("click",function(){openHall(hall,content,button);});
     });
   }
 
-  function openHall(hall, content) {
+  function openHall(hall, content, opener) {
     if (hall._busy) return;
     var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    function finish() {
+    var entryHash = location.hash;
+    function finish(fromDoor) {
       hall._busy = false;
+      if (!hall.isConnected || location.hash !== entryHash || document.body.classList.contains("editing") || document.body.classList.contains("presenting")) {
+        if (window.PORTFOLIO_HALL_DOOR) window.PORTFOLIO_HALL_DOOR.cancel(hall, false);
+        else hall.classList.remove("opening");
+        return;
+      }
       // Desktop walks through the door into a full-screen room; everywhere
       // else the doors still open the rail in place.
-      if (roomAvailable()) { openHallRoom(content); return; }
+      if (roomAvailable()) { openHallRoom(content, fromDoor); return; }
       hallOpen = true;
       hallBurst = true;
       renderAchievements(content);
+      if (fromDoor) {
+        var rail = $("#ach-rail");
+        rail.classList.remove("hall-rail-reveal");
+        void rail.offsetWidth;
+        rail.classList.add("hall-rail-reveal");
+      }
       if (window.PORTFOLIO_MOTION) window.PORTFOLIO_MOTION.rewire();
+    }
+    if (window.PORTFOLIO_HALL_DOOR) {
+      window.PORTFOLIO_HALL_DOOR.start(hall, function () { finish(true); }, opener);
+      return;
     }
     if (reduced) { finish(); return; }
     hall._busy = true;
@@ -2497,7 +2514,7 @@
            !!roomArt();
   }
 
-  function openHallRoom(content) {
+  function openHallRoom(content, fromDoor) {
     if (hallRoom || !roomArt()) return;
     var ov = el("div", "hall-overlay");
     ov.id = "hall-overlay";
@@ -2529,7 +2546,9 @@
       hallBurst = false;
     }, 0);
 
-    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (fromDoor) {
+      ov.classList.add("hall-door-reveal");
+    } else if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       ov.classList.add("hall-wipe");
       setTimeout(function () { ov.classList.remove("hall-wipe"); }, 900);
     }
