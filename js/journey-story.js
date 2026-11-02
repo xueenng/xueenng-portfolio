@@ -49,7 +49,11 @@
       read.setAttribute('aria-label','Read chapter '+(i+1)+': '+(t.role||''));
       read.addEventListener('click',function(){pause();openChapter(t,i);});
       ticket.append(read);sign.addEventListener('click',function(){pause();resume=false;start.textContent='Start my journey →';select(i,true);});
-      shelter.append(building,sign,ticket);station.append(shelter);stage.append(station);
+      shelter.append(building,sign);
+      // Earlier chapter tickets use the open sky, outside the transformed
+      // shelter's stacking context and well above the moving locomotive.
+      if(today)shelter.append(ticket);else station.append(ticket);
+      station.append(shelter);stage.append(station);
       stations.push(station);tickets.push(ticket);buttons.push(sign);
     });
     var train=node('div','js-train');train.setAttribute('aria-hidden','true');

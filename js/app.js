@@ -1228,8 +1228,6 @@
       if (journeyView === "overview") buildOverview(content, adv);
       else {
         buildAdventure(content, adv);
-        var controls=adv.querySelector(".js-controls");
-        if(controls)controls.insertBefore(bar,controls.querySelector(".ja-btn-off"));
       }
     } else {
       adv.hidden = true;
