@@ -1184,8 +1184,11 @@
     bar.style.display = editing ? "none" : "";
     if (!editing) {
       [["map", "Train ride"], ["overview", "All chapters"]].forEach(function (v) {
-        var chip = el("button", "chip" + (journeyView === v[0] ? " on" : ""), v[1]);
-        chip.setAttribute("aria-pressed",String(journeyView===v[0]));
+        // In the railway the ticket itself is Start/Pause/Resume, not a
+        // duplicate view selector. Overview uses the same art to return.
+        if(v[0]==="map" && journeyView==="map")return;
+        var chip = v[0]==="map" ? window.PORTFOLIO_JOURNEY.makeTicket("Back to journey","chip","↩") : el("button", "chip" + (journeyView === v[0] ? " on" : ""), v[1]);
+        if(v[0]!=="map")chip.setAttribute("aria-pressed",String(journeyView===v[0]));
         chip.addEventListener("click", function () {
           if (journeyView === v[0]) return;
           journeyView = v[0];
@@ -1228,6 +1231,8 @@
       if (journeyView === "overview") buildOverview(content, adv);
       else {
         buildAdventure(content, adv);
+        var ride=adv.querySelector('.ja-btn-go');
+        if(ride)bar.insertBefore(ride,bar.firstChild);
       }
     } else {
       adv.hidden = true;

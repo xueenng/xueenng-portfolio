@@ -6,6 +6,17 @@
     var e=document.createElement(tag); if(cls)e.className=cls;
     if(text!==undefined)e.textContent=text; return e;
   }
+  function setTicketLabel(button,label,icon) {
+    button.querySelector('.js-ride-label').textContent=label;
+    button.querySelector('.js-ride-icon').textContent=icon;
+    button.setAttribute('aria-label',label);
+  }
+  function makeTicket(label,cls,icon) {
+    var button=node('button','js-ride-action '+(cls||''));button.type='button';
+    button.append(node('span','js-ride-label'),node('span','js-ride-icon'));
+    button.querySelector('.js-ride-icon').setAttribute('aria-hidden','true');
+    setTicketLabel(button,label,icon||'▶');return button;
+  }
   function mount(content, host, openChapter, suu) {
     if(active)active();
     var chapters=content.timeline.slice().reverse(), count=chapters.length;
@@ -13,7 +24,8 @@
     if(!memory || memory.count!==count) memory={count:count,at:count-1,seen:{}};
     var reduced=matchMedia('(prefers-reduced-motion: reduce)'), timer=null, running=false, resume=false, disposed=false;
     var controls=node('div','ja-controls js-controls');
-    var start=node('button','ja-btn ja-btn-go','Start my journey →');start.type='button';start.setAttribute('aria-pressed','false');
+    var start=makeTicket('Start journey','ja-btn ja-btn-go');start.setAttribute('aria-pressed','false');
+    function setStartLabel(label){setTicketLabel(start,label,running?'Ⅱ':'▶');}
     var reset=node('button','ja-btn ja-btn-off','Reset');reset.type='button';reset.title='Return to Today and clear arrival stamps';
     var progress=node('span','ja-progress');progress.setAttribute('role','status');progress.setAttribute('aria-live','polite');
     controls.append(start,reset,progress);host.append(controls);
@@ -48,7 +60,7 @@
       var read=node('button','js-read','Read chapter →');read.type='button';
       read.setAttribute('aria-label','Read chapter '+(i+1)+': '+(t.role||''));
       read.addEventListener('click',function(){pause();openChapter(t,i);});
-      ticket.append(read);sign.addEventListener('click',function(){pause();resume=false;start.textContent='Start my journey →';select(i,true);});
+      ticket.append(read);sign.addEventListener('click',function(){pause();resume=false;setStartLabel('Start journey');select(i,true);});
       shelter.append(building,sign);
       // Earlier chapter tickets use the open sky, outside the transformed
       // shelter's stacking context and well above the moving locomotive.
@@ -85,14 +97,14 @@
       progress.textContent='Chapter '+(i+1)+' of '+count+' · '+label(chapters[i],i);
       position(arrive);
     }
-    function pause(){if(running)resume=memory.at<count-1;running=false;clearTimeout(timer);timer=null;start.textContent=resume?'Resume journey →':'Start my journey →';start.setAttribute('aria-pressed','false');train.classList.remove('js-moving');}
+    function pause(){if(running)resume=memory.at<count-1;running=false;clearTimeout(timer);timer=null;setStartLabel(resume?'Resume journey':'Start journey');start.setAttribute('aria-pressed','false');train.classList.remove('js-moving');}
     function next(){if(!running||disposed)return;if(memory.at===count-1){pause();return;}select(memory.at+1,true);timer=setTimeout(next,4200);}
     start.addEventListener('click',function(){
       if(running){pause();return;}
-      running=true;start.textContent='Pause journey';start.setAttribute('aria-pressed','true');
+      running=true;setStartLabel('Pause journey');start.setAttribute('aria-pressed','true');
       if(!resume)select(0,true);resume=false;timer=setTimeout(next,4200);
     });
-    reset.addEventListener('click',function(){pause();memory.seen={};resume=false;start.textContent='Start my journey →';select(count-1,false);});
+    reset.addEventListener('click',function(){pause();memory.seen={};resume=false;setStartLabel('Start journey');select(count-1,false);});
     function onResize(){position(false);}
     function onVisibility(){if(document.hidden)pause();}
     function onMode(){if(document.body.classList.contains('presenting')||document.body.classList.contains('editing'))pause();}
@@ -102,5 +114,5 @@
     function cleanup(){disposed=true;pause();observer.disconnect();window.removeEventListener('resize',onResize);window.removeEventListener('hashchange',onHash);document.removeEventListener('visibilitychange',onVisibility);if(active===cleanup)active=null;}
     active=cleanup;select(memory.at,false);
   }
-  window.PORTFOLIO_JOURNEY={mount:mount,stop:function(){if(active)active();}};
+  window.PORTFOLIO_JOURNEY={mount:mount,makeTicket:makeTicket,stop:function(){if(active)active();}};
 })();
