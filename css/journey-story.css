@@ -1,0 +1,48 @@
+/* Approved story railway; warm paper and existing painted station/engine art. */
+#journey .js-controls { min-height:48px; }
+#journey .js-controls .ja-btn-go { min-height:44px; padding:9px 20px; border:1px solid #957044; border-radius:5px; background:#f9e4b9; box-shadow:inset 0 0 0 3px #d4b38260; color:#30402a; font-size:1rem; }
+#journey .js-controls #journey-view { margin:0; gap:0; }
+#journey .js-controls #journey-view .chip:first-child { display:none; }
+#journey-view .chip { background:#f2ddb3; border:1px solid #957044; border-radius:4px; width:auto; height:auto; min-height:44px; padding:9px 18px; font:600 .95rem/1.3 var(--label); color:#4b3825; text-shadow:none; filter:none; transform:none; opacity:1; }
+#journey-view .chip:nth-child(n) { background-image:none; }
+#journey-view .chip.on { box-shadow:inset 0 -3px #756137; transform:none; filter:none; }
+#journey .js-controls .ja-btn-go::before, #journey .js-controls .ja-btn-off::before { display:none; }
+#journey .js-controls .ja-btn-off { min-height:44px; padding:6px; text-decoration:underline; text-underline-offset:4px; }
+#journey .js-controls .ja-progress { letter-spacing:.03em; }
+.js-scroll { margin-left:var(--journey-inset); width:calc(100% - var(--journey-inset)); overflow-x:auto; overflow-y:hidden; scrollbar-color:#8e603b #ebd9ac; scrollbar-width:thin; }
+.js-railway { position:relative; display:grid; grid-template-columns:repeat(var(--stops),minmax(170px,1fr)); min-width:calc(var(--stops) * 170px + 24px); height:410px; padding:0 12px; }
+.js-railway::after { content:''; position:absolute; left:0; right:0; bottom:35px; height:38px; background:url('../assets/journey/rail.webp') left center/91px 38px repeat-x; pointer-events:none; }
+.js-station { position:relative; min-width:0; height:100%; }
+.js-station::before { content:''; position:absolute; left:9%; right:9%; top:75px; bottom:65px; border-left:8px solid #665032; border-right:8px solid #665032; box-shadow:inset 2px 0 #bf9961,2px 0 #bf9961; pointer-events:none; }
+.js-station-art { position:absolute; width:76%; left:12%; height:105px; object-fit:contain; bottom:65px; pointer-events:none; opacity:.85; filter:drop-shadow(0 5px 3px #44301940); transition:opacity .4s,filter .4s; }
+.js-stop { position:absolute; z-index:2; top:24px; left:4%; width:92%; min-height:70px; border:0; padding:14px 17px; background:url('../assets/journey/sign.webp') center/100% 100% no-repeat; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:4px; color:#3d2d1d; cursor:pointer; transition:filter .35s,transform .35s; }
+.js-stop b { font:700 20px/1.15 var(--display); }
+.js-stop::before { content:''; position:absolute; left:-3px; right:-3px; top:-10px; height:12px; background:linear-gradient(#687141,#413a26); clip-path:polygon(7% 0,93% 0,100% 100%,0 100%); }
+.js-stop span { font:600 12px/1.25 var(--label); }
+.js-stop:hover { transform:translateY(-3px); }
+.js-current .js-stop { filter:drop-shadow(0 0 9px #ffcd63b0); }
+.js-current .js-station-art { opacity:1; filter:drop-shadow(0 0 12px #efb95080); }
+.js-preview { position:absolute; top:112px; left:12%; width:76%; padding:8px; color:#46351f; background:#f8e9c8e8; font:600 13px/1.4 var(--label); text-align:center; border:1px solid #bc9c6880; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.js-current .js-preview { visibility:hidden; }
+.js-ticket { position:absolute; z-index:3; top:106px; left:4%; width:92%; padding:12px 14px 9px; background:#f6e3bd; color:#443321; border:1px solid #ad8656; box-shadow:2px 4px 7px #3c281c35; transform:rotate(-2deg); }
+.js-ticket[hidden] { display:none; }
+.js-ticket-role { display:block; font:700 15px/1.25 var(--display); }
+.js-ticket-org { display:block; font:600 12px/1.35 var(--label); margin-top:4px; }
+.js-takeaway { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font:13px/1.4 var(--label); margin:7px 0 2px; }
+.js-read { display:block; min-height:44px; padding:7px 0 0; border:0; background:none; color:#34472c; text-decoration:underline; text-underline-offset:3px; font:700 14px/1.3 var(--label); }
+.js-arrived .js-ticket::after { content:'ARRIVED'; position:absolute; right:8px; bottom:-14px; padding:2px 5px; border:2px solid #a64b36; color:#963c2a; background:#f6e3bd; transform:rotate(-9deg); font:700 10px/1.2 var(--label); pointer-events:none; animation:jsStamp .35s ease-out both; }
+.js-train { position:absolute; z-index:4; bottom:55px; width:200px; height:80px; display:flex; align-items:flex-end; transform:translateX(-55%); pointer-events:none; transition:left 1.2s cubic-bezier(.32,.06,.32,1); }
+.js-train img { height:80px; width:auto; display:block; filter:drop-shadow(0 4px 3px #32271a55); }
+.js-train .js-tender { width:62px; }
+.js-train .js-engine { width:139px; }
+.js-suu { position:absolute; left:19px; bottom:56px; width:27px; height:27px; }
+.js-suu svg { width:100%; height:100%; }
+body.night .js-train::after { content:''; position:absolute; right:4px; bottom:35px; width:18px; height:18px; background:radial-gradient(circle,#fff3bd,#ffce6470 35%,transparent 70%); }
+body.night .js-train img { filter:brightness(.6) saturate(.68) drop-shadow(0 4px 4px #0007); }
+.js-moving::before { content:''; position:absolute; width:48px; height:33px; right:4px; top:-19px; border-radius:50%; background:radial-gradient(ellipse,#f8ecd599,transparent 70%); animation:jsSteam 1.1s ease-out infinite; }
+.js-stop:focus-visible, .js-read:focus-visible, .js-controls button:focus-visible, .js-scroll:focus-visible { outline:3px solid #2e5b43; outline-offset:3px; }
+@keyframes jsStamp { from { opacity:0; transform:rotate(-9deg) scale(1.25); } to { opacity:1; transform:rotate(-9deg) scale(1); } }
+@keyframes jsSteam { from { transform:translate(0,0) scale(.6); opacity:.7; } to { transform:translate(-28px,-30px) scale(1.6); opacity:0; } }
+@media(min-width:1600px) { .js-railway { height:440px; } .js-stop { top:30px; } .js-ticket { top:115px; } }
+@media(max-width:760px) { .js-railway { grid-template-columns:repeat(var(--stops),250px); min-width:calc(var(--stops) * 250px); height:410px; } #journey .js-controls { gap:8px 14px; } #journey .js-controls .ja-progress { flex-basis:100%; margin:0; } .js-scroll { margin-top:8px; } }
+@media(prefers-reduced-motion:reduce) { .js-train,.js-stop,.js-station-art { transition:none; } .js-moving::before,.js-arrived .js-ticket::after { animation:none; } }

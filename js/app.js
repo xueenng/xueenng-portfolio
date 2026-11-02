@@ -1043,14 +1043,16 @@
      Lives on <body>, not inside the section: position:fixed is defeated by any
      transformed ancestor, and the journey stage has several. Being fixed it
      also cannot affect the section's height. */
-  var jModal = null;
+  var jModal = null, jModalOpener = null;
   function closeJourneyModal() {
     if (!jModal) return;
     jModal.classList.remove("in");
     jModal.hidden = true;
     document.body.classList.remove("ja-modal-open");
+    if (jModalOpener && jModalOpener.isConnected) jModalOpener.focus({preventScroll:true});
   }
   function openJourneyModal(t, idx) {
+    jModalOpener = document.activeElement;
     if (!jModal) {
       jModal = el("div", "ja-card");
       jModal.hidden = true;
@@ -1059,11 +1061,17 @@
       });
       document.body.appendChild(jModal);
       document.addEventListener("keydown", function (ev) {
-        if (ev.key === "Escape" && jModal && !jModal.hidden) closeJourneyModal();
+        if (!jModal || jModal.hidden) return;
+        if (ev.key === "Escape") closeJourneyModal();
+        if (ev.key === "Tab") {
+          ev.preventDefault();var close=jModal.querySelector(".ja-close"),body=jModal.querySelector(".ja-body");
+          (document.activeElement===close?body:close).focus();
+        }
       });
     }
     jModal.innerHTML = "";
     var panel = el("div", "ja-panel");
+    panel.setAttribute("role","dialog");panel.setAttribute("aria-modal","true");panel.setAttribute("aria-label",t.role || "Journey chapter");
     /* The parchment itself must NOT scroll - an absolutely positioned close
        button inside a scroll box slides away with the content on a long
        chapter. The paper stays put and an inner body scrolls instead. */
@@ -1072,6 +1080,7 @@
     close.addEventListener("click", closeJourneyModal);
     panel.appendChild(close);
     var body = el("div", "ja-body");
+    body.tabIndex=0;body.setAttribute("role","region");body.setAttribute("aria-label","Chapter story");
     var head = el("div", "ja-head");
     head.appendChild(el("b", "ja-num", (idx < 9 ? "0" : "") + (idx + 1)));
     var tt = el("div");
@@ -1091,6 +1100,7 @@
     document.body.classList.add("ja-modal-open");
     void jModal.offsetWidth;
     jModal.classList.add("in");
+    close.focus({preventScroll:true});
   }
 
   /* ---------- the OVERVIEW: the same train, parked ----------
@@ -1160,24 +1170,27 @@
     stage.appendChild(scroller);
     adv.appendChild(stage);
   }
-  var jState = { visited: {}, at: 0, busy: false };
+
 
   function renderJourney(content) {
+    if(window.PORTFOLIO_JOURNEY)window.PORTFOLIO_JOURNEY.stop();
     var editing = document.body.classList.contains("editing");
     if (editing) journeyView = "timeline"; // editing always happens on the timeline
 
     // view switch chips
     var bar = $("#journey-view");
+    $("#journey").insertBefore(bar,$("#journey-adventure"));
     bar.innerHTML = "";
     bar.style.display = editing ? "none" : "";
     if (!editing) {
       [["map", "Train ride"], ["overview", "All chapters"]].forEach(function (v) {
         var chip = el("button", "chip" + (journeyView === v[0] ? " on" : ""), v[1]);
-        chip.setAttribute("role", "tab");
+        chip.setAttribute("aria-pressed",String(journeyView===v[0]));
         chip.addEventListener("click", function () {
           if (journeyView === v[0]) return;
           journeyView = v[0];
           renderJourney(content);
+          (v[0]==="map"?$("#journey .ja-btn-go"):bar.querySelectorAll("button")[1]).focus({preventScroll:true});
           if (window.PORTFOLIO_MOTION) window.PORTFOLIO_MOTION.rewire();
         });
         bar.appendChild(chip);
@@ -1213,506 +1226,20 @@
     if (!editing && (journeyView === "map" || journeyView === "overview")) {
       adv.hidden = false;
       if (journeyView === "overview") buildOverview(content, adv);
-      else buildAdventure(content, adv);
+      else {
+        buildAdventure(content, adv);
+        var controls=adv.querySelector(".js-controls");
+        if(controls)controls.insertBefore(bar,controls.querySelector(".ja-btn-off"));
+      }
     } else {
       adv.hidden = true;
       adv.innerHTML = "";
     }
   }
 
-  /* the adventure map is a side-scrolling journey: the road is longer than
-     the frame, so walking moves the WORLD - the road slides past Suu while
-     painted hills drift slower behind her, and the chapter she is standing
-     in is the one shown below. */
-  var jResize = null;
+  /* The story railway owns playback and responsive station layout. */
   function buildAdventure(content, adv) {
-    var INK = "#5d4a33";
-    var stops = content.timeline.slice().reverse();   // oldest chapter first
-    var n = stops.length;
-    if (n < 2) { adv.innerHTML = ""; return; }
-    var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var narrow = window.matchMedia("(max-width: 760px)").matches;
-
-    var SPACING = narrow ? 300 : 520;
-    var STAGE_H = narrow ? 240 : 300;
-    var ROAD_Y = STAGE_H - 74;
-    /* The consist is anchored by its right edge (the locomotive), so it
-       extends LEFT from whatever station it is parked at. The first station
-       therefore has to sit at least a whole train-length in from the start of
-       the track, or the carriages hang off the left of the scene. */
-    var TRAIN_H = narrow ? 42 : 58;
-    /* The RIDE shows a short train - two lit carriages is enough to read as a
-       train. One-carriage-per-chapter belongs to the "All chapters" overview,
-       where the whole consist is the point; here it just made the train longer
-       than the gap between stations. */
-    var RIDE_CARS = 2;
-    var CONSIST_W = Math.round(TRAIN_H * (RIDE_CARS * 524 + 827) / 328);
-    var EDGE = Math.max(narrow ? 150 : 280, CONSIST_W + 34);
-    var stationX = stops.map(function (t, i) { return EDGE + i * SPACING; });
-    var trackW = stationX[n - 1] + EDGE;
-
-    /* ---------- painted pieces ----------
-       The railway pack is real painted art at the valley map's fidelity, so
-       the stops, the rail and the roadside are <image> now rather than the
-       rectangles-and-circles this used to draw. Natural sizes come from
-       js/journey-art.js (generated), so choosing a display HEIGHT is enough -
-       the width follows the art and stays correct if the art is rebuilt. */
-    var JA = (window.JOURNEY_ART && window.JOURNEY_ART.pieces) || {};
-    function art(slug, h) {
-      var nat = JA[slug];
-      if (!nat) {
-        // Squaring off is the visible symptom of journey-art.js not having
-        // loaded - which looks like a layout bug, not a missing file. Say so.
-        console.warn("journey: no natural size for " + slug +
-                     " - is js/journey-art.js loaded before app.js?");
-        nat = [h, h];
-      }
-      return { href: "assets/journey/" + slug + ".webp",
-               w: Math.round(nat[0] * h / nat[1]), h: h };
-    }
-    /* centred on cx, standing ON baseY - every piece in the pack is drawn
-       resting on its own ground, so aligning feet is what makes them sit on
-       the same line. */
-    function piece(slug, h, cx, baseY, cls) {
-      var a = art(slug, h);
-      return '<image href="' + a.href + '" x="' + (cx - a.w / 2).toFixed(1) +
-        '" y="' + (baseY - a.h).toFixed(1) + '" width="' + a.w + '" height="' + a.h +
-        '" preserveAspectRatio="xMidYMax meet"' + (cls ? ' class="' + cls + '"' : "") + "/>";
-    }
-
-    var SIGNAL_H = narrow ? 58 : 76;    // semaphore beside each stop
-    var RAIL_H = narrow ? 26 : 34;      // the tiled track band
-    var RAIL_TOP = ROAD_Y - RAIL_H / 2;
-    /* The axle line: the midpoint BETWEEN the two rails, measured off the art
-       at build time. Everything trackside is placed against THIS rather than
-       the band's top or bottom edge, so the train rides in the track the way
-       the valley map's does instead of perching on it. */
-    var AX = (window.JOURNEY_ART && window.JOURNEY_ART.axle) ||
-             { rail: 0.5, train: { deg: 0, midY: 1 } };
-    var AXLE_Y = RAIL_TOP + RAIL_H * AX.rail;
-
-    /* The lineside, from art-source/nature. Four tree shapes on rotation, and
-       clutter on a different cycle length so the two never line up into a
-       visible repeat. */
-    var LINESIDE = [["oak", 62], ["bush", 48], ["pine", 58], ["cypress", 56]];
-    var CLUTTER = [["boulder", 20], ["logs", 22], null, ["reeds", 20], null];
-
-    function postSVG(i, t) {
-      /* The place plate that used to live here is now a painted signboard in
-         HTML (see the .ja-sign pass below): SVG <text> cannot wrap, and role
-         names run from "IT Intern" to "SPM - Malaysian Certificate of
-         Education". The labels belong on the STATIONS rather than on the
-         carriages because carriages move, and a sliding label is both hard to
-         read and collides with everything it passes. */
-      var hitW = 118;
-      // A semaphore signal per stop: its arm is what "lit" swings down, so
-      // reaching a chapter clears the line the way a real railway does.
-      return '<g class="ja-post" data-mi="' + i +
-        '" transform="translate(' + stationX[i] + "," + ROAD_Y + ')">' +
-        piece("signal", SIGNAL_H, 0, 8, "ja-signal") +
-        '<rect x="' + (-hitW / 2) + '" y="' + (-SIGNAL_H - 40) + '" width="' + hitW + '" height="' + (SIGNAL_H + 92) + '" fill="transparent" style="cursor:pointer"/></g>';
-    }
-    function trackSVG() {
-      var a = art("rail", RAIL_H);
-      // The pattern tiles from the USER SPACE origin, not from the rect - so
-      // unless its y is pinned to the band, the band starts mid-tile and a
-      // sliver of a second track repeats above the first.
-      var s = '<svg width="' + trackW + '" height="' + STAGE_H + '" viewBox="0 0 ' + trackW + " " + STAGE_H + '">' +
-        '<defs><pattern id="ja-railpat" x="0" y="' + RAIL_TOP + '" width="' + a.w + '" height="' + RAIL_H +
-        '" patternUnits="userSpaceOnUse">' +
-        '<image href="' + a.href + '" width="' + a.w + '" height="' + RAIL_H + '"/></pattern></defs>' +
-        '<rect class="ja-railband" x="0" y="' + RAIL_TOP + '" width="' + trackW + '" height="' + RAIL_H + '" fill="url(#ja-railpat)"/>';
-      // A platform where the line starts. It runs on through the right-hand
-      // edge - a through line, not a terminus.
-      // narrow has a smaller EDGE, so the desktop offset would push the
-      // platform off the left of the frame (measured: 37px clipped at 420)
-      /* The station building, not the old bare platform. It is much taller
-         than it is long compared with the old piece (2.15:1 against 3.33:1),
-         so it is sized to stand ABOVE the train rather than beside it - a real
-         station house overtops its carriages. */
-      s += piece("station", narrow ? 88 : 124, stationX[0] - (narrow ? 118 : 210), AXLE_Y, "ja-scene");
-      stops.forEach(function (t, i) { s += postSVG(i, t); });
-      return s + "</svg>";
-    }
-    function midSVG() {   // roadside trees and fencing - drift at middle speed
-      var s = '<svg width="' + trackW + '" height="' + STAGE_H + '" viewBox="0 0 ' + trackW + " " + STAGE_H + '">', x, k = 0;
-      var shrink = narrow ? 0.7 : 1;
-      for (x = 80; x < trackW; x += 330, k++) {
-        // trees stay well under the number plates: one that out-scales the
-        // locomotive reads as a forest the line runs through, not the
-        // roadside it is meant to be
-        var t = LINESIDE[k % LINESIDE.length];
-        s += piece(t[0], t[1] * shrink, x, AXLE_Y - 18, "ja-scene");
-        s += piece("fence", (narrow ? 18 : 26) * 1, x + 150, AXLE_Y - 12, "ja-scene");
-        var c = CLUTTER[k % CLUTTER.length];
-        if (c) s += piece(c[0], c[1] * shrink, x + 245, AXLE_Y - 10, "ja-scene");
-      }
-      return s + "</svg>";
-    }
-
-    /* ---------- DOM ---------- */
-    adv.innerHTML = "";
-    // the overview reads these back so both views size the same (see buildOverview)
-    adv.style.setProperty("--ja-stage-h", STAGE_H + "px");
-    adv.style.setProperty("--ja-ground", (STAGE_H - ROAD_Y) + "px");
-    var ctl = el("div", "ja-controls");
-    /* Not .chip any more: these are ACTIONS, and .chip is the filter/toggle
-       look shared with the Projects and Achievements bars. */
-    var autoB = el("button", "ja-btn ja-btn-go", "let Suu walk");
-    var resetB = el("button", "ja-btn ja-btn-off", "reset journey");
-    var prog = el("span", "ja-progress");
-    ctl.appendChild(autoB); ctl.appendChild(resetB); ctl.appendChild(prog);
-    adv.appendChild(ctl);
-
-    var stage = el("div", "ja-stage");
-    stage.style.height = STAGE_H + "px";
-    var mid = el("div", "ja-layer ja-mid"); mid.innerHTML = midSVG();
-    var track = el("div", "ja-layer ja-track"); track.innerHTML = trackSVG();
-    // Suu rides the line rather than walking it - the locomotive is the
-    // traveller now, she is on the carriage roof.
-    // TRAIN_H is declared up with EDGE now - the first station's offset has to
-    // know the whole consist's length before the track is laid out.
-    var suuEl = el("div", "ja-train");
-    suuEl.style.width = CONSIST_W + "px";
-    suuEl.style.height = TRAIN_H + "px";
-    /* Hung from its MEASURED axle, not its bbox. The sprite is drawn on a
-       slope, so its bottom edge is a corner - hanging it there puts the wheels
-       wherever that corner falls. Levelling it is the same measurement read
-       the other way: rotate out the baked-in slope, about the axle itself so
-       the pivot does not move the train off the rail. */
-    suuEl.style.top = (AXLE_Y - TRAIN_H * AX.train.midY) + "px";
-
-    var T = AX.train, sm = AX.smoke;
-
-    /* ---------- the consist: one carriage per chapter ----------
-       The single train sprite is replaced by loco + n carriages, so the train
-       itself doubles as a progress bar - a carriage lights when its station is
-       reached. The consist is anchored by its RIGHT edge (see paint()), which
-       puts the locomotive at the station and strings the carriages back over
-       the stations already passed. */
-    var CAR_W = Math.round(TRAIN_H * 524 / 328);
-    /* The engine and its tender are SEPARATE pieces. They used to be one
-       slice, so reversing mirrored both - and the tender's painted "XE
-       RAILWAY" came out backwards. Split, the tender can move to the engine's
-       other side (which is where a turned loco's tender really goes) while
-       never being mirrored itself. */
-    var ENG_W = Math.round(TRAIN_H * 571 / 328);
-    var TEND_W = Math.round(TRAIN_H * 256 / 328);
-    // scenery, not controls: the stations and their signboards are what you
-    // click in the ride. Always lit, so the windows glow the whole way.
-    var cars = "";
-    for (var ci = 0; ci < RIDE_CARS; ci++) {
-      cars += '<span class="ja-car lit" style="width:' + CAR_W +
-        "px;height:" + TRAIN_H + 'px"><img src="assets/journey/carriage.webp" alt="" ' +
-        'draggable="false" style="width:' + CAR_W + "px;height:" + TRAIN_H + 'px">' +
-        '<span class="ja-carglow"></span></span>';
-    }
-    /* The old smoke/lamp anchors were measured against the WHOLE train sprite.
-       They are re-based onto the locomotive slice here: the slice is source
-       x1040-1867 of 1887, and the deployed art was trimmed ~6px off the top of
-       328, so x maps by (x*1887-1040)/827 and y by (6+y*318)/328. */
-    function locoX(v) { return (v * 1887 - 1296) / 571; }
-    function locoY(v) { return (6 + v * 318) / 328; }
-    var lb = "", lf = "";
-    if (sm && T.funnel) {
-      var smH2 = TRAIN_H * 0.72, smW2 = Math.round(smH2 * sm.w / sm.h);
-      lb += '<span class="ja-smoke" style="left:' +
-        (ENG_W * locoX(T.funnel[0]) - smW2 * sm.origin[0] + TRAIN_H * 0.13).toFixed(1) +
-        "px;top:" + (TRAIN_H * locoY(T.funnel[1]) - smH2 * sm.origin[1]).toFixed(1) +
-        "px;width:" + smW2 + "px;height:" + smH2.toFixed(1) + "px;--frames:" + sm.frames +
-        ";--travel:" + (-smW2 * sm.frames) + 'px"><img src="assets/journey/smoke.webp" alt="" ' +
-        'draggable="false" style="width:' + (smW2 * sm.frames) + 'px;height:100%"></span>';
-    }
-    if (T.lamp) {
-      /* the beam the headlamp throws: a shallow wedge lying along the ground.
-         BEHIND the locomotive so the boiler occludes its root. */
-      var R = Math.round(TRAIN_H * 2.8), half = 13 * Math.PI / 180;
-      var bh = Math.ceil(R * Math.sin(half) * 0.6 * 2) + 4;
-      var bx = (R * Math.cos(half)).toFixed(1), by = (R * Math.sin(half)).toFixed(1);
-      lb += '<svg class="ja-beam" width="' + R + '" height="' + bh + '" viewBox="0 ' +
-        (-bh / 2) + " " + R + " " + bh + '" style="left:' +
-        (locoX(T.lamp[0]) * ENG_W).toFixed(1) + "px;top:" +
-        (locoY(T.lamp[1]) * TRAIN_H - bh / 2).toFixed(1) + 'px">' +
-        '<defs><radialGradient id="ja-head" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="' + R + '">' +
-        '<stop offset="0" stop-color="rgba(255,240,196,.5)"/>' +
-        '<stop offset=".45" stop-color="rgba(255,230,172,.16)"/>' +
-        '<stop offset="1" stop-color="rgba(255,222,160,0)"/></radialGradient></defs>' +
-        '<g transform="scale(1,0.6)"><path d="M0 0 L' + bx + " " + (-by) +
-        " A" + R + " " + R + " 0 0 1 " + bx + " " + by + ' Z" fill="url(#ja-head)"/></g></svg>';
-      lf += '<span class="ja-lamp" style="left:' + (locoX(T.lamp[0]) * ENG_W).toFixed(1) +
-        "px;top:" + (locoY(T.lamp[1]) * TRAIN_H).toFixed(1) + "px;width:" +
-        (T.lamp[2] * ENG_W * 5).toFixed(1) + "px;height:" +
-        (T.lamp[3] * TRAIN_H * 5).toFixed(1) + 'px"></span>';
-    }
-    suuEl.style.width = (RIDE_CARS * CAR_W + ENG_W + TEND_W) + "px";
-    /* Order is [tender][engine]; .ja-train.rev flips this container to
-       row-reverse, so the engine leads on the left and the tender ends up
-       behind it - and only the engine is mirrored. Suu rides on the coal. */
-    suuEl.innerHTML =
-      '<div class="ja-cars">' + cars + "</div>" +
-      '<div class="ja-power">' +
-        '<div class="ja-tender" style="width:' + TEND_W + "px;height:" + TRAIN_H + 'px">' +
-          '<img src="assets/journey/tender.webp" alt="" draggable="false" style="width:' +
-          TEND_W + "px;height:" + TRAIN_H + 'px">' +
-          '<span class="ja-rider">' + suuSpriteSVG() + "</span></div>" +
-        '<div class="ja-engine" style="width:' + ENG_W + "px;height:" + TRAIN_H + 'px">' +
-          lb + '<img src="assets/journey/engine.webp" alt="" draggable="false" style="width:' +
-          ENG_W + "px;height:" + TRAIN_H + 'px">' + lf + "</div>" +
-      "</div>";
-    track.appendChild(suuEl);
-
-    /* Station signboards, in HTML so the text can actually wrap. They live
-       inside `track`, so the camera transform carries them along with the
-       rails instead of leaving them behind. */
-    stops.forEach(function (t, si) {
-      var sg = el("div", "ja-sign");
-      sg.style.left = stationX[si] + "px";
-      sg.style.bottom = (STAGE_H - ROAD_Y + SIGNAL_H + 12) + "px";
-      sg.appendChild(el("b", null, t.role || ""));
-      sg.appendChild(el("span", null, t.period || ""));
-      track.appendChild(sg);          // click is bound with the other gestures below
-    });
-    /* No far layer any more: it drew nothing but a flat green land fill that
-       sat on top of the painted valley. The plate behind the section is the
-       ground now, so the rails run straight over the real meadow. */
-    stage.appendChild(mid); stage.appendChild(track);
-    adv.appendChild(stage);
-
-    var nav = el("div", "ja-nav");
-    var prevB = el("button", "ja-arrow", "◄");
-    prevB.title = "previous chapter";
-    var dots = el("div", "ja-dots");
-    var nextB = el("button", "ja-arrow", "►");
-    nextB.title = "next chapter";
-    nav.appendChild(prevB); nav.appendChild(dots); nav.appendChild(nextB);
-    adv.appendChild(nav);
-
-
-    var dotEls = stops.map(function (t, i) {
-      var b = el("button", "ja-dot-btn");
-      b.title = (i + 1) + ". " + (t.place ? t.place + " - " : "") + t.role;
-      b.addEventListener("click", function () { stopAuto(); walkTo(i); });
-      dots.appendChild(b);
-      return b;
-    });
-
-    /* Distance travelled at time k, for a trapezoidal SPEED profile: pull
-       away, run, brake. A quadratic ease is either accelerating or braking at
-       every instant and never settles into a run, which is what made short
-       hops between stops look like a lurch rather than a departure. */
-    function trainEase(k) {
-      var up = 0.3, down = 0.3, run = 1 - up - down;
-      var area = up / 2 + run + down / 2;          // so trainEase(1) === 1
-      if (k < up) return (k * k / (2 * up)) / area;
-      if (k < up + run) return (up / 2 + (k - up)) / area;
-      var t = k - up - run;
-      return (up / 2 + run + t - t * t / (2 * down)) / area;
-    }
-
-    /* ---------- camera + walking ---------- */
-    var curX = stationX[jState.at], facing = 1, raf = null, stageW = 900;
-    function measure() { stageW = stage.clientWidth || 900; }
-    function paint(hop) {
-      /* The anchor is folded into `left` rather than a percentage transform.
-         A translate(-100%) that had to flip to translate(0) on reverse simply
-         would not budge - not from the .rev rule, not from an inline style,
-         not even from inline !important - and the turned engine stayed parked
-         a whole train-length off screen. `left` is plain layout and always
-         obeys. Running right the engine is the right-hand vehicle so the
-         consist hangs back to the left; turned, it leads and trails right. */
-      suuEl.style.left = (facing < 0 ? curX : curX - CONSIST_W) + "px";
-      /* No bob. This carried Suu's walking bounce, oscillating several times a
-         second, which on a locomotive reads as the train hopping along the
-         rail instead of rolling down it.
-         Anchored by whichever end the ENGINE is on, so the engine always stops
-         at the platform and stays in shot. Running right the engine is the
-         right-hand vehicle, so the consist hangs back to the left; once turned
-         it leads on the left, so the consist trails off to the right instead.
-         Anchoring by the right edge in both cases put the turned engine a
-         whole train-length left of the station, outside the camera entirely -
-         measured at x=-32, i.e. off screen. */
-      /* The anchor is NOT set here. It is driven by the .rev class in CSS, so
-         there is exactly one source of truth for which end the engine is on -
-         setting it per-frame here raced the class and left the turned engine
-         parked a whole train-length off screen. paint() only owns `left`. */
-      var cam = Math.max(0, Math.min(Math.max(0, trackW - stageW), curX - stageW * 0.3));
-      track.style.transform = "translateX(" + (-cam).toFixed(1) + "px)";
-      mid.style.transform = "translateX(" + (-cam * 0.55).toFixed(1) + "px)";
-    }
-    function syncUI() {
-      var v = Object.keys(jState.visited).length;
-      prog.textContent = v + " / " + n + " chapters";
-      dotEls.forEach(function (b, i) {
-        b.classList.toggle("on", i === jState.at);
-        b.classList.toggle("seen", !!jState.visited[i]);
-      });
-      prevB.disabled = jState.at === 0;
-      nextB.disabled = jState.at === n - 1;
-    }
-    function celebrate() {
-      for (var i = 0; i < 9; i++) {
-        var leaf = el("span", "ja-leaf");
-        leaf.style.left = (10 + Math.random() * 80) + "%";
-        leaf.style.animationDelay = (Math.random() * 0.9).toFixed(2) + "s";
-        leaf.style.background = ["#6ca25e", "#e8b23a", "#c25742"][i % 3];
-        stage.appendChild(leaf);
-        (function (lf) { setTimeout(function () { lf.remove(); }, 3400); })(leaf);
-      }
-    }
-    function visit(mi) {
-      var post = track.querySelector('.ja-post[data-mi="' + mi + '"]');
-      if (post) post.classList.add("lit");
-      var sgn = track.querySelectorAll(".ja-sign")[mi];
-      if (sgn) sgn.classList.add("lit");
-      if (jState.visited[mi]) return;
-      jState.visited[mi] = true;
-      if (post && !reduced) {
-        var sp = el("span", "ja-spark");
-        sp.style.left = stationX[mi] + "px";
-        sp.style.top = ROAD_Y + "px";
-        track.appendChild(sp);
-        setTimeout(function () { sp.remove(); }, 900);
-      }
-      if (mi === n - 1 && !reduced) celebrate();
-    }
-    function closeChapter() { closeJourneyModal(); }
-    function showCard(mi) { openJourneyModal(stops[mi], mi); }
-
-    function walkTo(target, done) {
-      target = Math.max(0, Math.min(n - 1, target));
-      if (jState.busy) return;
-      /* Arriving no longer OPENS the chapter. The card used to sit below and
-         could appear on every arrival harmlessly; a modal cannot - under "let
-         Suu walk" it would slam open every six seconds on top of the train.
-         Travelling now only lights things up, and reading is opt-in: callers
-         that represent an explicit request (clicking a carriage, a signboard
-         or a station) pass a `done` that opens it. */
-      if (target === jState.at) { visit(target); syncUI(); if (done) done(); return; }
-      jState.busy = true;
-      closeChapter();                              // the chapter closes as she leaves
-      var from = stationX[jState.at], to = stationX[target];
-      function land() {
-        jState.at = target; curX = to; paint(0);
-        visit(target); syncUI();
-        jState.busy = false;
-        if (done) done();
-      }
-      if (reduced) {
-        facing = target > jState.at ? 1 : -1;
-        suuEl.classList.toggle("rev", facing < 0);
-        var lo = Math.min(target, jState.at), hi = Math.max(target, jState.at);
-        for (var k = lo; k <= hi; k++) visit(k);
-        land();
-        return;
-      }
-
-      /* ---------- departure procedure ----------
-         A train does not simply start. The signal at the platform it is
-         standing at clears first, and if it is about to run the other way the
-         engine has to be turned before it can lead. Only the LOCOMOTIVE
-         pivots: mirroring the whole consist would reverse the carriages on
-         screen and carriage 3 would stop being chapter 3. */
-      var turning = (target < jState.at) !== (facing < 0);
-      facing = target > jState.at ? 1 : -1;
-      var leaving = track.querySelector('.ja-post[data-mi="' + jState.at + '"]');
-      /* THE DEPARTURE, in the order a real one happens:
-           0ms    the consist swings edge-on, pivoting on the signpost (the
-                  transform-origin is the engine's leading edge, which sits
-                  exactly on stationX - the same point the signboard and the
-                  semaphore are drawn at)
-           250ms  order and engine mirror swap, hidden at the midpoint
-           520ms  turn complete - the train is STOPPED, facing the new way
-           660ms  only now does the signal clear: permission to proceed
-           1020ms it pulls away
-         The whole consist turns as ONE piece. Easing the engine separately is
-         what used to make the head twist before the tail followed. */
-      if (turning) {
-        suuEl.classList.add("turning");
-        setTimeout(function () { suuEl.classList.toggle("rev", facing < 0); }, 250);
-        setTimeout(function () { if (leaving) leaving.classList.add("clearing"); }, 660);
-      } else {
-        suuEl.classList.toggle("rev", facing < 0);
-        if (leaving) leaving.classList.add("clearing");
-      }
-      // a turn buys a real stand at the platform; a straight run just a beat
-      setTimeout(function () { depart(); }, turning ? 1020 : 320);
-
-      function depart() {
-      if (leaving) leaving.classList.remove("clearing");
-      suuEl.classList.remove("turning");
-      var dur = Math.max(1100, Math.min(3600, Math.abs(to - from) / 0.34));
-      var t0 = performance.now();
-      if (raf) cancelAnimationFrame(raf);
-      suuEl.classList.add("moving");     // steam works harder under way
-      (function step(now) {
-        var k = Math.min(1, (now - t0) / dur);
-        curX = from + (to - from) * trainEase(k);
-        stationX.forEach(function (sx, si) {        // stations passed light up
-          if (sx >= Math.min(from, curX) - 2 && sx <= Math.max(from, curX) + 2) visit(si);
-        });
-        paint(0);
-        if (k < 1) { raf = requestAnimationFrame(step); return; }
-        suuEl.classList.remove("moving");
-        land();
-      })(t0);
-      }
-    }
-
-    /* ---------- controls ---------- */
-    var autoRunning = false, autoTimer = null;
-    function stopAuto() {
-      autoRunning = false;
-      clearTimeout(autoTimer); autoTimer = null;
-      autoB.textContent = "let Suu walk";
-    }
-    function stepAuto() {
-      if (!autoRunning) return;
-      if (jState.at >= n - 1) { stopAuto(); return; }
-      walkTo(jState.at + 1, function () {
-        if (autoRunning) autoTimer = setTimeout(stepAuto, 6000);  // a beat to read
-      });
-    }
-    autoB.addEventListener("click", function () {
-      if (autoRunning) { stopAuto(); return; }
-      if (jState.at >= n - 1) { jState.at = 0; curX = stationX[0]; paint(0); syncUI(); }
-      autoRunning = true;
-      autoB.textContent = "stop walking";
-      stepAuto();
-    });
-    resetB.addEventListener("click", function () {
-      stopAuto();
-      if (raf) cancelAnimationFrame(raf);
-      jState = { visited: {}, at: 0, busy: false };
-      buildAdventure(content, adv);
-    });
-    prevB.addEventListener("click", function () { stopAuto(); walkTo(jState.at - 1); });
-    nextB.addEventListener("click", function () { stopAuto(); walkTo(jState.at + 1); });
-    /* Explicit "show me this chapter" gestures: the station, its signboard and
-       its carriage. All three drive the train there first, THEN pop the card -
-       so the reading is always anchored to where the train actually is. */
-    function goRead(mi) {
-      stopAuto();
-      walkTo(mi, function () { showCard(mi); });
-    }
-    $all(".ja-post", track).forEach(function (g) {
-      g.addEventListener("click", function () { goRead(parseInt(g.getAttribute("data-mi"), 10)); });
-    });
-    $all(".ja-sign", track).forEach(function (s, si) {
-      s.addEventListener("click", function () { goRead(si); });
-    });
-
-    /* ---------- boot ---------- */
-    measure();
-    Object.keys(jState.visited).forEach(function (k) {
-      var p = track.querySelector('.ja-post[data-mi="' + k + '"]');
-      if (p) p.classList.add("lit");
-    });
-    paint(0);
-    visit(jState.at);
-    syncUI();          // NO showCard here - the page must not load with a modal open
-    if (jResize) window.removeEventListener("resize", jResize);
-    jResize = function () { measure(); paint(0); };
-    window.addEventListener("resize", jResize);
+    window.PORTFOLIO_JOURNEY.mount(content, adv, openJourneyModal, suuSpriteSVG());
   }
 
   /* ---------- achievements: the Hall of Achievements ---------- */

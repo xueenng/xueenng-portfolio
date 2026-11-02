@@ -741,6 +741,7 @@ window.PORTFOLIO_CONTENT = {
     {
       "period": "Mar 2026 - Present",
       "role": "Business System Analyst",
+      "highlight": "Production automation · SQL reporting",
       "org": "Golden Pet Industries Sdn Bhd, Ipoh",
       "place": "Ipoh",
       "points": [
@@ -752,6 +753,7 @@ window.PORTFOLIO_CONTENT = {
     {
       "period": "Oct 2024 - Jan 2025",
       "role": "IT Intern",
+      "highlight": "Requirements · Testing · UAT",
       "org": "Chuan Sin Sdn Bhd (Spritzer group), Taiping",
       "place": "Taiping",
       "points": [
@@ -764,6 +766,7 @@ window.PORTFOLIO_CONTENT = {
     {
       "period": "2023 - 2026",
       "role": "B.CS (Honours), Computer Science",
+      "highlight": "Computer science · VR development",
       "org": "Universiti Tunku Abdul Rahman (UTAR)",
       "place": "Kampar",
       "points": [
@@ -775,6 +778,7 @@ window.PORTFOLIO_CONTENT = {
     {
       "period": "2021 - 2022",
       "role": "Foundation in Science",
+      "highlight": "Merit scholarship · Academic excellence",
       "org": "Xiamen University Malaysia",
       "place": "Sepang",
       "points": [
@@ -785,6 +789,7 @@ window.PORTFOLIO_CONTENT = {
     {
       "period": "2016 - 2020",
       "role": "SPM - Malaysian Certificate of Education",
+      "highlight": "10 As at SPM",
       "org": "SMJK Perempuan Perak, Ipoh",
       "place": "Ipoh",
       "points": [
