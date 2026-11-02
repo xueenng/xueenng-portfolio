@@ -1,4 +1,4 @@
-/* Story railway: existing painted assets, live chapter copy, no saved state. */
+/* Story railway: generated shelter/ticket art, live chapter copy, no saved state. */
 (function () {
   'use strict';
   var memory = null, active = null;
@@ -19,6 +19,7 @@
     controls.append(start,reset,progress);host.append(controls);
     var scroller=node('div','js-scroll');scroller.tabIndex=0;scroller.setAttribute('role','region');scroller.setAttribute('aria-label','Journey stations. Scroll to explore all chapters.');
     var stage=node('div','js-railway');stage.style.setProperty('--stops',count);
+    stage.style.setProperty('--station-columns',chapters.map(function(t){return /\b(present|current)\b/i.test(t.period||'')?'1.6fr':'1fr';}).join(' '));
     var stations=[],tickets=[],buttons=[];
     function label(t,i) {
       if(/\b(present|current)\b/i.test(t.period||''))return 'Today';
@@ -31,23 +32,24 @@
     // A short takeaway uses the authored first point. The full story remains
     // in the existing chapter reader, including every responsibility point.
     chapters.forEach(function(t,i){
-      var station=node('div','js-station');
+      var today=/\b(present|current)\b/i.test(t.period||'');
+      var station=node('div','js-station'+(today?' js-station--today':''));
+      var shelter=node('div','js-shelter');
       var sign=node('button','js-stop');sign.type='button';sign.setAttribute('aria-label',(i+1)+'. '+(t.role||'Chapter')+' · '+(t.period||''));
-      sign.append(node('b',null,label(t,i)),node('span',null,t.period||''));
-      var building=node('img','js-station-art');building.src='assets/journey/fence.webp';building.alt='';building.draggable=false;
+      sign.append(node('b',null,today?(t.role||'Today'):label(t,i)),node('span',null,t.period||''));
+      var building=node('img','js-station-art');building.src='assets/journey-story/'+(today?'current-station-v1.webp':'shelter-v1.webp');building.alt='';building.draggable=false;
       var original=(window.PORTFOLIO_CONTENT.timeline||[]).find(function(base){return base.role===t.role && base.org===t.org && base.period===t.period;});
       var unchanged=original && JSON.stringify(original.points)===JSON.stringify(t.points);
       var authored=t.highlight && (!original || t.highlight!==original.highlight || unchanged);
       var point=(authored && t.highlight) || (unchanged && original.highlight) || (t.points||[])[0] || '';
-      station.append(node('span','js-preview',point));
       var ticket=node('div','js-ticket');ticket.hidden=true;
-      ticket.append(node('b','js-ticket-role',t.role||''),node('span','js-ticket-org',t.org||''));
+      ticket.append(node('b','js-ticket-org',t.org||t.role||''));
       if(point)ticket.append(node('span','js-takeaway',point));
       var read=node('button','js-read','Read chapter →');read.type='button';
       read.setAttribute('aria-label','Read chapter '+(i+1)+': '+(t.role||''));
       read.addEventListener('click',function(){pause();openChapter(t,i);});
       ticket.append(read);sign.addEventListener('click',function(){pause();resume=false;start.textContent='Start my journey →';select(i,true);});
-      station.append(building,sign,ticket);stage.append(station);
+      shelter.append(building,sign,ticket);station.append(shelter);stage.append(station);
       stations.push(station);tickets.push(ticket);buttons.push(sign);
     });
     var train=node('div','js-train');train.setAttribute('aria-hidden','true');
@@ -55,11 +57,18 @@
     var rider=node('span','js-suu');rider.innerHTML=suu;train.append(rider);
     stage.append(train);scroller.append(stage);host.append(scroller);
     function position(animate) {
-      var target=stations[memory.at], x=target.offsetLeft+target.offsetWidth/2;
+      var target=stations[memory.at];
+      // Distinct anchors preserve the first hop without a hard left clamp.
+      var first=stations[0],last=stations[count-1];
+      var begin=first.offsetLeft+first.offsetWidth/2,end=last.offsetLeft+last.offsetWidth/2;
+      var center=target.offsetLeft+target.offsetWidth/2;
+      var ratio=end===begin?0:(center-begin)/(end-begin);
+      var firstX=train.offsetWidth*.7,lastX=last.offsetLeft+last.offsetWidth*.13;
+      var x=firstX+(lastX-firstX)*ratio;
       train.classList.toggle('js-moving',!!animate&&!reduced.matches);
       train.style.left=x+'px';
       // Scroll only this region; scrollIntoView would move the whole page.
-      var left=Math.max(0,Math.min(stage.scrollWidth-scroller.clientWidth,x-scroller.clientWidth/2));
+      var left=Math.max(0,Math.min(stage.scrollWidth-scroller.clientWidth,center-scroller.clientWidth/2));
       scroller.scrollTo({left:left,behavior:'instant'});
     }
     function select(i,arrive) {
