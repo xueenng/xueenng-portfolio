@@ -2,10 +2,10 @@
    Text stays live, positioned inside each asset's measured blank board. */
 #journey .js-controls { min-height:48px; }
 #journey-view { align-items:center; }
-html[data-theme] #journey-view .js-ride-action { position:relative; display:block; flex:none; width:280px; height:auto; aspect-ratio:4/1; min-height:44px; padding:0; border:0; border-radius:0; background:url('../assets/journey-story/ride-ticket-blank-v1.webp') center/contain no-repeat; color:#6d2f1d; text-shadow:none; opacity:1; transform:none; filter:drop-shadow(0 3px 3px #52341625); font-size:0; }
+html[data-theme] #journey-view .js-ride-action { position:relative; display:block; flex:none; width:185px; height:auto; aspect-ratio:4/1; min-height:44px; padding:0; border:0; border-radius:0; background:url('../assets/journey-story/ride-ticket-blank-v1.webp') center/contain no-repeat; color:#6d2f1d; text-shadow:none; opacity:1; transform:none; filter:drop-shadow(0 3px 3px #52341625); font-size:0; }
 html[data-theme] #journey-view .js-ride-action::before { display:none; }
-.js-ride-label { position:absolute; left:37%; right:24%; top:15%; bottom:15%; display:flex; align-items:center; justify-content:center; font:700 17px/1.12 var(--display); text-align:center; white-space:normal; }
-.js-ride-icon { position:absolute; left:82%; width:14%; top:17%; bottom:17%; display:flex; align-items:center; justify-content:center; color:#f8e6be; font:700 22px/1 Arial,sans-serif; }
+.js-ride-label { position:absolute; left:37%; right:24%; top:15%; bottom:15%; display:flex; align-items:center; justify-content:center; font:700 13px/1.05 var(--display); text-align:center; white-space:normal; }
+.js-ride-icon { position:absolute; left:82%; width:14%; top:17%; bottom:17%; display:flex; align-items:center; justify-content:center; color:#f8e6be; font:700 16px/1 Arial,sans-serif; }
 #journey .js-controls .ja-btn-go::before,#journey .js-controls .ja-btn-off::before { display:none; }
 #journey .js-controls .ja-btn-off { min-height:44px; padding:6px; text-decoration:underline; text-underline-offset:4px; }
 #journey .js-controls .ja-progress { letter-spacing:.03em; }
@@ -48,8 +48,8 @@ body.night .js-train img { filter:brightness(.6) saturate(.68) drop-shadow(0 4px
 @media(max-width:760px) {
  #journey-view { gap:6px; }
  #journey-view .chip { width:min(140px,calc((100vw - 60px)*.40)); height:44px; }
- html[data-theme] #journey-view .js-ride-action { width:min(210px,calc((100vw - 60px)*.58)); }
- .js-ride-label { font-size:14px; line-height:1.08; } .js-ride-icon { font-size:18px; }
+ html[data-theme] #journey-view .js-ride-action { width:min(140px,calc((100vw - 60px)*.40)); }
+ .js-ride-label { font-size:12px; line-height:1.05; } .js-ride-icon { font-size:14px; }
  .js-railway { display:flex; min-width:max-content; height:380px; }
  .js-station { flex:0 0 220px; width:220px; }
  .js-station--today { flex-basis:330px; width:330px; }
