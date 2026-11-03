@@ -21,7 +21,7 @@ html[data-theme] #journey-view .js-ride-action::before { display:none; }
 .js-stop b { font:700 clamp(14px,1.35vw,19px)/1.08 var(--display); }
 .js-stop span { font:600 clamp(9px,.8vw,11px)/1.15 var(--label); }
 .js-station--today .js-stop { top:28%; height:18%; left:23%; width:60%; color:#ffe0a1; text-shadow:0 1px 2px #19241b; }
-.js-station--today .js-stop b { font-size:clamp(14px,1.35vw,19px); }
+.js-station--today .js-stop b { font-size:clamp(14px,.83vw,16px); }
 .js-ticket { position:absolute; z-index:6; top:42%; left:0; width:max(220px,100%); min-height:168px; padding:0; border:solid transparent; border-width:42px 24px 22px; border-image-source:url('../assets/journey-story/hanging-ticket-v1.webp'); border-image-slice:136 80 80 80 fill; border-image-width:42px 24px 22px; color:#443321; transform:rotate(-3deg); filter:drop-shadow(1px 3px 2px #3c281c30); display:flex; flex-direction:column; justify-content:center; }
 .js-ticket[hidden] { display:none; }
 .js-station > .js-ticket { top:8px; left:50%; width:220px; transform:translateX(-50%) rotate(-3deg); }
@@ -54,7 +54,7 @@ body.night .js-train img { filter:brightness(.6) saturate(.68) drop-shadow(0 4px
  .js-station { flex:0 0 220px; width:220px; }
  .js-station--today { flex-basis:330px; width:330px; }
  .js-stop b { font-size:18px; } .js-stop span { font-size:11px; }
- .js-station--today .js-stop b { font-size:19px; }
+ .js-station--today .js-stop b { font-size:14px; }
  #journey .js-controls { gap:8px 14px; } #journey .js-controls .ja-progress { flex-basis:100%; margin:0; }
  .js-scroll { margin-top:4px; } .js-shelter { bottom:80px; }
  .js-train { width:270px; height:107px; } .js-train img { height:107px; }
