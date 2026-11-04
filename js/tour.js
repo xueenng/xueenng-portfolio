@@ -64,7 +64,7 @@
       { sel: '.feature[data-project="vr-escape-room"]',
         say: "By night: a VR escape room inside a real Malaysian heritage castle - modelled in Blender and built in Unity, solo. 90-200 FPS, 25 of 25 tests passed." },
       { sel: "#achievements", act: openHall, dwell: 11000,
-        say: "Watch - I'll push these doors open. Inside: President's List three semesters, Dean's List two, and 10 As at SPM, collected era by era." },
+        say: "Watch - I'll push these doors open. Inside: President's List two semesters, Dean's List four semesters, and 10 As at SPM, collected era by era." },
       { sel: "#skills", act: openToolboxes,
         say: "My toolbox - a workshop bench of it. Watch the automation chest open: n8n, PowerShell, Microsoft Graph. There are six, and SQL, Python, Unity and the AI pipelines are all in there." },
       { sel: "#contact",
