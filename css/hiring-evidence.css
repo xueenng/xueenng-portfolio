@@ -13,6 +13,8 @@
 .is-evidence-overview :is(.pjs-prev,.pjs-next)[hidden] { display:none; }
 .is-evidence-overview .pjs-count { font:500 12px/1.4 var(--label); }
 .pjs-story-title { margin:0 0 18px; color:#3f472d; font:500 clamp(22px,2.4vw,30px)/1.15 var(--display); }
+.pjs-reasoning-story .pjs-proof-links { display:flex; flex-wrap:wrap; gap:10px; margin:22px 0; font:500 14px/1.5 var(--sans); }
+.pjs-reasoning-story .pjs-proof-links a { display:inline-flex; align-items:center; min-height:44px; color:#344a2d; text-decoration:underline; text-underline-offset:3px; }
 @media(max-width:760px) {
  .pjs-scroll.is-evidence-overview { border-width:8px 12px 8px 32px; border-image-width:8px 12px 8px 32px; width:96vw; max-width:96vw; }
  .is-evidence-overview .pjs-pg { padding:18px 14px; }

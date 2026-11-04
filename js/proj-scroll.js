@@ -57,6 +57,15 @@
     };
   }
 
+  function caseStudyFor(p) {
+    var source=(window.PORTFOLIO_CONTENT.projects||[]).find(function(item){return item.id===p.id;});
+    var unchanged=source&&['problem','action','outcome','impact'].every(function(key){return p[key]===source[key];});
+    var study=p.caseStudy;
+    if(study&&source&&!unchanged&&JSON.stringify(study)===JSON.stringify(source.caseStudy))study=null;
+    if(!study&&unchanged)study=source.caseStudy;
+    return study&&Array.isArray(study.sections)&&study.sections.length?study:null;
+  }
+
   /* TWO COLUMNS: text left, framed image right - the blueprint's layout.
      Stacked vertically (the first build) the image took the full panel width
      and pushed the tools and tiles past the fold, which is what put an
@@ -112,7 +121,8 @@
     pg.tabIndex = 0;
     pg.setAttribute("aria-label", "Project story");
 
-    var readingStory = p.id === "do-pipeline";
+    var study=caseStudyFor(p);
+    var readingStory = p.id === "do-pipeline" || !!study;
     if (readingStory) {
       var head = el("header", "pjs-story-head");
       head.appendChild(el("small", null, "PROJECT STORY \u00b7 PAGE 2 OF 2"));
@@ -136,17 +146,25 @@
 
     var sections = readingStory ? [["01 \u00b7 THE PROBLEM", "problem"], ["02 \u00b7 WHAT I PERSONALLY BUILT", "action"], ["03 \u00b7 THE OUTCOME", "outcome"]] :
       [["THE PROBLEM", "problem"], ["WHAT I BUILT", "action"], ["THE RESULT", "outcome"]];
+    if(study)sections=study.sections.map(function(section,i){return [String(i+1).padStart(2,'0')+' · '+section.label.toUpperCase(),section.text];});
     sections.forEach(function (pair) {
       var para = el("p", "pjs-case");
       para.appendChild(el("b", null, pair[0]));
-      para.appendChild(el("span", null, p[pair[1]]));
+      para.appendChild(el("span", null, study ? pair[1] : p[pair[1]]));
       textCol.appendChild(para);
     });
+
+    if(study&&study.links&&study.links.length){
+      var proof=el('nav','pjs-proof-links');proof.setAttribute('aria-label','Original project evidence');
+      study.links.forEach(function(link){var a=el('a',null,link.label+' ↗');a.href=link.url;a.target='_blank';a.rel='noopener';proof.appendChild(a);});
+      textCol.appendChild(proof);
+    }
 
     exCol.appendChild(el("div", "feature-exhibit"));
     two.appendChild(textCol);
     two.appendChild(exCol);
     pg.appendChild(two);
+    if(study)pg.classList.add('pjs-reasoning-story');
 
     // links ride UNDER THE EXHIBIT, not under the grid: the write-up is the
     // taller column, so a full-width row below it landed half-cut on the
@@ -207,7 +225,7 @@
     backdrop.addEventListener("click", close);
 
     scrollEl = el("div", "pjs-scroll is-evidence-overview");
-    if (p.id === "do-pipeline") scrollEl.classList.add("is-reading-story");
+    if (p.id === "do-pipeline" || caseStudyFor(p)) scrollEl.classList.add("is-reading-story");
     scrollEl.setAttribute("data-page", "1");
     scrollEl.addEventListener("click", function (ev) { ev.stopPropagation(); });
 

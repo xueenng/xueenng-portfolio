@@ -114,6 +114,44 @@ window.PORTFOLIO_CONTENT = {
   "projects": [
     {
       "id": "vr-escape-room",
+      "caseStudy": {
+        "sections": [
+          {
+            "label": "User need",
+            "text": "My final-year project explored how a historical site could become an experience people actively investigate and learn from, rather than only observe."
+          },
+          {
+            "label": "Requirements",
+            "text": "I translated the learning objectives into a historically grounded setting, puzzles that use heritage information, understandable interaction feedback, and a flow from the main menu through level selection, puzzle completion and the next chapter. The design also included a separate 360-degree exploration mode and adjustable turning and audio options."
+          },
+          {
+            "label": "My decisions",
+            "text": "I compared existing escape-room approaches using criteria such as visual clues, narrative, educational value and interaction. For my design, I connected diary collection, quizzes, message sequencing and a floor-plan puzzle to the castle story. I separated chapter progression from free exploration, and included visual, audio and haptic feedback to make actions and puzzle results understandable."
+          },
+          {
+            "label": "Validation",
+            "text": "My FYP presentation records expected and actual results for 25 system tests, all marked PASS. These cover menus, progress locks, scene changes, teleportation, grabbing, puzzle logic, feedback, turning options and progress reset. I also evaluated the application through user-acceptance testing."
+          },
+          {
+            "label": "Outcome",
+            "text": "I modelled the castle in Blender and built three escape-room chapters plus a VR-360 exploration mode in Unity. The project connects learning objectives to interaction choices and recorded system checks. Original screenshots and gameplay footage show the delivered experience."
+          }
+        ],
+        "links": [
+          {
+            "label": "Original menu and level flow",
+            "url": "assets/fyp/08-level-select.jpg"
+          },
+          {
+            "label": "Original puzzle screenshot",
+            "url": "assets/fyp/12-l2-sequence.jpg"
+          },
+          {
+            "label": "Original gameplay and poster",
+            "url": "kellie.html"
+          }
+        ]
+      },
       "overview": {
         "problem": "Traditional heritage tours offered limited interaction for young visitors.",
         "contribution": "Solo project: historical research, Blender modelling, Unity gameplay and VR interactions.",
@@ -172,6 +210,30 @@ window.PORTFOLIO_CONTENT = {
     },
     {
       "id": "do-pipeline",
+      "caseStudy": {
+        "sections": [
+          {
+            "label": "User need",
+            "text": "The back-office team received scanned delivery orders as anonymous files. Checking receiving evidence, looking up the ERP order and filing each document required several manual steps."
+          },
+          {
+            "label": "Requirements",
+            "text": "The workflow needed to connect each scan to its ERP record, apply the relevant delivery and receiving-evidence rules, distinguish duplicate copies from revisions, and leave a clear reason when a document needed attention."
+          },
+          {
+            "label": "My decisions",
+            "text": "I combined AI extraction with ERP cross-checks and explicit business rules. The extracted text was one input to the filing decision, alongside delivery terms, handwritten overrides and duplicate checks. I included a reason with each outcome and a run report so the team could inspect exceptions and understand what happened."
+          },
+          {
+            "label": "Validation",
+            "text": "The portfolio's Document Mill demonstrates these decisions using synthetic delivery orders. Its sample cases and scripted expectations cover normal filing, missing receiving evidence, own-transport terms, handwritten overrides, duplicate copies and revised copies. This demonstrates the rule logic; it is not a production accuracy measurement."
+          },
+          {
+            "label": "Outcome",
+            "text": "I delivered the extraction, ERP checks, rule handling, document naming and filing, and run reporting as one workflow. Documents receive an explicit outcome and explanation, giving the team a focused route to review exceptions."
+          }
+        ]
+      },
       "overview": {
         "problem": "Scanned delivery orders needed manual checking, ERP lookup, renaming and filing.",
         "contribution": "Built the AI extraction, ERP cross-checks, business rules, automated filing and run reporting.",
