@@ -85,7 +85,7 @@
               saved.skills.some(function (g) { return g && !g.core; })) {
             saved.skills = JSON.parse(JSON.stringify(base.skills));
           }
-          return window.PORTFOLIO_RESUME_CONTENT.upgrade(saved, base);
+          return window.PORTFOLIO_CLAIMS_CONTENT.upgrade(window.PORTFOLIO_RESUME_CONTENT.upgrade(saved, base), base);
         }
       }
     } catch (e) {
@@ -328,13 +328,13 @@
     var defaults = {
       "vr-escape-room": {
         scene: "castle",
-        facts: ["3 playable escape-room levels", "25 / 25 system tests passed", "90% top user-acceptance rating"],
+        facts: ["3 original VR chapters", "25 system tests recorded as passed", "Original gameplay available"],
         action: "Play the castle teaser",
         status: "Adventure Status: Ready"
       },
       "do-pipeline": {
         scene: "mill",
-        facts: ["29 OCR fields read", "4 business rules applied", "Humans handle only exceptions"],
+        facts: ["29 OCR fields read", "4 business rules applied", "Explicit outcomes and exception review"],
         action: "Explore the story",
         status: "Story Status: Live",
         showStack: false
@@ -1983,7 +1983,7 @@
     if (room._closeCert) room._closeCert();
     var panel = room.querySelector(".ach-panel");
     var cat = ACH_CATEGORIES[a.category] || ACH_CATEGORIES.academic;
-    panel.querySelector(".ach-panel-cat").textContent = cat.icon + " " + cat.label;
+    panel.querySelector(".ach-panel-cat").textContent = cat.icon + " " + cat.label + (a.image ? "" : " · Achievement summary");
     panel.querySelector(".ach-panel-title").textContent = a.title;
     panel.querySelector(".ach-panel-org").textContent =
       (a.org || "") + (a.org && a.year ? " · " : "") + (a.year || "");
@@ -2500,7 +2500,7 @@
 
         var top = el("div", "ach-top");
         top.appendChild(el("span", "ach-medal", cat.icon));
-        top.appendChild(el("span", "ach-cat", cat.label));
+        top.appendChild(el("span", "ach-cat", cat.label + (a.image ? "" : " · Achievement summary")));
         if (a.year) {
           var yr = el("span", "ach-year", a.year);
           yr.setAttribute("data-edit", "achievements." + i + ".year");

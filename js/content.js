@@ -130,7 +130,7 @@ window.PORTFOLIO_CONTENT = {
           },
           {
             "label": "Validation",
-            "text": "My FYP presentation records expected and actual results for 25 system tests, all marked PASS. These cover menus, progress locks, scene changes, teleportation, grabbing, puzzle logic, feedback, turning options and progress reset. I also evaluated the application through user-acceptance testing."
+            "text": "My FYP presentation records expected and actual results for 25 system tests, all marked PASS. These cover menus, progress locks, scene changes, teleportation, grabbing, puzzle logic, feedback, turning options and progress reset. In a Google Forms questionnaire with 10 participants, 90% gave the highest rating for increased interest and understanding of Kellie's Castle and heritage tourism."
           },
           {
             "label": "Outcome",
@@ -166,7 +166,7 @@ window.PORTFOLIO_CONTENT = {
       "featured": true,
       "problem": "Heritage sites like Kellie's Castle struggle to engage young visitors - traditional tours are passive, and virtual reality is barely used in Malaysian tourism. My FYP set out to prove that VR plus gamification can turn a historical site into an experience people want to explore and learn from.",
       "action": "Modelled Kellie's Castle in Blender from historical research - facade, semi-circular tower, staircases - then built the game in Unity (C#, OpenXR, XR Interaction Toolkit): three escape-room levels of story-driven puzzles (diary-piece quizzes, a message-sequence puzzle, candle-revealed hidden clues, a timed floor-plan jigsaw and a numpad lock) plus a free VR-360 exploration mode. Full VR interaction: teleportation, grabbable objects, haptic and audio feedback, snap or continuous turning, saved progress - running on Meta Quest 2, desktop and Android.",
-      "outcome": "90-200 FPS against the 72 FPS VR comfort standard, 25 of 25 system test cases passed, and 90% of user-acceptance participants gave the highest rating for increased interest and understanding of Kellie's Castle.",
+      "outcome": "The FYP presentation records 25 system test cases, all marked PASS. In a Google Forms questionnaire with 10 participants, 90% gave the highest rating for increased interest and understanding of Kellie's Castle and heritage tourism.",
       "impact": "One person, one world: from Blender vertices to a shipped, tested VR experience - and proof that heritage can be taught through play.",
       "stack": [
         "Unity",
@@ -222,7 +222,7 @@ window.PORTFOLIO_CONTENT = {
           },
           {
             "label": "My decisions",
-            "text": "I combined AI extraction with ERP cross-checks and explicit business rules. The extracted text was one input to the filing decision, alongside delivery terms, handwritten overrides and duplicate checks. I included a reason with each outcome and a run report so the team could inspect exceptions and understand what happened."
+            "text": "I designed most of the architecture and business logic, using AI tools throughout development. I combined AI extraction with ERP cross-checks and explicit business rules. The extracted text was one input to the filing decision, alongside delivery terms, handwritten overrides and duplicate checks. I included a reason with each outcome and a run report so the team could inspect exceptions and understand what happened."
           },
           {
             "label": "Validation",
@@ -236,8 +236,8 @@ window.PORTFOLIO_CONTENT = {
       },
       "overview": {
         "problem": "Scanned delivery orders needed manual checking, ERP lookup, renaming and filing.",
-        "contribution": "Built the AI extraction, ERP cross-checks, business rules, automated filing and run reporting.",
-        "outcome": "Document filing became a zero-touch process; humans only see the exceptions."
+        "contribution": "I designed most of the architecture and business logic, using AI tools throughout development.",
+        "outcome": "Automates document classification and filing, with explicit outcomes and a route to review exceptions."
       },
       "title": "Delivery Order Intelligence Pipeline",
       "subtitle": "From anonymous scans to verified, correctly filed delivery orders.",
@@ -249,7 +249,7 @@ window.PORTFOLIO_CONTENT = {
       "problem": "Hundreds of scanned delivery orders arrived as anonymous scan files. Someone had to open each one, check the customer's chop and signature, look the order up in the ERP, rename the file and file it - slow, boring and error-prone.",
       "action": "Built an AI pipeline on a self-hosted automation platform: a vision LLM reads each scan (two-pass OCR with a fallback model), detects whether the customer box carries a valid chop or signature, cross-checks the order against the ERP, applies business rules (own-transport terms, handwritten overrides, duplicate full-content comparison), then renames and files the document and logs every decision.",
       "outcome": "Every scan is classified Success / Needs Review / Failed with a reason. A styled Excel run report is emailed after each run, and the team can re-trigger processing from a chat message.",
-      "impact": "Document filing became a zero-touch process; humans only see the exceptions.",
+      "impact": "Automates document classification and filing, with explicit outcomes and a route to review exceptions.",
       "stack": [
         "n8n",
         "Claude vision models",
@@ -275,7 +275,7 @@ window.PORTFOLIO_CONTENT = {
       "problem": "Month-end accounting needed official BNM exchange rates keyed into the ERP for every active currency - a manual, deadline-critical chore that could silently go wrong.",
       "action": "Built a scheduled workflow that discovers which currencies the ERP actually uses, pulls official rates from the BNM open API, retries across a morning window when the feed is late, writes the rates into the ERP, and emails a summary - flagging partial results loudly instead of failing silently.",
       "outcome": "Rates appear in the ERP on the 1st of every month before anyone is awake. Missing currencies trigger an alert instead of a silent gap.",
-      "impact": "A recurring month-end task disappeared from everyone's checklist.",
+      "impact": "Automates the recurring retrieval and ERP update steps, with alerts for missing currencies.",
       "stack": [
         "n8n",
         "REST API",
@@ -300,7 +300,7 @@ window.PORTFOLIO_CONTENT = {
       "problem": "Every workflow had its own copy-pasted alert emails. Changing a recipient meant editing workflows one by one, and test noise reached real users.",
       "action": "Built a shared notification service every workflow reports into: recipients live in a SharePoint list the team edits (no code changes), each module has a testing/live stage gate so unfinished systems only email admins, alerts fan out to email with an automatic fallback sender, and critical ones also post cards into Teams.",
       "outcome": "One place to manage who gets notified. Flipping a module from testing to live is a data change, not a deployment.",
-      "impact": "Alert fatigue down, trust in alerts up - when something emails you, it matters.",
+      "impact": "Centralises recipient routing and separates test notifications from live delivery.",
       "stack": [
         "n8n",
         "SharePoint lists",
@@ -317,7 +317,7 @@ window.PORTFOLIO_CONTENT = {
     {
       "id": "ssrs-monitor",
       "title": "Report Server Watchdog",
-      "subtitle": "Finds out the reporting server is down before the users do",
+      "subtitle": "Scheduled report-server checks with retry and alerts",
       "period": "2026 - live in production",
       "year": "2026",
       "status": "LIVE",
@@ -325,8 +325,8 @@ window.PORTFOLIO_CONTENT = {
       "featured": false,
       "problem": "When the SSRS reporting server went down, the first alert was an annoyed colleague. By then reports had been failing for hours.",
       "action": "Built a twice-daily reachability probe: it checks the report server, and on failure enters a patient retry loop (six retries, ten minutes apart) to ride out reboots before declaring an outage and emailing the admins with the failure history.",
-      "outcome": "Outages are announced by the robot, with timestamps, before the first human notices.",
-      "impact": "Faster recovery and no more silent report-delivery gaps.",
+      "outcome": "Checks report-server reachability and emails admins when repeated checks fail, with timestamps and failure history.",
+      "impact": "Provides a repeatable failure-notification path.",
       "stack": [
         "n8n",
         "HTTP health probes",
@@ -351,7 +351,7 @@ window.PORTFOLIO_CONTENT = {
       "problem": "Operations data lived in scattered lists and inboxes. Different teams needed different slices, and nobody needed everything.",
       "action": "Built a lightweight web portal over the automation fleet's data with group-based access control: users belong to groups, groups grant modules, and the UI assembles itself from what you are allowed to see. Data flows in through an automation bridge instead of direct credentials.",
       "outcome": "One URL for operations status. Adding a person is a group assignment, not a development task.",
-      "impact": "Managers self-serve their own answers instead of asking for exports.",
+      "impact": "Provides module-based access to operations information through one portal.",
       "stack": [
         "Python Flask",
         "SQLite",
@@ -376,7 +376,7 @@ window.PORTFOLIO_CONTENT = {
       "problem": "Good work disappears if you do not write it down. Assembling review presentations and resumes from scratch every time wastes the effort twice.",
       "action": "Built a local web app where each piece of work is logged once with its screenshots and scripts. It rolls everything into an Excel summary, then generates branded PowerPoint decks - with an AI vision model choosing the best screenshots per slide - and exports a formatted resume from the same data.",
       "outcome": "A living achievement database that compiles itself into presentation and job-application material on demand.",
-      "impact": "Review prep went from a weekend to a button.",
+      "impact": "Generates presentation and résumé material from structured achievement records.",
       "stack": [
         "Python Flask",
         "python-pptx / docx",
@@ -520,7 +520,7 @@ window.PORTFOLIO_CONTENT = {
       "featured": false,
       "problem": "Real extinguisher drills are expensive, messy and rarely repeatable - most people get one try, years ago, if at all.",
       "action": "A VR training simulation in Unity with the XR Interaction Toolkit, set in a factory scene: grab the CO2 extinguisher with your controller and hold the trigger to spray - particles, hissing audio, a nozzle collider doing the real work. Fires are simulated properly too: each fire source has health, shrinks as you hit it at the base, and can regrow if you stop too early, with a progress bar tracking the extinguish.",
-      "outcome": "Repeatable fire-safety practice with zero real-world risk - reset the scene and drill again.",
+      "outcome": "A resettable virtual scene for practising extinguisher interactions without using real fire.",
       "impact": "VR as a training tool, not just entertainment.",
       "stack": [
         "Unity",
