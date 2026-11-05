@@ -43,7 +43,7 @@
 <link rel="stylesheet" href="css/project-story.css?v=cr002-v1">
 <link rel="stylesheet" href="css/hiring-evidence.css?v=cr018-a-v1">
 <link rel="stylesheet" href="css/atmosphere-overlay.css?v=foreground-v1">
-<link rel="stylesheet" href="css/header-ivory.css?v=ivory-v1.2">
+<link rel="stylesheet" href="css/header-ivory.css?v=cr021-b-v1">
 <link rel="stylesheet" href="css/footer-stone.css?v=stone-v1">
 <link rel="stylesheet" href="css/castle-farewell.css?v=rain-night-v2">
 <link rel="stylesheet" href="css/about-journal.css?v=about-connect-v1.4">
@@ -72,9 +72,9 @@
   <div class="nav-inner">
     <a class="nav-brand" href="#top"><span class="nav-mono" data-edit="identity.monogram"></span><span class="nav-name" data-edit="identity.name"></span></a>
     <nav class="nav-links" aria-label="Main navigation">
-      <a href="#map">Valley map</a>
-      <a href="#selected">Work</a>
-      <a href="#projects">Projects</a>
+      <a href="#map">Explore the valley</a>
+      <a href="#selected">Selected work</a>
+      <a href="#projects">All projects</a>
       <a href="#about">About</a>
       <a href="#journey">Journey</a>
       <a href="#achievements">Achievements</a>
@@ -85,16 +85,19 @@
       <span class="nav-menu-label">Menu</span><span class="nav-menu-bars" aria-hidden="true"><i></i><i></i><i></i></span>
     </button>
     <div class="nav-actions">
+      <button class="nav-present" id="btn-present" aria-label="Start presentation" title="Presentation mode (P)">Presentation</button>
       <a class="nav-resume" id="nav-resume" href="resume.html" title="View &amp; download my r&eacute;sum&eacute;">R&eacute;sum&eacute;</a>
       <details class="nav-atmosphere" id="nav-atmosphere">
         <summary>Atmosphere <span aria-hidden="true">&#9662;</span></summary>
-        <div class="atmosphere-panel" role="group" aria-label="Atmosphere and site tools">
+        <div class="atmosphere-panel" role="group" aria-label="Appearance controls">
           <div class="atmosphere-row"><span>Valley weather</span><button class="icon-btn" id="btn-weather" aria-label="Change valley weather" title="Weather over the valley">&#127782;</button></div>
           <div class="atmosphere-row"><span>Reading lantern</span><button class="icon-btn" id="btn-lantern" aria-label="Toggle reading lantern" title="Suu's reading lantern (L)" aria-pressed="false">&#127982;</button></div>
           <div class="atmosphere-row"><span>Light / dark</span><button class="icon-btn" id="btn-theme" aria-label="Toggle light and dark" title="Toggle light / dark">&#9681;</button></div>
-          <div class="atmosphere-row"><span>Presentation</span><button class="icon-btn" id="btn-present" aria-label="Start presentation" title="Presentation mode (P)">&#9654;</button></div>
-          <div class="atmosphere-owner"><button class="icon-btn" id="btn-edit" title="Edit this site (Ctrl+E)">&#9998; Edit site</button></div>
         </div>
+      </details>
+      <details class="nav-owner" id="nav-owner" hidden>
+        <summary>Owner tools <span aria-hidden="true">&#9662;</span></summary>
+        <div class="atmosphere-owner"><button class="icon-btn" id="btn-edit" title="Edit this site (Ctrl+E)" hidden>&#9998; Edit site</button></div>
       </details>
     </div>
   </div>
@@ -109,20 +112,25 @@
     <button class="nav-overlay-close" id="nav-overlay-close" aria-label="Close menu">&#10005;</button>
   </div>
   <nav class="nav-overlay-links" aria-label="Mobile navigation">
-    <a href="#map">Valley map</a>
-    <a href="#selected">Work</a>
-    <a href="#projects">Projects</a>
+    <a href="#map">Explore the valley</a>
+    <a href="#selected">Selected work</a>
+    <a href="#projects">All projects</a>
     <a href="#about">About</a>
     <a href="#journey">Journey</a>
     <a href="#achievements">Achievements</a>
     <a href="#contact">Contact</a>
   </nav>
-  <a class="nav-overlay-resume" href="resume.html">&#8595;&nbsp; R&eacute;sum&eacute; (PDF)</a>
-  <div class="nav-overlay-tools">
+  <div class="nav-overlay-actions">
+    <a class="nav-overlay-resume" href="resume.html">&#8595;&nbsp; R&eacute;sum&eacute; (PDF)</a>
+    <button class="nav-overlay-presentation" id="ov-present" aria-label="Start presentation">Presentation</button>
+  </div>
+  <p class="nav-tools-label">Appearance</p>
+  <div class="nav-overlay-tools" role="group" aria-label="Appearance controls">
     <button class="icon-btn" id="ov-weather" aria-label="Change valley weather" title="Weather over the valley">&#127782;</button>
     <button class="icon-btn" id="ov-theme" aria-label="Toggle light and dark" title="Toggle light / dark">&#9681;</button>
-    <button class="icon-btn" id="ov-present" aria-label="Start presentation" title="Presentation mode">&#9654;</button>
+    <button class="icon-btn" id="ov-lantern" aria-label="Toggle reading lantern" aria-pressed="false">&#127982;</button>
   </div>
+  <div class="nav-overlay-owner" id="ov-owner" hidden></div>
 </div>
 
 <!-- ======== HERO ======== -->
@@ -345,7 +353,7 @@
 <script src="js/scene-layout.js?v=workshop-counter-v1.6"></script>
 <script src="js/hall-door-motion.js?v=hall-motion-v1"></script>
 <script src="js/app.js?v=journey-role-fit-v7"></script>
-<script src="js/header-ivory.js?v=ivory-v1"></script>
+<script src="js/header-ivory.js?v=cr021-b-v1"></script>
 <script>
 /* The mini games are stood down on phones (exhibits.js renderDesktopOnly), so
    a phone has no reason to download the 151KB engine. Desktop still gets it,
@@ -396,7 +404,7 @@
 <script src="js/editor.js"></script>
 <script src="js/origami.js"></script>
 <script src="js/about-mailbox.js?v=mailbox-compact-v3"></script>
-<script src="js/present.js"></script>
+<script src="js/present.js?v=cr021-focus-v1"></script>
 <script src="js/tour.js?v=cr019-confirmed-v1"></script>
 <!-- Scene editor: OWNER-ONLY and deliberately absent from the public tree
      (publish-site.ps1 deletes it and its safety scan blocks a leak), so this

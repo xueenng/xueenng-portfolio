@@ -19,6 +19,7 @@
   var App, open = false, idx = 0, slides = [], stations = [];
   var autoOn = false, autoTimer = null;
   var clockIv = null, clockT0 = 0;
+  var returnFocus = null;
   var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function $(s, r) { return (r || document).querySelector(s); }
@@ -489,6 +490,10 @@
 
   function enter() {
     if (open) return;
+    returnFocus = document.activeElement;
+    if (!returnFocus || returnFocus === document.body || !returnFocus.getClientRects().length) {
+      returnFocus = window.innerWidth <= 1200 ? $('#nav-toggle') : $('#btn-present');
+    }
     App = window.PORTFOLIO_APP;
     if (window.PORTFOLIO_EDITOR && window.PORTFOLIO_EDITOR.isEditing()) window.PORTFOLIO_EDITOR.exit();
     if (window.PORTFOLIO_TOUR && window.PORTFOLIO_TOUR.end) window.PORTFOLIO_TOUR.end();
@@ -513,6 +518,8 @@
     clockIv = setInterval(tickClock, 1000);
     craneDue = true;      // the overture belongs to entering the deck, not to
     show(0);              // every later walk back to slide 1
+    var firstControl = box.querySelector('button');
+    if (firstControl) firstControl.focus({ preventScroll:true });
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(function () {});
     }
@@ -528,6 +535,7 @@
     document.body.style.overflow = "";
     releaseTime();   // the sky goes back to the scroll
     if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+    if (returnFocus && returnFocus.isConnected && returnFocus.getClientRects().length) returnFocus.focus({ preventScroll:true });
   }
 
   /* ---------- input ---------- */
