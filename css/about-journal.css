@@ -33,7 +33,7 @@
 #about .about-links a { color:#4f673e; font:600 .73rem/1.5 var(--label); text-decoration:underline; text-underline-offset:4px; }
 #about summary:focus-visible,#about a:focus-visible { outline:2px solid #4f673e; outline-offset:4px; }
 body.about-journal-in-view #sprite,body:has(#about:hover) #sprite,body:has(#about:focus-within) #sprite { opacity:0; pointer-events:none; }
-@media (max-width:900px) {
+@media (max-width:1200px) {
   #about { padding:2.5rem 12px 1rem; }
   #about .about-inner { width:min(100%,560px); aspect-ratio:auto; background:none; display:grid; gap:10px; }
   #about .about-letter { position:relative; left:auto; top:auto; width:100%; height:auto; aspect-ratio:3 / 4; background:url('../assets/selected/about-letter-paper-v1.webp') center/contain no-repeat; }
@@ -72,7 +72,7 @@ body.about-journal-in-view #sprite,body:has(#about:hover) #sprite,body:has(#abou
 #about .about-detail-body p,#about .about-detail .about-summary { margin:0 0 14px; color:#51442e; text-shadow:none; font:400 .92rem/1.65 var(--display); }
 #about .about-detail .now { margin:0; padding:0; border:0; }
 #about .about-detail .about-links { margin:12px 0 4px; }
-@media (max-width:900px) {
+@media (max-width:1200px) {
   #about .about-note { background:url('../assets/selected/about-letter-note-v1.webp') center/contain no-repeat; }
   #about .about-detail { inset:10% 8% 19%; padding:8px; gap:10px; }
   #about .about-detail-body p,#about .about-detail .about-summary { font-size:.85rem; }
@@ -110,7 +110,7 @@ body.about-journal-in-view #sprite,body:has(#about:hover) #sprite,body:has(#abou
 #about .about-note-copy { font-size:clamp(.78rem,1vw,.95rem); }
 #about .about-detail { inset:0; padding:8px; }
 #about .about-detail-body p,#about .about-detail .about-summary { font-size:clamp(.85rem,1.1vw,1rem); line-height:1.6; }
-@media(max-width:900px) {
+@media(max-width:1200px) {
  #about .about-inner { max-width:560px; aspect-ratio:auto; display:flex; flex-direction:column; gap:14px; padding:18px 12px; border:3px solid #b39552; border-radius:10px; background:#3f513e; box-shadow:inset 0 0 0 4px #71815b,0 8px 22px #26332126; }
  #about .about-letter { position:relative; left:auto; top:auto; width:100%; height:auto; aspect-ratio:3/4; background:url('../assets/selected/about-letter-paper-v1.webp') center/contain no-repeat; }
  #about .about-kicker { top:13.5%; left:25%; width:50%; font-size:clamp(1.05rem,4.9vw,1.6rem); }
@@ -134,20 +134,33 @@ body.about-journal-in-view #sprite,body:has(#about:hover) #sprite,body:has(#abou
  #about .about-detail { inset:10% 8% 19%; }
 }
 #about .contact-meta { padding:2px 5px; border-radius:2px; background:#f7ecd1; font-size:clamp(.68rem,.8vw,.76rem); }
-@media(min-width:901px) {
+@media(min-width:1201px) {
  #about .letter-seal { display:grid; left:172%; top:97%; width:17%; height:23%; z-index:2; }
  #about .about-monogram { font-size:clamp(1.1rem,2vw,1.8rem); }
 }
-@media(max-width:900px) {
+@media(max-width:1200px) {
  #about .letter-seal { display:grid; left:80%; top:88.5%; width:12%; height:12%; }
 }
 
 /* Painted desk completes the approved Option 4 environment. */
-@media(max-width:900px) { #about .about-notes,#about .about-note { min-width:0; } }
+@media(max-width:1200px) { #about .about-notes,#about .about-note { min-width:0; } }
 #about { background:#b5bf9b url('../assets/selected/about-connect-desk-v1.webp') center/cover no-repeat; padding:3.5rem clamp(16px,5vw,100px) 2rem; }
-@media(max-width:900px) { #about { padding:2.5rem 12px 2rem; background-size:auto 100%; } }
-@media(min-width:901px) {
+@media(max-width:1200px) { #about { padding:2.5rem 12px 2rem; background-size:auto 100%; } }
+@media(min-width:1201px) {
  #about .connect-sub { margin:7px 0; }
  #about .contact-row { gap:5px; margin-top:8px; }
  #about .contact-row a { min-height:32px; padding:6px 10px; }
 }
+
+/* CR-005 A: functional text stays readable independently of the painted board. */
+#about .contact-row a { font-size:14px; line-height:1.4; min-height:44px; padding:6px 8px; }
+#about .contact-meta,#about .connect-sub { font-size:14px; line-height:1.5; }
+#about .about-note-copy { font-size:14px; line-height:1.45; }
+#about .about-detail-body p,#about .about-detail .about-summary,#about .about-detail .now-list li { font-size:16px; line-height:1.6; }
+#about .about-detail-close,#about .about-links a { font-size:14px; line-height:1.4; min-height:44px; }
+#about .about-links a { display:inline-flex; align-items:center; }
+@media(min-width:1201px) {
+ #about .contact-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+ #about .contact-meta { grid-column:1/-1; }
+}
+@media(max-width:1200px) { #about .about-notes .about-note { padding:4% 9%; } }

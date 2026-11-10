@@ -98,7 +98,7 @@ html[data-theme] #castle-farewell-heading { color:#34422a; font-size:var(--castl
 html[data-theme] #about .about-kicker {
  top:4%; left:0; width:100%; color:#514325; font-size:var(--about-title-size);
 }
-@media(max-width:900px) {
+@media(max-width:1200px) {
  html[data-theme] #about .about-kicker { top:13.5%; left:25%; width:50%; }
 }
 @media(max-width:760px) {

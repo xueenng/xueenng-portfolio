@@ -765,7 +765,8 @@
   .ft-stage--mill .dw-help-steps { margin-top: 0; }
   .ft-stage--mill .dw-modal .dw-report-head { margin-bottom: 12px; }
   .ft-stage--mill .dw-modal .dw-report-subject { margin: 0 0 6px; font-weight: 600; }
-  .ft-stage--mill .dw-modal .dw-sheet { font-size: 13px; }
+  .ft-stage--mill .dw-modal .dw-sheet { font-size: 14px; }
+  .ft-stage--mill .dw-modal .dw-fix { font-size:14px; min-height:44px; }
   .ft-stage--mill .dw-modal--document {
     width: min(1000px, calc(100vw - 64px));
     height: min(880px, calc(100dvh - 64px));

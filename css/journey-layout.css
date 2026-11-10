@@ -6,6 +6,11 @@
 #journey .ja-controls { margin-left:var(--journey-inset); margin-top:10px; width:calc(100% - var(--journey-inset)); gap:16px; align-items:center; }
 #journey .ja-btn { color:#39422c; text-shadow:none; font-size:.82rem; }
 #journey .ja-progress { margin-left:4px; }
+
+/* CR-005 A: larger full-reader text; approved painted tickets stay compact. */
+.ja-panel .ja-place,.ja-panel .ja-org { font-size:14px; line-height:1.5; color:#453726; }
+.ja-panel .ja-points li { font-size:16px; line-height:1.6; }
+#journey .ja-progress,#journey .js-controls .ja-btn-off { font-size:14px; line-height:1.5; }
 @media(max-width:760px) {
  #journey > .section-head p { max-width:34rem; text-wrap:pretty; font-size:.95rem; }
  #journey-view { margin-top:16px; }

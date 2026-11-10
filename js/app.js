@@ -700,17 +700,21 @@
   }
 
   var tbCard = null;          // the shared parchment, appended to <body>
+  var tbCardOpener = null;
 
   function toolsOf(g) { return (g.core || []).concat(g.also || []); }
 
   function closeToolCard() {
-    if (!tbCard) return;
+    if (!tbCard || tbCard.hidden) return;
     tbCard.classList.remove("in");
     tbCard.hidden = true;
     document.body.classList.remove("tb-card-open");
+    if (tbCardOpener && tbCardOpener.isConnected) tbCardOpener.focus({ preventScroll:true });
+    tbCardOpener = null;
   }
 
-  function openToolCard(g) {
+  function openToolCard(g, opener) {
+    tbCardOpener = opener || document.activeElement;
     if (!tbCard) {
       tbCard = el("div", "tb-scrim");
       /* on <body>, not in the stage: `position: fixed` is defeated by any
@@ -817,7 +821,7 @@
       });
       if (!editing) {
         var more = el("button", "tb-more", "All " + toolsOf(g).length + " tools");
-        more.addEventListener("click", function () { openToolCard(g); });
+        more.addEventListener("click", function () { openToolCard(g, more); });
         box.appendChild(more);
       }
       grid.appendChild(box);
@@ -900,7 +904,7 @@
       st.appendChild(open);
 
       var more = el("button", "tb-chip", "All " + toolsOf(g).length + " tools");
-      more.addEventListener("click", function () { openToolCard(g); });
+      more.addEventListener("click", function () { openToolCard(g, more); });
       st.appendChild(more);
 
       open.addEventListener("click", function () {

@@ -1,0 +1,10 @@
+/* CR-005 A: readable summaries while preserving the painted gallery. */
+.ach-panel-cat,.ach-panel-org,.ach-cat,.ach-year,.ach-org { font-size:14px; line-height:1.5; }
+.ach-panel-desc,.ach-desc { font-size:16px; line-height:1.6; }
+.ach-panel-cat { color:inherit; }
+.ach-card .ach-cat { color:var(--paper-ink); letter-spacing:.06em; }
+.ach-panel-x { width:44px; height:44px; }
+.ach-panel-cat,.ach-panel-title { padding-right:40px; }
+.ach-top { flex-wrap:wrap; align-items:flex-start; }
+.ach-cat { flex:1 1 160px; overflow-wrap:anywhere; }
+.ach-year { margin-left:0; }

@@ -1,0 +1,11 @@
+/* CR-005 A: readable tool details without changing the painted workshop. */
+.tb-side p,.tb-li-blurb { font-size:16px; line-height:1.6; }
+.tb-side p,.tb-row span { color:#4a3a26; }
+.tb-row b { font-size:16px; }
+.tb-row span,.tb-page-label,.tb-back,.tb-chip,.tb-more,.tb-li .tag,.tb-li h3 { font-size:14px; line-height:1.5; }
+.tb-back,.tb-chip,.tb-more,.tb-close { min-width:44px; min-height:44px; }
+.tb-dot { position:relative; width:44px; height:44px; border:0; background:transparent; }
+.tb-dot.on { background:transparent; }
+.tb-dot::after { content:''; position:absolute; width:9px; height:9px; left:50%; top:50%; transform:translate(-50%,-50%); border:1px solid #5d4a3380; border-radius:50%; background:transparent; }
+.tb-dot.on::after { background:#a8431d; }
+.tb-row > div { min-width:0; overflow-wrap:anywhere; }
