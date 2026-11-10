@@ -38,9 +38,9 @@ window.PORTFOLIO_CONTENT = {
     "night": "Outside work, I build a VR escape room at Kellie’s Castle.",
     "signoff": "Systems and stories, made with care.",
     "notes": [
-      { "title": "Building", "text": "AI document workflows and ERP integrations." },
-      { "title": "Creating", "text": "An escape room inside Kellie’s Castle." },
-      { "title": "Learning", "text": "Scroll animations and interactive 3D for the web." }
+      { "title": "Building", "text": "Read my professional background →" },
+      { "title": "Creating", "text": "Read about my VR work →" },
+      { "title": "Learning", "text": "See what I’m learning →" }
     ]
   },
   "hero": {

@@ -9,3 +9,6 @@
 .tb-dot::after { content:''; position:absolute; width:9px; height:9px; left:50%; top:50%; transform:translate(-50%,-50%); border:1px solid #5d4a3380; border-radius:50%; background:transparent; }
 .tb-dot.on::after { background:#a8431d; }
 .tb-row > div { min-width:0; overflow-wrap:anywhere; }
+/* Closed secondary actions must be absent from keyboard focus as well as sight. */
+.tb-chip { visibility:hidden; }
+.tb-station.open .tb-chip { visibility:visible; }

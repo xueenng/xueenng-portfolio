@@ -74,13 +74,50 @@
       if (window.innerWidth <= 1200) { details.open = false; owner.open = false; }
       if (window.innerWidth > 1200 && !overlay.hidden && window.PORTFOLIO_APP) window.PORTFOLIO_APP.navOverlay.close();
     });
+    var header = document.getElementById('nav'), headerHeight = -1, currentQueued = false;
+    var sectionLinks = Array.from(document.querySelectorAll('.nav-links a,.nav-overlay-links a'));
     function syncCurrent() {
-      document.querySelectorAll('.nav-links a,.nav-overlay-links a').forEach(function (link) {
-        if (link.getAttribute('href') === location.hash) link.setAttribute('aria-current', 'location');
-        else link.removeAttribute('aria-current');
+      currentQueued = false;
+      var height = header.getBoundingClientRect().height;
+      if (height !== headerHeight) {
+        headerHeight = height;
+        document.documentElement.style.setProperty('--nav-header-height', height + 'px');
+      }
+      var line = height + 24, current = null;
+      if (document.getElementById('projects-overlay')) current = '#map';
+      else if (document.getElementById('hall-overlay')) current = '#achievements';
+      else {
+        ['selected', 'projects', 'journey', 'achievements', 'about'].forEach(function (id) {
+          var section = document.getElementById(id);
+          if (!section || !section.getClientRects().length) return;
+          var rect = section.getBoundingClientRect();
+          if (rect.top <= line && rect.bottom > line) current = '#' + id;
+        });
+        var contact = document.getElementById('contact');
+        if (contact && contact.getClientRects().length) {
+          var rect = contact.getBoundingClientRect();
+          if (rect.top <= line + 24 && rect.bottom > line) current = '#contact';
+        }
+      }
+      sectionLinks.forEach(function (link) {
+        if (link.getAttribute('href') === current) {
+          if (link.getAttribute('aria-current') !== 'location') link.setAttribute('aria-current', 'location');
+        } else if (link.hasAttribute('aria-current')) link.removeAttribute('aria-current');
       });
     }
-    window.addEventListener('hashchange', syncCurrent);
+    function scheduleCurrent() {
+      if (currentQueued) return;
+      currentQueued = true;
+      requestAnimationFrame(syncCurrent);
+    }
+    window.addEventListener('scroll', scheduleCurrent, { passive:true });
+    window.addEventListener('resize', scheduleCurrent);
+    window.addEventListener('hashchange', scheduleCurrent);
+    window.addEventListener('popstate', scheduleCurrent);
+    new ResizeObserver(scheduleCurrent).observe(header);
+    new MutationObserver(scheduleCurrent).observe(document.body, { childList:true });
+    var aboutReveal = document.getElementById('about-reveal');
+    if (aboutReveal) new MutationObserver(scheduleCurrent).observe(aboutReveal, { attributes:true, attributeFilter:['hidden'] });
     syncCurrent();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

@@ -62,6 +62,13 @@
           if (!saved.aboutLetter && base.aboutLetter) {
             saved.aboutLetter = JSON.parse(JSON.stringify(base.aboutLetter));
           }
+          // Refresh exact former note defaults, retaining custom titles/copy.
+          if (saved.aboutLetter && Array.isArray(saved.aboutLetter.notes) && base.aboutLetter && base.aboutLetter.notes) {
+            ["AI document workflows and ERP integrations.", "An escape room inside Kellie’s Castle.", "Scroll animations and interactive 3D for the web."].forEach(function (text, index) {
+              var note = saved.aboutLetter.notes[index], original = base.aboutLetter.notes[index];
+              if (note && original && note.title === original.title && note.text === text) note.text = original.text;
+            });
+          }
           // Refresh the previous default contact wording, preserving custom edits.
           if (saved.sections && saved.sections.contact) {
             if (saved.sections.contact.heading === "Let's talk") saved.sections.contact.heading = base.sections.contact.heading;

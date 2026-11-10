@@ -65,3 +65,5 @@
 .nav-tools-label { margin:20px 0 8px; font:700 .75rem var(--label); letter-spacing:.06em; text-transform:uppercase; color:#665334; }
 .nav-overlay-owner a,.nav-overlay-owner button { display:inline-flex; align-items:center; min-height:44px; padding:8px 14px; margin-right:10px; color:#34472f; background:#fff6df; border:1px solid #aa9566; border-radius:3px; font:500 .9rem var(--display); }
 @media(min-width:1101px) and (max-width:1400px) { #nav .nav-links a { font-size:14px; } #nav .nav-brand { gap:8px; } #nav .nav-inner { padding-inline:20px; } #nav .nav-resume { padding-inline:12px; } }
+/* CR-011: keep the Achievements destination clear of the measured header. */
+#achievements { scroll-margin-top:calc(var(--nav-header-height,77px) + 12px); }
