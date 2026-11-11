@@ -197,7 +197,9 @@
   /* ---------- filmstrip: the gallery as a reel you scroll through ----------
      Opened from a button on the project card, so the shots cost the card no
      height at all - the card stays inside one screen. */
-  function openFilmstrip(images, title) {
+  function openFilmstrip(images, title, trigger) {
+    var opener = trigger || document.activeElement;
+    var closed = false;
     var back = el("div", "film-back");
     var wrap = el("div", "film-wrap");
 
@@ -277,10 +279,15 @@
     setTimeout(syncEdges, 60);
 
     function shut() {
+      if (closed) return;
+      closed = true;
       back.remove();
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      if (opener && opener.isConnected && typeof opener.focus === "function") {
+        opener.focus({ preventScroll: true });
+      }
     }
     function onKey(ev) {
       // while a shot is enlarged the keys belong to the lightbox
@@ -341,7 +348,7 @@
         var shots = el("button", "btn btn-small", "View " + ex.images.length + " screenshots");
         shots.type = "button";
         shots.setAttribute("data-phone-evidence", "screenshots");
-        shots.addEventListener("click", function () { openFilmstrip(ex.images, project.title); });
+        shots.addEventListener("click", function () { openFilmstrip(ex.images, project.title, shots); });
         actions.appendChild(shots);
       }
       evidence.appendChild(actions);

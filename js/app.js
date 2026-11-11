@@ -320,7 +320,7 @@
       var b = el("button", "tag film-btn", "🎞 " + shots.length + " screenshots");
       b.title = "Open the filmstrip";
       b.addEventListener("click", function () {
-        window.PORTFOLIO_EXHIBITS.filmstrip(shots, p.title);
+        window.PORTFOLIO_EXHIBITS.filmstrip(shots, p.title, b);
       });
       row.appendChild(b);
     }
