@@ -1,4 +1,6 @@
 /* Approved CR-006 A: concise evidence before optional exploration. */
+/* Keep the centered panel from imposing its min-content width on the grid track. */
+.pjs-backdrop { grid-template-columns:minmax(0,1fr); }
 .pjs-evidence { margin:12px 0 14px; display:grid; gap:11px; }
 .pjs-evidence > div { border-left:2px solid #a88447; padding-left:12px; }
 .pjs-evidence dt { font:700 14px/1.5 var(--label); letter-spacing:.07em; text-transform:uppercase; color:#795225; }

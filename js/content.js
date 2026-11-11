@@ -265,6 +265,11 @@ window.PORTFOLIO_CONTENT = {
     },
     {
       "id": "forex-sync",
+      "overview": {
+        "problem": "Finance needed official exchange rates entered into the ERP each month.",
+        "contribution": "I built the scheduled BNM-to-ERP workflow, including active-currency lookup, retries and missing-rate alerts.",
+        "outcome": "The workflow retrieves and updates rates automatically, with a summary that identifies missing currencies for follow-up."
+      },
       "title": "Central Bank Exchange Rate Sync",
       "subtitle": "Monthly forex rates flow from Bank Negara Malaysia into the ERP by themselves",
       "period": "2026 - live in production",
@@ -290,6 +295,11 @@ window.PORTFOLIO_CONTENT = {
     },
     {
       "id": "notify-hub",
+      "overview": {
+        "problem": "Recipient changes required edits across separate workflows, and test notifications could reach ordinary users.",
+        "contribution": "I built shared recipient routing, testing/live controls and email/Teams notification paths.",
+        "outcome": "Recipient changes are managed centrally, while testing and live notification delivery follow separate rules."
+      },
       "title": "Shared Notification Hub",
       "subtitle": "One routing brain decides who hears about which failure, and where it lands",
       "period": "2026 - live in production",
@@ -316,6 +326,11 @@ window.PORTFOLIO_CONTENT = {
     },
     {
       "id": "ssrs-monitor",
+      "overview": {
+        "problem": "Report-server failures depended on someone noticing and reporting the problem.",
+        "contribution": "I built scheduled reachability checks, retry handling and timestamped failure alerts.",
+        "outcome": "Repeated failed checks produce an admin alert with failure history, providing a repeatable investigation starting point."
+      },
       "title": "Report Server Watchdog",
       "subtitle": "Scheduled report-server checks with retry and alerts",
       "period": "2026 - live in production",
