@@ -44,9 +44,9 @@
     scene.insertBefore(brief, stage);
   }
   function watchDoLifecycle(container, project) {
-    if (!doLifecycle || !project || project.id !== "do-pipeline" || doLifecycle.has(container)) return;
-    var queries = [window.matchMedia("(max-width: 1099px)"), window.matchMedia("(max-width: 760px)"),
-      window.matchMedia("(pointer: coarse)")];
+    if (!doLifecycle || !project || (project.id !== "do-pipeline" && project.id !== "vr-escape-room") || doLifecycle.has(container)) return;
+    var queries = [window.matchMedia("(max-width: 760px)"), window.matchMedia("(pointer: coarse)")];
+    if (project.id === "do-pipeline") queries.push(window.matchMedia("(max-width: 1099px)"));
     var onChange = function () { window.PORTFOLIO_EXHIBITS.render(container, project); };
     queries.forEach(function (q) {
       if (q.addEventListener) q.addEventListener("change", onChange);
@@ -299,7 +299,7 @@
      Only kellie-fyp carries screenshots, so the rest are note-only. The
      project's own problem/action/result copy still renders above this, so the
      card never looks empty. */
-  function renderDesktopOnly(container, ex, heading) {
+  function renderDesktopOnly(container, ex, heading, project) {
     // Some cards bundle a video alongside the game (the AR card is a
     // "Mini game"/"Video" switcher). Phones still get to watch the video -
     // only the interactive part is stood down.
@@ -310,6 +310,46 @@
     }
 
     var note = el("div", "demo-desktop-only");
+    // Only the two homepage scenes get the approved phone evidence path.
+    // Keep generic cards and the DO compact fine-pointer notice unchanged.
+    var phoneEvidence = project && (project.id === "do-pipeline" || project.id === "vr-escape-room") &&
+      container.closest(".ft-scene") &&
+      (window.innerWidth <= 760 || window.matchMedia("(pointer: coarse)").matches);
+    if (phoneEvidence) {
+      note.classList.add("ddo-phone-evidence");
+      var mark = el("span", "ddo-mark", "▶");
+      mark.setAttribute("aria-hidden", "true");
+      note.appendChild(mark);
+      var castle = project.id === "vr-escape-room";
+      var evidence = el("div", "ddo-body");
+      evidence.appendChild(el("b", null, castle ? "Explore the VR project" : "Explore this workflow on your phone"));
+      evidence.appendChild(el("p", null, castle
+        ? "Read the project story and view original project screenshots. The browser teaser is an illustrated adaptation of the VR project."
+        : "See the user need, processing rules, design decisions and validation. The interactive demo uses synthetic sample orders."));
+      var actions = el("div", "ddo-evidence-actions");
+      var story = el("button", "btn btn-small", "Read project story");
+      story.type = "button";
+      story.setAttribute("data-phone-evidence", "story");
+      story.addEventListener("click", function () {
+        if (window.PORTFOLIO_PROJ_SCROLL) {
+          story.focus({ preventScroll: true });
+          window.PORTFOLIO_PROJ_SCROLL.open(project);
+        }
+      });
+      actions.appendChild(story);
+      if (castle && ex.images && ex.images.length) {
+        var shots = el("button", "btn btn-small", "View " + ex.images.length + " screenshots");
+        shots.type = "button";
+        shots.setAttribute("data-phone-evidence", "screenshots");
+        shots.addEventListener("click", function () { openFilmstrip(ex.images, project.title); });
+        actions.appendChild(shots);
+      }
+      evidence.appendChild(actions);
+      evidence.appendChild(el("small", "ddo-requirement", "Interactive demo requires a desktop with a cursor and a full-size window."));
+      note.appendChild(evidence);
+      container.appendChild(note);
+      return;
+    }
     note.appendChild(el("span", "ddo-mark", "▶"));
     var body = el("div", "ddo-body");
     body.appendChild(el("b", null,
@@ -361,8 +401,9 @@
           // the mini games are built for a cursor and a full-size window; at
           // phone scale their controls are too small to actually play
           renderDesktopOnly(container, ex,
-            policy ? policy.heading : undefined);
+            policy ? policy.heading : undefined, project);
         } else if (ex.type === "demo" && ex.demo) {
+          if (!window.DEMOS_READY && window.PORTFOLIO_LOAD_DEMOS) window.PORTFOLIO_LOAD_DEMOS();
           var box = el("div", "demo");
           container.appendChild(box);
           // screenshots do NOT stack under the demo any more - they live in

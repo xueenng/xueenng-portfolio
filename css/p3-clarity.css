@@ -1,4 +1,12 @@
 /* Approved P3 Pass 1: larger ivory map guide and five-second sample feedback. */
+/* CR-009 A: existing evidence at the phone demo fallback, without duplicate actions. */
+.ddo-phone-evidence .ddo-body { min-width: 0; }
+.ft-scene .demo-desktop-only.ddo-phone-evidence .ddo-body p { font-size: 16px; line-height: 1.6; }
+.ddo-evidence-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0; }
+.ddo-evidence-actions button { min-height: 44px; max-width: 100%; white-space: normal; font-size: 14px; }
+.ddo-requirement { display: block; margin-top: 12px; font-size: 14px; line-height: 1.5; }
+.ft-scene:has(.ddo-phone-evidence) .ft-brief .film-btn,
+.ft-scene:has(.ddo-phone-evidence) .ft-brief > .ft-story { display: none; }
 .wm-legend {
   width: min(300px,82vw); padding: 22px 20px;
   border: 1px solid #a58c59; border-radius: 5px; border-image: none;

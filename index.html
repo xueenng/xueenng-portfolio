@@ -59,7 +59,7 @@
 <link rel="stylesheet" href="css/hall-readability.css?v=cr005-hall-a-v1">
 <link rel="stylesheet" href="css/section-headings.css?v=cr005-access-a-v1">
 <link rel="stylesheet" href="css/image-viewer.css?v=p2-approved-v1">
-<link rel="stylesheet" href="css/p3-clarity.css?v=p3-pass1-v1">
+<link rel="stylesheet" href="css/p3-clarity.css?v=cr009-a-v1">
 </head>
 <body>
 
@@ -355,7 +355,7 @@
 <!-- layout overrides saved by the scene editor; must load BEFORE app.js -->
 <script src="js/scene-layout.js?v=workshop-counter-v1.6"></script>
 <script src="js/hall-door-motion.js?v=hall-motion-v1"></script>
-<script src="js/app.js?v=cr012-a-v1"></script>
+<script src="js/app.js?v=cr009-a-v1"></script>
 <script src="js/header-ivory.js?v=cr011-a-v1"></script>
 <script>
 /* The mini games are stood down on phones (exhibits.js renderDesktopOnly), so
@@ -363,7 +363,6 @@
    loaded async - DEMOS_READY lets exhibits.js mount an exhibit opened before
    the file has landed, instead of rendering an empty panel. */
 (function () {
-  if (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 760) return;
   /* do-workbench.js carries the DO exhibit; demos.js delegates to it. Both
      are gated the same way and DEMOS_READY waits for both, so exhibits.js
      never mounts the DO panel into a half-loaded pair. */
@@ -377,17 +376,25 @@
     document.head.appendChild(s);
     return done;
   }
-  window.DEMOS_READY = Promise.all([
+  function loadDesktopDemos() {
+    if (window.DEMOS_READY) return window.DEMOS_READY;
+    if (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 760) return;
+    window.DEMOS_READY = Promise.all([
     grab("js/do-workbench.js?v=p3-pass1-v1"),
     Promise.all([grab("js/castle-story.js?v=castle-fyp-v2.4"), grab("js/castle-panorama.js?v=castle-fyp-v2.4")]).then(function () {
       return grab("js/castle-experience.js?v=castle-fyp-v2.9");
     }).then(function () {
       return grab("js/demos.js?v=castle-fyp-v2.4");
     })
-  ]);
+    ]);
+    return window.DEMOS_READY;
+  }
+  // A phone-sized window may later become a supported desktop window.
+  window.PORTFOLIO_LOAD_DEMOS = loadDesktopDemos;
+  loadDesktopDemos();
 })();
 </script>
-<script src="js/exhibits.js?v=p2-approved-v1"></script>
+<script src="js/exhibits.js?v=cr009-a-v1"></script>
 <script src="js/world.js?v=fixed-reading-v1"></script>
 <script src="js/world-art.js"></script>
 <script src="js/worldmap.js"></script>

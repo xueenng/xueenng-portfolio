@@ -568,7 +568,12 @@
       }
       if (links && presentation.scene === "castle") {
         var fallbackLink = links.querySelector('a[href="kellie.html"]');
-        if (fallbackLink) fallbackLink.href = "kellie.html?v=castle-fyp-v2.4";
+        if (fallbackLink) {
+          fallbackLink.href = "kellie.html?v=castle-fyp-v2.4";
+          if (window.innerWidth <= 760 || window.matchMedia("(pointer: coarse)").matches) {
+            fallbackLink.textContent = "Explore the Castle project page ↗";
+          }
+        }
       }
       if (links) brief.appendChild(links);
       else brief.appendChild(featureStoryAction(p, presentation));
