@@ -1,4 +1,21 @@
 /* Approved P3 Pass 1: larger ivory map guide and five-second sample feedback. */
+/* Approved CR-007/010 A: preserve copy/counters, shorten phone introduction. */
+.hero .tour-link { min-height:44px; line-height:1.4; }
+.hero :is(.hero-cta a,.tour-link):focus-visible { outline:3px solid currentColor; outline-offset:4px; }
+@media(max-width:760px) {
+ .hero .hero-cta { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 12px; margin-top:24px; }
+ .hero .hero-cta .btn-primary { grid-column:1/-1; justify-content:center; min-height:44px; }
+ .hero .hero-cta .btn-ghost { font-size:14px; min-height:44px; padding:8px 0; white-space:normal; text-align:center; justify-content:center; line-height:1.4; }
+ .hero { padding-top:96px; padding-bottom:20px; }
+ .hero .hero-inner { gap:16px; }
+ .hero .hero-subline { font-size:16px; line-height:1.65; }
+ .hero #hero-photo { padding:14px 0; }
+ .hero .hero-polaroid { width:min(180px,60vw); }
+ .hero .hero-stats { margin-top:24px; }
+ .hero .stat { padding:12px 8px; }
+ .hero .stat b { font-size:28px; line-height:1.15; }
+ .hero .stat span { display:block; font-size:14px; line-height:1.45; margin-top:4px; }
+}
 /* CR-009 A: existing evidence at the phone demo fallback, without duplicate actions. */
 .ddo-phone-evidence .ddo-body { min-width: 0; }
 .ft-scene .demo-desktop-only.ddo-phone-evidence .ddo-body p { font-size: 16px; line-height: 1.6; }
