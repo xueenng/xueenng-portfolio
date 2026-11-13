@@ -218,15 +218,15 @@ window.PORTFOLIO_CONTENT = {
           },
           {
             "label": "Requirements",
-            "text": "The workflow needed to connect each scan to its ERP record, apply the relevant delivery and receiving-evidence rules, distinguish duplicate copies from revisions, and leave a clear reason when a document needed attention."
+            "text": "The workflow needed to match each scan to its ERP record, apply delivery and receiving-evidence rules, and explain exceptions. In particular, a repeated delivery-order number had to be treated as a candidate duplicate, not proof of identical content: item or quantity details could differ."
           },
           {
             "label": "My decisions",
-            "text": "I designed most of the architecture and business logic, using AI tools throughout development. I combined AI extraction with ERP cross-checks and explicit business rules. The extracted text was one input to the filing decision, alongside delivery terms, handwritten overrides and duplicate checks. I included a reason with each outcome and a run report so the team could inspect exceptions and understand what happened."
+            "text": "I designed most of the architecture and business logic, using AI tools throughout development. For duplicate handling, I chose to compare document details rather than header fields alone. The tradeoff was explicit: retaining an extra copy creates review work, while discarding a genuinely different document can lose evidence. Uncertain comparisons were designed to retain copies for review. I kept ERP cross-checks and other business rules as separate inputs to the filing decision, and included a reason with each outcome in the run report."
           },
           {
             "label": "Validation",
-            "text": "The portfolio's Document Mill demonstrates these decisions using synthetic delivery orders. Its sample cases and scripted expectations cover normal filing, missing receiving evidence, own-transport terms, handwritten overrides, duplicate copies and revised copies. This demonstrates the rule logic; it is not a production accuracy measurement."
+            "text": "The portfolio's synthetic Document Mill includes a repeated-copy example and an updated-copy example, so reviewers can inspect distinct outcomes. A local scripted check confirms those illustrative examples' expected outcomes. The demo simplifies the production rules; it does not validate the production comparison algorithm or measure OCR accuracy."
           },
           {
             "label": "Outcome",

@@ -3,6 +3,36 @@
   'use strict';
   var legacy = [
   {
+    "id": "do-pipeline",
+    "path": [
+      "caseStudy",
+      "sections",
+      1,
+      "text"
+    ],
+    "old": "The workflow needed to connect each scan to its ERP record, apply the relevant delivery and receiving-evidence rules, distinguish duplicate copies from revisions, and leave a clear reason when a document needed attention."
+  },
+  {
+    "id": "do-pipeline",
+    "path": [
+      "caseStudy",
+      "sections",
+      2,
+      "text"
+    ],
+    "old": "I designed most of the architecture and business logic, using AI tools throughout development. I combined AI extraction with ERP cross-checks and explicit business rules. The extracted text was one input to the filing decision, alongside delivery terms, handwritten overrides and duplicate checks. I included a reason with each outcome and a run report so the team could inspect exceptions and understand what happened."
+  },
+  {
+    "id": "do-pipeline",
+    "path": [
+      "caseStudy",
+      "sections",
+      3,
+      "text"
+    ],
+    "old": "The portfolio's Document Mill demonstrates these decisions using synthetic delivery orders. Its sample cases and scripted expectations cover normal filing, missing receiving evidence, own-transport terms, handwritten overrides, duplicate copies and revised copies. This demonstrates the rule logic; it is not a production accuracy measurement."
+  },
+  {
     "id": "vr-escape-room",
     "path": [
       "outcome"
