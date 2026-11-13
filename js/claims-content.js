@@ -3,6 +3,47 @@
   'use strict';
   var legacy = [
   {
+    "id": "vr-escape-room",
+    "path": [
+      "caseStudy",
+      "sections",
+      2,
+      "text"
+    ],
+    "old": "I compared existing escape-room approaches using criteria such as visual clues, narrative, educational value and interaction. For my design, I connected diary collection, quizzes, message sequencing and a floor-plan puzzle to the castle story. I separated chapter progression from free exploration, and included visual, audio and haptic feedback to make actions and puzzle results understandable."
+  },
+  {
+    "id": "vr-escape-room",
+    "path": [
+      "caseStudy",
+      "sections",
+      3,
+      "text"
+    ],
+    "old": "My FYP presentation records expected and actual results for 25 system tests, all marked PASS. These cover menus, progress locks, scene changes, teleportation, grabbing, puzzle logic, feedback, turning options and progress reset. In a Google Forms questionnaire with 10 participants, 90% gave the highest rating for increased interest and understanding of Kellie's Castle and heritage tourism."
+  },
+  {
+    "id": "vr-escape-room",
+    "path": [
+      "caseStudy",
+      "links"
+    ],
+    "old": [
+      {
+        "label": "Original menu and level flow",
+        "url": "assets/fyp/08-level-select.jpg"
+      },
+      {
+        "label": "Original puzzle screenshot",
+        "url": "assets/fyp/12-l2-sequence.jpg"
+      },
+      {
+        "label": "Original gameplay and poster",
+        "url": "kellie.html"
+      }
+    ]
+  },
+  {
     "id": "do-pipeline",
     "path": [
       "caseStudy",
@@ -145,10 +186,13 @@
     legacy.forEach(function (entry) {
       var saved = (result.projects || []).find(function (p) { return p.id === entry.id; });
       var source = (base.projects || []).find(function (p) { return p.id === entry.id; });
-      if (!saved || !source || at(saved, entry.path) !== entry.old) return;
+      if (!saved || !source) return;
+      var value = at(saved, entry.path);
+      var matches = Array.isArray(entry.old) ? JSON.stringify(value) === JSON.stringify(entry.old) : value === entry.old;
+      if (!matches) return;
       var replacement = at(source, entry.path);
       var parent = at(saved, entry.path.slice(0, -1));
-      if (parent && replacement !== undefined) parent[entry.path[entry.path.length - 1]] = replacement;
+      if (parent && replacement !== undefined) parent[entry.path[entry.path.length - 1]] = Array.isArray(replacement) ? JSON.parse(JSON.stringify(replacement)) : replacement;
     });
     return result;
   }

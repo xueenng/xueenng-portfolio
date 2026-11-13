@@ -126,11 +126,11 @@ window.PORTFOLIO_CONTENT = {
           },
           {
             "label": "My decisions",
-            "text": "I compared existing escape-room approaches using criteria such as visual clues, narrative, educational value and interaction. For my design, I connected diary collection, quizzes, message sequencing and a floor-plan puzzle to the castle story. I separated chapter progression from free exploration, and included visual, audio and haptic feedback to make actions and puzzle results understandable."
+            "text": "I used locked level buttons to show the guided chapter sequence, with a separate VR-360 entry for free exploration. I connected diary collection, quizzes and message sequencing to the castle story. For the quiz, I showed an explicit completion message and reward so players could see what had changed. These choices followed my comparison of existing escape-room approaches for visual clues, narrative, educational value and interaction."
           },
           {
             "label": "Validation",
-            "text": "My FYP presentation records expected and actual results for 25 system tests, all marked PASS. These cover menus, progress locks, scene changes, teleportation, grabbing, puzzle logic, feedback, turning options and progress reset. In a Google Forms questionnaire with 10 participants, 90% gave the highest rating for increased interest and understanding of Kellie's Castle and heritage tourism."
+            "text": "My FYP presentation records expected and actual results for 25 system tests, all marked PASS. Relevant checks include level-progress locks (TC07), diary-to-quiz flow (TC10), UI feedback (TC12) and VR-360 navigation (TC20). The original screenshots show the related interfaces; the recorded tests report their behavior. In a Google Forms questionnaire with 10 participants, 90% gave the highest rating for increased interest and understanding of Kellie's Castle and heritage tourism. This is a self-reported questionnaire result."
           },
           {
             "label": "Outcome",
@@ -139,12 +139,20 @@ window.PORTFOLIO_CONTENT = {
         ],
         "links": [
           {
-            "label": "Original menu and level flow",
+            "label": "Chapter sequence: original level menu",
             "url": "assets/fyp/08-level-select.jpg"
           },
           {
-            "label": "Original puzzle screenshot",
+            "label": "Quiz completion: original feedback",
+            "url": "assets/fyp/10-l1-quiz.jpg"
+          },
+          {
+            "label": "Message sequence: original puzzle",
             "url": "assets/fyp/12-l2-sequence.jpg"
+          },
+          {
+            "label": "Free exploration: original VR-360",
+            "url": "assets/fyp/16-vr360.jpg"
           },
           {
             "label": "Original gameplay and poster",
