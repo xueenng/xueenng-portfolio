@@ -1,0 +1,60 @@
+/* CR029: field-note paper, with live HTML counters above the artwork. */
+#top .hero-stats {
+  position: relative;
+  isolation: isolate;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 0;
+  border-radius: 0;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  padding: 10px 12px;
+  filter: drop-shadow(0 3px 4px rgba(44, 37, 20, .14));
+}
+#top .hero-stats::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url("../assets/selected/hero-stats-paper-v1.webp") center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+/* Opaque reading fallback if the decorative image cannot load. */
+#top .hero-stats::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  z-index: -2;
+  background: #f8efd9;
+  pointer-events: none;
+}
+#top .hero-stats .stat { min-width: 0; padding: 16px 12px; }
+#top .hero-stats .stat + .stat::before { background: #cbb995; }
+#top .hero-stats .stat b,
+html[data-theme="dark"] #top .hero-stats .stat b {
+  color: #293c27;
+  font-size: 34px;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  text-shadow: none;
+}
+#top .hero-stats .stat span,
+html[data-theme="dark"] #top .hero-stats .stat span {
+  display: block;
+  max-width: 28ch;
+  margin: 6px auto 0;
+  color: #453d2e;
+  font-size: 14px;
+  line-height: 1.45;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+  text-shadow: none;
+}
+@media (max-width: 700px) {
+  #top .hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 8px; }
+  #top .hero-stats .stat { padding: 12px 8px; }
+  #top .hero-stats .stat b,
+  html[data-theme="dark"] #top .hero-stats .stat b { font-size: 28px; }
+  #top .hero-stats .stat:nth-child(even) { border-left-color: #cbb995; }
+  #top .hero-stats .stat:nth-child(n+3) { border-top-color: #cbb995; }
+}
