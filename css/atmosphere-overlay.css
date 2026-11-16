@@ -1,12 +1,4 @@
 ﻿/* Scenery is supplied by the section paintings; atmosphere passes through input. */
 #valley[data-layer="atmosphere"] { z-index:30; pointer-events:none; background:transparent; }
-/* Local warm pool: contrast-preserving overlay, without a surrounding dimmer.
-   Paper and controls are excluded; ink keeps its light/dark hierarchy. */
-body #lantern-disc {
-  position: fixed; inset: 0; margin: 0; border-radius: 0;
-  width: 100vw; height: 100vh; transform: none;
-  z-index: 29; pointer-events: none; mix-blend-mode: overlay;
-}
-body.lantern-on #sprite .suu-lantern {
-  filter: drop-shadow(0 0 3px rgba(255, 195, 82, .8));
-}
+/* Soft-light preserves the illustration and glyph detail while lighting the artwork. */
+body #lantern-disc { z-index:29; pointer-events:none; mix-blend-mode:soft-light; }
