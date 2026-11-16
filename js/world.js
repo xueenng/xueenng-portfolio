@@ -165,21 +165,11 @@
     ctx.globalAlpha = 1;
   }
 
-  /* Ambient darkness only controls the reading-lantern effect, never text ink. */
-  var ambientLast = -1, ambientNight = 0;
-  function syncAmbient(lum) {
-    var dark = lum < 152 ? 1 : 0;
-    if (dark === ambientLast) return;
-    ambientLast = dark;
-    ambientNight = dark;
-    syncDisc();
-  }
-
   // Cache visible text/control rectangles; clearing them keeps atmosphere off ink.
   // Child-list observation and scroll/resize invalidation avoid layout reads per particle.
   var protectedRects = [], maskDirty = true, maskScroll = -1, maskWidth = 0, maskHeight = 0, lastMaskRead = -Infinity;
   var protectedSelector = "h1,h2,h3,h4,h5,p,button,a,summary,input,select,textarea,label," +
-    ".hero-stats,.ft-facts,.tag,.badge,[role='status'],.about-signature,.about-monogram," +
+    ".hero-polaroid,.hero-stats,.ft-facts,.tag,.badge,[role='status'],.about-signature,.about-monogram," +
     ".contact-meta,.now-list,.footer-brand,.footer-signature,.ja-sign,.dw-paper,.dw-console,.dw-stage,.dw-gauge";
   function protectInterface(now) {
     var moved = maskScroll !== window.scrollY || maskWidth !== W || maskHeight !== H;
@@ -188,7 +178,7 @@
       document.querySelectorAll(protectedSelector).forEach(function (node) {
         var r = node.getBoundingClientRect();
         if (r.width && r.height && r.bottom > 0 && r.top < H && r.right > 0 && r.left < W) {
-          protectedRects.push({ x: r.left - 4, y: r.top - 4, w: r.width + 8, h: r.height + 8 });
+          protectedRects.push({ x: r.left - 4, y: r.top - 4, w: r.width + 8, h: r.height + 8, lanternProtect: node.matches("button,a,input,select,textarea,.hero-stats,.hero-polaroid,.ja-sign,.dw-paper,.dw-console,.dw-stage,.dw-gauge") });
         }
       });
       maskScroll = window.scrollY; maskWidth = W; maskHeight = H;
@@ -199,8 +189,6 @@
 
   function paint(now) {
     paintCount++;
-    var st = sample(tCur);
-    syncAmbient(st.lum);
     // Artwork owns the scenery. This canvas paints only transparent atmosphere.
     ctx.clearRect(0, 0, W, H);
     var raining = weatherActive === "rain";
@@ -249,6 +237,7 @@
       ctx.globalAlpha = 1;
     }
     protectInterface(now);
+    drawReadingLantern();
   }
 
   /* ---------- scroll -> time of day ---------- */
@@ -303,9 +292,9 @@
     tCur += (tTarget - tCur) * 0.07;
     if (Math.abs(tTarget - tCur) < 0.0004) tCur = tTarget;
     syncNight();
+    lanternFrame();
     paint(now);
     spriteFrame(now);
-    lanternFrame();
     requestAnimationFrame(loop);
   }
 
@@ -318,15 +307,17 @@
     sprite.setAttribute("aria-hidden", "true");
     sprite.title = "Suu, the valley spirit";
     sprite.innerHTML =
-      '<svg viewBox="0 0 64 64" width="46" height="46">' +
+      '<svg viewBox="0 0 76 64" width="55" height="46">' +
       '<g class="suu-legs"><rect x="24" y="50" width="4" height="9" rx="2" fill="#221d16"/><rect x="36" y="50" width="4" height="9" rx="2" fill="#221d16"/></g>' +
       '<path d="M32 8 C14 8 8 24 10 36 C12 50 20 55 32 55 C44 55 52 50 54 36 C56 24 50 8 32 8 Z" fill="#2a251d"/>' +
       '<path d="M32 8 C 30 4 34 2 33 6 M22 11 C 19 7 24 5 23 9 M42 11 C 45 7 40 5 41 9" stroke="#2a251d" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
       '<circle cx="24" cy="30" r="6.5" fill="#fffdf4"/><circle cx="40" cy="30" r="6.5" fill="#fffdf4"/>' +
       '<circle class="suu-eye" cx="25.5" cy="31" r="2.6" fill="#17130d"/><circle class="suu-eye" cx="41.5" cy="31" r="2.6" fill="#17130d"/>' +
-      '<g class="suu-lantern" opacity="0"><path d="M52 34 L58 30" stroke="#4a3d28" stroke-width="2" stroke-linecap="round"/>' +
-      '<rect x="55" y="30" width="7" height="9" rx="2.5" fill="#ffd98a" stroke="#4a3d28" stroke-width="1.4"/>' +
-      '<circle cx="58.5" cy="34.5" r="7" fill="rgba(255,222,140,.35)"/></g>' +
+      '<g class="suu-lantern" opacity="0"><path d="M52 34 L59 29 M59 31 Q59 21 66 25 Q69 27 67 31" stroke="#735126" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+      '<circle cx="64" cy="38" r="12" fill="rgba(255,205,105,.22)"/>' +
+      '<rect x="58" y="30" width="13" height="17" rx="3" fill="#ffcf72" stroke="#735126" stroke-width="1.7"/>' +
+      '<path d="M57 30 H72 M57 47 H72 M61 32 V45 M68 32 V45" stroke="#735126" stroke-width="1.5"/>' +
+      '<ellipse cx="64.5" cy="39" rx="2.2" ry="4.2" fill="#fff4c9"/></g>' +
       "</svg>";
     document.body.appendChild(sprite);
 
@@ -346,10 +337,10 @@
     var carrying = lanternOn && mlTX > -500;
     spriteTargetX = carrying ? mlTX - 62 : 24 + scrollPar * (window.innerWidth * 0.82);
     var d = spriteTargetX - spriteX;
-    spriteX += d * (carrying ? 0.09 : 0.045);
+    spriteX += d * (carrying ? 0.22 : 0.045);
     if (Math.abs(d) > (carrying ? 40 : 2)) faceRight = d > 0;
     var tyT = carrying ? (mlTY + 36 - (window.innerHeight - 4)) : 0;
-    spriteY += (tyT - spriteY) * 0.09;
+    spriteY += (tyT - spriteY) * (carrying ? 0.22 : 0.09);
     var walk = Math.min(Math.abs(d), 14);
     var bob = Math.abs(Math.sin(now / 130)) * clamp(walk / 5, 0, 1) * 4;
     var hop = now < hopUntil ? Math.abs(Math.sin((hopUntil - now) / 90)) * 14 : 0;
@@ -358,46 +349,36 @@
     if (lantern) lantern.setAttribute("opacity", lanternOn ? "1" : clamp((tCur - 0.72) / 0.18, 0, 1).toFixed(2));
   }
 
-  /* ---------- Suu's reading lantern (toggle: nav button or L key) ----------
-     The light is a disc BETWEEN the painted sky and the words (z-index -1),
-     so it never tints the glyphs. It pushes the background OPPOSITE to the
-     current ink - warm paper under dark ink, smoked glass under light ink -
-     which mathematically raises contrast under the light every time. */
-  var lanternOn = false, lanternDisc = null, discPaper = null, discGlass = null;
+  /* Warm local light, painted separately from atmosphere. Cached interface
+     rectangles keep controls and paper untouched; overlay blending preserves ink contrast. */
+  var lanternOn = false, lanternDisc = null, lanternCtx = null;
   var mlX = -600, mlY = -600, mlTX = -600, mlTY = -600;
   var coarse = window.matchMedia("(pointer: coarse)").matches;
 
   function buildLantern() {
     if (coarse) return;
-    lanternDisc = document.createElement("div");
+    lanternDisc = document.createElement("canvas");
     lanternDisc.id = "lantern-disc";
     lanternDisc.setAttribute("aria-hidden", "true");
-    discPaper = document.createElement("div"); discPaper.className = "ld-paper";
-    discGlass = document.createElement("div"); discGlass.className = "ld-glass";
-    var rim = document.createElement("div"); rim.className = "ld-rim";
-    lanternDisc.appendChild(discPaper);
-    lanternDisc.appendChild(discGlass);
-    lanternDisc.appendChild(rim);
     document.body.appendChild(lanternDisc);
-    syncDisc();
-
+    lanternCtx = lanternDisc.getContext("2d");
     document.addEventListener("mousemove", function (ev) {
       mlTX = ev.clientX; mlTY = ev.clientY;
-      if (reduced && lanternOn) {
+      if (reduced) {
         mlX = mlTX; mlY = mlTY;
-        lanternDisc.style.transform = "translate(" + mlX + "px," + mlY + "px)";
+        if (lanternOn) paint(performance.now());
       }
     }, { passive: true });
     document.documentElement.addEventListener("mouseleave", function () {
-      mlTX = -600; mlTY = -600;
+      mlTX = mlX = -600; mlTY = mlY = -600;
+      drawReadingLantern();
     });
-
     var btn = document.getElementById("btn-lantern");
     if (btn) btn.addEventListener("click", function () { setLantern(!lanternOn); });
     document.addEventListener("keydown", function (ev) {
-      if ((ev.key || "").toLowerCase() !== "l") return;
+      if ((ev.key || "").toLowerCase() !== "l" || ev.ctrlKey || ev.metaKey || ev.altKey || ev.repeat) return;
       var t = ev.target;
-      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
       setLantern(!lanternOn);
     });
     var saved = "0";
@@ -407,26 +388,47 @@
   function setLantern(on) {
     if (!lanternDisc) return;
     lanternOn = !!on;
+    if (lanternOn && mlTX < -500) {
+      mlTX = mlX = window.innerWidth * .5;
+      mlTY = mlY = window.innerHeight * .5;
+    }
     document.body.classList.toggle("lantern-on", lanternOn);
     var b = document.getElementById("btn-lantern");
     if (b) { b.classList.toggle("on", lanternOn); b.setAttribute("aria-pressed", lanternOn ? "true" : "false"); }
     try { localStorage.setItem("xe-lantern", lanternOn ? "1" : "0"); } catch (e) {}
-    if (lanternOn && reduced && mlTX > -500) {
-      mlX = mlTX; mlY = mlTY;
-      lanternDisc.style.transform = "translate(" + mlX + "px," + mlY + "px)";
-    }
+    if (W && H) paint(performance.now());
   }
-  function syncDisc() {
-    if (!discPaper) return;
-    var g = clamp((ambientNight - 0.35) / 0.3, 0, 1);
-    discPaper.style.opacity = (1 - g).toFixed(2);
-    discGlass.style.opacity = g.toFixed(2);
+  function drawReadingLantern() {
+    if (!lanternCtx || !W || !H) return;
+    var pw = Math.round(W * DPR), ph = Math.round(H * DPR);
+    if (lanternDisc.width !== pw || lanternDisc.height !== ph) {
+      lanternDisc.width = pw; lanternDisc.height = ph;
+      lanternDisc.style.width = W + "px"; lanternDisc.style.height = H + "px";
+      lanternCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+    lanternCtx.clearRect(0, 0, W, H);
+    if (!lanternOn || mlTX < -500 || W <= 700 || document.body.classList.contains("presenting") || document.body.classList.contains("touring")) return;
+    var glow = lanternCtx.createRadialGradient(mlX, mlY, 0, mlX, mlY, 235);
+    glow.addColorStop(0, "rgba(255,198,83,.72)");
+    glow.addColorStop(.3, "rgba(255,211,127,.26)");
+    glow.addColorStop(.65, "rgba(255,222,161,.10)");
+    glow.addColorStop(1, "rgba(255,225,170,0)");
+    lanternCtx.fillStyle = glow;
+    lanternCtx.fillRect(mlX - 235, mlY - 235, 470, 470);
+    lanternCtx.save();
+    lanternCtx.globalCompositeOperation = "destination-out";
+    lanternCtx.fillStyle = "#000";
+    lanternCtx.shadowColor = "#000";
+    lanternCtx.shadowBlur = 12;
+    protectedRects.forEach(function (r) {
+      if (r.lanternProtect && r.x < mlX + 250 && r.x + r.w > mlX - 250 && r.y < mlY + 250 && r.y + r.h > mlY - 250) lanternCtx.fillRect(r.x, r.y, r.w, r.h);
+    });
+    lanternCtx.restore();
   }
   function lanternFrame() {
     if (!lanternDisc || !lanternOn) return;
-    mlX += (mlTX - mlX) * 0.22;
-    mlY += (mlTY - mlY) * 0.22;
-    lanternDisc.style.transform = "translate(" + mlX + "px," + mlY + "px)";
+    mlX += (mlTX - mlX) * .36;
+    mlY += (mlTY - mlY) * .36;
   }
 
   /* ---------- hero vignette: painted studio-on-a-hill ---------- */
@@ -505,7 +507,7 @@
        on phones. React to width and orientation changes only; a height-only
        change is the URL bar and is ignored. */
     window.addEventListener("resize", function () {
-      if (layoutWidth() === lastW) return;
+      if (layoutWidth() === lastW && (coarse || window.innerHeight === H)) return;
       resize();
     });
     window.addEventListener("orientationchange", function () {
