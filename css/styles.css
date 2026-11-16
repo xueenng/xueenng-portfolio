@@ -307,9 +307,9 @@ a.contact-resume:hover { border-style: solid; border-color: var(--accent); color
    static, and static content paints BEFORE any positioned element no matter
    how late it sits in the DOM - at 0 the plate covers its own headline. At -1
    it shares the sky canvas's layer and wins on tree order alone.
-   The gradient layered over the image is a scrim, not decoration: the
-   painting's "XE STUDIO" signpost falls right behind the subline and the
-   buttons, so the text column needs its own wash of light to stay readable.
+   The gradient layered over the image is a reading scrim. The approved
+   quieter painting removes the sign/birds and opens the text area while
+   keeping the original valley composition and colors.
    The mask dissolves the plate's bottom edge into the canvas hills below, so
    the hero does not end on a hard horizontal seam. */
 .hero::before {
@@ -321,7 +321,7 @@ a.contact-resume:hover { border-style: solid; border-color: var(--accent); color
       color-mix(in srgb, var(--bg) 76%, transparent) 0%,
       color-mix(in srgb, var(--bg) 46%, transparent) 46%,
       transparent 78%),
-    url("../assets/scenes/valley-hero.webp") center / cover no-repeat;
+    url("../assets/scenes/valley-hero-quiet-v2.webp") center / cover no-repeat;
   -webkit-mask-image: linear-gradient(to bottom, #000 68%, transparent 99%);
   mask-image: linear-gradient(to bottom, #000 68%, transparent 99%);
 }
@@ -329,12 +329,10 @@ a.contact-resume:hover { border-style: solid; border-color: var(--accent); color
    graded rather than left glaring against an otherwise dark page */
 html[data-theme="dark"] .hero::before { filter: brightness(.38) saturate(.6) hue-rotate(204deg); }
 
-/* A portrait phone crops a 1.59:1 plate to a narrow vertical strip - centred,
-   that strip is almost entirely sky, and the whole painting is wasted. Aiming
-   it at 76% puts the mountain, the village and the meadow in the strip
-   instead. A proper portrait plate would be better; this is the cheap fix. */
+/* The quieter central strip keeps distant scenery below phone reading/actions.
+   The old 76% crop put the detailed mountain/village behind those controls. */
 @media (max-width: 700px) {
-  .hero::before { background-position: 76% center, 76% center; }
+  .hero::before { background-position: 50% center, 50% center; }
 }
 
 /* ---------- painted section plates: Journey & Hall of Achievement ----------
