@@ -183,6 +183,18 @@
   function at(object, keys) { return keys.reduce(function (value, key) { return value == null ? undefined : value[key]; }, object); }
   function upgrade(content, base) {
     var result = JSON.parse(JSON.stringify(content));
+    // Disclose the existing projection only for the exact former default stat.
+    // Keep authored labels, values and calculation settings; never write storage.
+    ((result.hero && result.hero.stats) || []).forEach(function (stat) {
+      var live = stat.live;
+      if (stat.label !== "hours of AI-assisted engineering" || stat.value !== "800" ||
+          !live || live.kind !== "hours" || live.startDate !== "2026-04-26" ||
+          live.asOf !== "2026-07-21" || live.asOfValue !== 800) return;
+      var source = ((base.hero && base.hero.stats) || []).find(function (item) {
+        return item.live && item.live.kind === "hours";
+      });
+      if (source) stat.label = source.label;
+    });
     legacy.forEach(function (entry) {
       var saved = (result.projects || []).find(function (p) { return p.id === entry.id; });
       var source = (base.projects || []).find(function (p) { return p.id === entry.id; });

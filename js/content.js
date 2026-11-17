@@ -70,7 +70,7 @@ window.PORTFOLIO_CONTENT = {
       },
       {
         "value": "800",
-        "label": "hours of AI-assisted engineering",
+        "label": "AI-assisted hours (estimated)",
         "live": { "kind": "hours", "startDate": "2026-04-26", "asOf": "2026-07-21", "asOfValue": 800 }
       },
       {
