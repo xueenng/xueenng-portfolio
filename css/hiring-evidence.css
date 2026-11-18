@@ -1,6 +1,12 @@
 /* Approved CR-006 A: concise evidence before optional exploration. */
 /* Keep the centered panel from imposing its min-content width on the grid track. */
 .pjs-backdrop { grid-template-columns:minmax(0,1fr); }
+/* Existing phone evidence notices hide direct summary .ft-story actions. */
+.ft-scene--castle .ft-brief > .ft-written-story {
+  min-height:44px; margin:16px 0 0; padding:10px 12px;
+  background:#f5ecd7; color:#30422c; border:1px solid #8a7041;
+  font:600 14px/1.4 var(--label); box-shadow:0 2px 3px #44392318;
+}
 .pjs-evidence { margin:12px 0 14px; display:grid; gap:11px; }
 .pjs-evidence > div { border-left:2px solid #a88447; padding-left:12px; }
 .pjs-evidence dt { font:700 14px/1.5 var(--label); letter-spacing:.07em; text-transform:uppercase; color:#795225; }

@@ -575,6 +575,19 @@
           }
         }
       }
+      if (presentation.scene === "castle") {
+        var writtenStory = el("button", "ft-story ft-written-story", "Read project story \u2192");
+        writtenStory.type = "button";
+        writtenStory.addEventListener("click", function () {
+          var reader = window.PORTFOLIO_PROJ_SCROLL;
+          if (reader && reader.open && reader.page) {
+            writtenStory.focus({ preventScroll: true });
+            reader.open(p);
+            reader.page(2);
+          }
+        });
+        brief.appendChild(writtenStory);
+      }
       if (links) brief.appendChild(links);
       else brief.appendChild(featureStoryAction(p, presentation));
       scene.appendChild(brief);
