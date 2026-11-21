@@ -1414,11 +1414,14 @@
 
     var cta = document.querySelector(".hero-cta");
     if (cta) {
-      var b = el("a", "btn btn-ghost magnetic", "🗺 Explore the valley");
-      b.href = "#map";
-      b.id = "btn-map";
+      var b = document.getElementById("btn-map");
+      if (!b) {
+        b = el("a", "btn btn-ghost magnetic", "\uD83D\uDDFA Explore the valley");
+        b.href = "#map";
+        b.id = "btn-map";
+        cta.appendChild(b);
+      }
       b.addEventListener("click", function (ev) { ev.preventDefault(); openMap(); });
-      cta.appendChild(b);
     }
     /* The shell owns the hash, Escape and body.overflow - it writes #projects
        and closes on its own listeners, and a second copy here would be two
@@ -1429,6 +1432,8 @@
     window.addEventListener("hashchange", function () {
       if (location.hash === "#map") openMap();
     });
+    // A native critical-view link can be used before this enhancement arrives.
+    if (location.hash === "#map") openMap();
     // WASD / arrow keys walk Suu (only in map mode, and not while the scroll is open).
     // Coarse-pointer devices have no keyboard worth binding to, so skip it
     // entirely there rather than wire a listener nothing will ever fire. Below

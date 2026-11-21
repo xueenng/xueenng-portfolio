@@ -62,9 +62,9 @@
       read.addEventListener('click',function(){pause();openChapter(t,i);});
       ticket.append(read);sign.addEventListener('click',function(){pause();resume=false;setStartLabel('Start journey');select(i,true);});
       shelter.append(building,sign);
-      // Earlier chapter tickets use the open sky, outside the transformed
-      // shelter's stacking context and well above the moving locomotive.
-      if(today)shelter.append(ticket);else station.append(ticket);
+      // Every chapter uses the same upper ticket row, including Today.
+      // Keep the reading copy outside the shelter and clear of the train.
+      station.append(ticket);
       station.append(shelter);stage.append(station);
       stations.push(station);tickets.push(ticket);buttons.push(sign);
     });

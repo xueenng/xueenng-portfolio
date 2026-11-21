@@ -556,7 +556,7 @@
     stage.addEventListener("click", function () { craneSkip(); });
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
+  document.addEventListener(window.PORTFOLIO_APP && window.PORTFOLIO_APP.readyEvent || "DOMContentLoaded", function () {
     App = window.PORTFOLIO_APP;
     $("#btn-present").addEventListener("click", enter);
     wireSwipe();

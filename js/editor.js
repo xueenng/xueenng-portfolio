@@ -599,7 +599,7 @@
   };
 
   /* ---------- boot ---------- */
-  document.addEventListener("DOMContentLoaded", function () {
+  document.addEventListener(window.PORTFOLIO_APP && window.PORTFOLIO_APP.readyEvent || "DOMContentLoaded", function () {
     App = window.PORTFOLIO_APP;
 
     // the pencil is hidden for ordinary visitors; admin.html unlocking reveals it

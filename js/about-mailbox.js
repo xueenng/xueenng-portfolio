@@ -8,7 +8,31 @@
   var label=trigger.querySelector('.mailbox-label');
   var reduce=window.matchMedia('(prefers-reduced-motion: reduce)');
   var timer;
+  var openImage=trigger.querySelector('.mailbox-open');
+  function loadOpenArt() {
+    if(!openImage)return;
+    if(openImage.complete&&openImage.naturalWidth)trigger.classList.add('open-art-ready');
+    if(!openImage.dataset.src)return;
+    openImage.addEventListener('load',function(){trigger.classList.add('open-art-ready');},{once:true});
+    openImage.loading='eager';
+    openImage.src=openImage.dataset.src;
+    delete openImage.dataset.src;
+  }
+  function watchOpenArt() {
+    if(!window.IntersectionObserver)return;
+    var observer=new IntersectionObserver(function(entries){
+      if(entries.some(function(e){return e.isIntersecting;})){loadOpenArt();observer.disconnect();}
+    },{rootMargin:'600px'});
+    observer.observe(trigger);
+  }
+  trigger.addEventListener('pointerenter',loadOpenArt,{once:true});
+  trigger.addEventListener('focus',loadOpenArt,{once:true});
+  // Observe only after the app's full render establishes real section positions.
+  if(window.PORTFOLIO_APP && !window.PORTFOLIO_APP.ready)document.addEventListener(window.PORTFOLIO_APP.readyEvent,watchOpenArt,{once:true});
+  else if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',watchOpenArt,{once:true});
+  else watchOpenArt();
   function open(animate) {
+    loadOpenArt();
     var wasClosed=reveal.hidden;
     reveal.hidden=false;
     trigger.setAttribute('aria-expanded','true');

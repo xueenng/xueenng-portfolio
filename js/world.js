@@ -554,5 +554,5 @@
     release: function () { window.PORTFOLIO_WORLD.holdTime(null); }
   };
 
-  document.addEventListener("DOMContentLoaded", boot);
+  document.addEventListener(window.PORTFOLIO_APP && window.PORTFOLIO_APP.readyEvent || "DOMContentLoaded", boot);
 })();

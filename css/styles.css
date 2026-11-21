@@ -208,6 +208,24 @@ body.night .footer .footer-mark { color: #e8e4d8; }
 .castle-link:hover .castle-caption b { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ---------- intro overlay ---------- */
+/* Critical data is filled before revealing the first view. Keep native links
+   outside it available, and never paint empty copy in a returning session. */
+html[data-hero-pending] .hero-inner,
+html[data-hero-pending] .hero-stats,
+html[data-hero-pending] .nav-brand,
+html[data-hero-pending] #intro-mark { visibility: hidden; }
+html[data-startup-intro="pending"] #intro[hidden] { display: flex !important; }
+html[data-startup-fallback] .reveal { opacity:1; transform:none; transition:none; }
+/* Raw below-fold image dimensions must not widen a mobile viewport while
+   the noncritical stylesheet is still arriving. This guard is temporary. */
+html[data-full-style-pending] :is(img,svg,button,video,canvas) { max-width:100%; }
+
+/* Paper textures can follow the painting; readable solid fallbacks remain. */
+html[data-hero-art-pending] #nav,
+html[data-hero-art-pending] #nav-overlay,
+html[data-hero-art-pending] #top .hero-stats::before { background-image:none; }
+
+
 .intro {
   position: fixed; inset: 0; z-index: 500; background: var(--bg);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;

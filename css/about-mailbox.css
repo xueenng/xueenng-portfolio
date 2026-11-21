@@ -55,3 +55,8 @@ body:has(#about.mailbox-is-open) .section-join--castle-about { display:block; }
  .castle-mailbox .mailbox-label { top:100%; left:auto; right:0; transform:none; width:155px; max-width:none; min-height:44px; font-size:.76rem; }
  .castle-mailbox .mailbox-hint { top:-25%; font-size:.7rem; width:170px; left:auto; right:0; }
 }
+
+/* Decorative open art is fetched near use. Keep the closed painting while
+   it loads, or if it fails; the letter itself remains fully functional. */
+.mailbox-trigger[aria-expanded=true]:not(.open-art-ready) .mailbox-closed { opacity:1; }
+.mailbox-trigger[aria-expanded=true]:not(.open-art-ready) .mailbox-open { opacity:0; }

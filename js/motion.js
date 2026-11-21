@@ -19,23 +19,31 @@
 
   /* ---------- intro overlay ---------- */
   function intro() {
+    if (window.PORTFOLIO_STARTUP_READY) return; // home intro already owns its bounded lifecycle
     var el = document.getElementById("intro");
     if (!el) return;
     var seen = false;
     try { seen = sessionStorage.getItem("xe.intro") === "1"; } catch (e) {}
-    if (reduced || seen) { el.remove(); return; }
+    if (reduced || seen) {
+      clearTimeout(window.PORTFOLIO_STARTUP_FALLBACK);
+      document.documentElement.removeAttribute("data-startup-intro");
+      el.remove(); return;
+    }
     var mark = document.getElementById("intro-mark");
     var App = window.PORTFOLIO_APP;
     if (App && App.content && App.content.identity.monogram) mark.textContent = App.content.identity.monogram;
     el.hidden = false;
+    document.documentElement.removeAttribute("data-startup-intro");
     function leave() {
       if (el.classList.contains("leaving")) return;
+      clearTimeout(window.PORTFOLIO_STARTUP_FALLBACK);
       el.classList.add("leaving");
       try { sessionStorage.setItem("xe.intro", "1"); } catch (e) {}
       setTimeout(function () { el.remove(); }, 500);
     }
     el.addEventListener("click", leave);
-    setTimeout(leave, 1700);
+    var began = typeof window.PORTFOLIO_INTRO_STARTED === "number" ? window.PORTFOLIO_INTRO_STARTED : performance.now();
+    setTimeout(leave, Math.max(0, 1700 - (performance.now() - began)));
   }
 
   /* ---------- scroll reveals (re-wireable after re-renders) ---------- */
@@ -92,7 +100,7 @@
 
   /* ---------- stat counters ---------- */
   function wireCounters() {
-    var stats = document.querySelectorAll(".stat b");
+    var stats = document.querySelectorAll(".stat b:not([data-counter-ready])");
     if (!stats.length) return;
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
@@ -115,7 +123,7 @@
         })(startT);
       });
     }, { threshold: 0.6 });
-    stats.forEach(function (s) { io.observe(s); });
+    stats.forEach(function (s) { s.setAttribute("data-counter-ready", ""); io.observe(s); });
   }
 
   /* ---------- Konami easter egg: the v1 boot terminal ---------- */

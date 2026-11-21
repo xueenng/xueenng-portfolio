@@ -116,10 +116,21 @@
     window.addEventListener('popstate', scheduleCurrent);
     new ResizeObserver(scheduleCurrent).observe(header);
     new MutationObserver(scheduleCurrent).observe(document.body, { childList:true });
-    var aboutReveal = document.getElementById('about-reveal');
-    if (aboutReveal) new MutationObserver(scheduleCurrent).observe(aboutReveal, { attributes:true, attributeFilter:['hidden'] });
+    var aboutReveal = null;
+    function watchAbout() {
+      var node = document.getElementById('about-reveal');
+      if (node && node !== aboutReveal) {
+        aboutReveal = node;
+        new MutationObserver(scheduleCurrent).observe(node, { attributes:true, attributeFilter:['hidden'] });
+      }
+      scheduleCurrent();
+    }
+    if (window.PORTFOLIO_APP && window.PORTFOLIO_APP.readyEvent) document.addEventListener(window.PORTFOLIO_APP.readyEvent, watchAbout, { once:true });
+    watchAbout();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watchAbout, { once:true });
     syncCurrent();
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  if (window.PORTFOLIO_APP && window.PORTFOLIO_APP.content && document.getElementById('top')) init();
+  else if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();

@@ -398,7 +398,7 @@
   }
 
   /* ---------- boot ---------- */
-  document.addEventListener("DOMContentLoaded", function () {
+  document.addEventListener(window.PORTFOLIO_APP && window.PORTFOLIO_APP.readyEvent || "DOMContentLoaded", function () {
     var btn = document.getElementById("btn-tour");
     if (btn) btn.addEventListener("click", offer);
     // clicking valley-Suu offers the tour too (she hops as well - that's fine)

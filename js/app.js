@@ -139,8 +139,9 @@
   }
 
   /* ---------- render: bound text ---------- */
-  function renderBound(content) {
+  function renderBound(content, preserveHero) {
     $all("[data-edit]").forEach(function (node) {
+      if (preserveHero && node.closest("#top,#nav,#nav-overlay")) return;
       var val = getPath(content, node.getAttribute("data-edit"));
       if (typeof val === "string") node.textContent = val;
     });
@@ -223,6 +224,12 @@
     var frame = el("div", "hp-frame");
     if (content.identity.photo) {
       var img = document.createElement("img");
+      img.fetchPriority = "high";
+      img.decoding = "async";
+      if (content.identity.photo === "assets/me.jpg") {
+        img.sizes = "(max-width: 760px) 180px, 285px";
+        img.srcset = "assets/me-web-v1.webp 570w, assets/me.jpg 720w";
+      }
       img.src = content.identity.photo;
       img.alt = content.identity.name;
       frame.appendChild(img);
@@ -2618,12 +2625,14 @@
   }
 
   /* ---------- full render ---------- */
-  function renderAll() {
+  function renderAll(options) {
     var c = App.content;
     applyAccent(c.meta.accent || "#E8A200");
-    renderBound(c);
-    renderHeroStats(c);
-    renderHeroPhoto(c);
+    renderBound(c, options && options.preserveHero);
+    if (!options || !options.preserveHero) {
+      renderHeroStats(c);
+      renderHeroPhoto(c);
+    }
     renderNow(c);
     renderFeatures(c);
     renderProjectsInline();
@@ -2642,6 +2651,8 @@
   /* ---------- public app object ---------- */
   var App = {
     content: null,
+    ready: false,
+    readyEvent: "portfolio:ready",
     LS_KEY: LS_KEY,
     CATEGORY_LABELS: CATEGORY_LABELS,
     ACH_CATEGORIES: ACH_CATEGORIES,
@@ -2710,20 +2721,29 @@
 
   window.PORTFOLIO_APP = App;
 
-  /* ---------- boot ---------- */
-  document.addEventListener("DOMContentLoaded", function () {
-    App.content = loadContent();
-    var savedTheme = null;
-    try { savedTheme = localStorage.getItem(LS_THEME); } catch (e) {}
-    applyTheme(savedTheme || App.content.meta.defaultTheme || "light");
+  /* Critical pass runs immediately after the parsed hero, using the same
+     loader and renderers as full/edit renders. No default/custom copy drift. */
+  App.content = loadContent();
+  var savedTheme = null;
+  try { savedTheme = localStorage.getItem(LS_THEME); } catch (e) {}
+  applyTheme(savedTheme || App.content.meta.defaultTheme || "light");
+  applyAccent(App.content.meta.accent || "#E8A200");
+  renderBound(App.content);
+  renderHeroStats(App.content);
+  // These values are already presented; late motion wiring must not reset them.
+  $all("#hero-stats b").forEach(function (node) { node.setAttribute("data-counter-ready", ""); });
+  renderHeroPhoto(App.content);
+  $("#hero-photo").classList.add("in");
+  $all("#hero-stats .reveal").forEach(function (node) { node.classList.add("in"); });
+  document.documentElement.removeAttribute("data-hero-pending");
+  if (window.PORTFOLIO_STARTUP_READY) window.PORTFOLIO_STARTUP_READY(App.content.identity.monogram);
 
-    renderAll();
-
+  /* Core navigation is ready with the hero, before below-fold scripts finish. */
     $("#btn-theme").addEventListener("click", function () {
       var cur = document.documentElement.getAttribute("data-theme");
       applyTheme(cur === "dark" ? "light" : "dark");
     });
-
+    $("#ov-theme").addEventListener("click", function () { $("#btn-theme").click(); });
     /* ---------- mobile nav overlay wiring ---------- */
     $("#nav-toggle").addEventListener("click", function () {
       if (navOverlay.isOpen()) { navOverlay.close(); } else { navOverlay.open(); }
@@ -2735,6 +2755,37 @@
     document.addEventListener("keydown", function (ev) {
       if (ev.key === "Escape" && navOverlay.isOpen()) navOverlay.close();
     });
+
+  /* ---------- boot ---------- */
+  document.addEventListener("DOMContentLoaded", async function () {
+    // Give the already-populated hero a paint between independent sections.
+    // Full/editor renders stay synchronous; only the first render is staged.
+    function yieldPaint() { return new Promise(function (resolve) { setTimeout(resolve, 0); }); }
+    await yieldPaint();
+    var c = App.content;
+    renderBound(c, true);
+    renderNow(c);
+    renderAvatar(c);
+    renderContact(c);
+    renderFooter(c);
+    var sections = [renderFeatures, renderProjectsInline, renderSkills, renderJourney, renderAchievements];
+    for (var i = 0; i < sections.length; i++) {
+      await yieldPaint();
+      sections[i](c);
+    }
+    if (window.PORTFOLIO_MOTION) window.PORTFOLIO_MOTION.rewire();
+    // Bind optional enhancement controls before making them available.
+    setTimeout(function () {
+      $all('[data-startup-disabled]').forEach(function (button) {
+        var kind = button.getAttribute('data-startup-disabled');
+        var ready = kind === 'tour' ? !!window.PORTFOLIO_TOUR : kind === 'present' ? !!window.PORTFOLIO_PRESENT :
+          !!(window.PORTFOLIO_WORLD && window.PORTFOLIO_WORLD.stats().width);
+        if (ready) { button.disabled = false; button.removeAttribute('data-startup-disabled'); }
+      });
+    }, 0);
+
+
+
     /* ---------- the Hall is a destination, like the valley map ---------- */
     window.addEventListener("hashchange", function () {
       if (location.hash === "#hall") {
@@ -2764,11 +2815,17 @@
     if (location.hash === "#hall" && roomAvailable()) openHallRoom(App.content);
 
     /* the overlay's tools delegate to the desktop bar's own handlers */
-    $("#ov-theme").addEventListener("click", function () { $("#btn-theme").click(); });
     $("#ov-weather").addEventListener("click", function () { $("#btn-weather").click(); });
     $("#ov-present").addEventListener("click", function () {
       navOverlay.close();
       $("#btn-present").click();
     });
+    App.ready = true;
+    document.dispatchEvent(new Event(App.readyEvent));
+    // An early native section link must still land correctly after late content.
+    if (/^#(selected|projects|skills|journey|achievements|about|contact)$/.test(location.hash)) {
+      var destination = document.querySelector(location.hash);
+      if (destination) destination.scrollIntoView();
+    }
   });
 })();
