@@ -8133,7 +8133,7 @@ html[data-theme] #journey-view .js-ride-action::before { display:none; }
 #journey .js-controls .ja-btn-off { min-height:44px; padding:6px; text-decoration:underline; text-underline-offset:4px; }
 #journey .js-controls .ja-progress { letter-spacing:.03em; }
 .js-scroll { margin-left:var(--journey-inset); width:calc(100% - var(--journey-inset)); overflow-x:auto; overflow-y:hidden; scrollbar-color:#8e603b #ebd9ac; scrollbar-width:thin; }
-.js-railway { position:relative; display:grid; grid-template-columns:var(--station-columns); min-width:calc(var(--stops) * 170px + 24px); height:480px; padding:0 12px; }
+.js-railway { position:relative; display:grid; grid-template-columns:var(--station-columns); min-width:calc(var(--stops) * 170px + 24px); height:560px; padding:0 12px; }
 .js-railway::after { content:''; position:absolute; left:0; right:0; bottom:35px; height:38px; background:url('../assets/journey/rail.webp') left center/91px 38px repeat-x; pointer-events:none; }
 .js-station { position:relative; min-width:0; height:100%; }
 .js-shelter { position:absolute; width:min(100%,220px); left:50%; bottom:80px; transform:translateX(-50%); }
@@ -8149,7 +8149,7 @@ html[data-theme] #journey-view .js-ride-action::before { display:none; }
 .js-ticket[hidden] { display:none; }
 .js-station > .js-ticket { top:8px; left:50%; width:220px; transform:translateX(-50%) rotate(-3deg); }
 .js-station:first-child > .js-ticket { left:0; transform:rotate(-3deg); }
-.js-station--today .js-ticket { left:50%; width:220px; }
+.js-station--today .js-ticket { top:auto; bottom:calc(100% + 12px); left:53%; width:220px; transform:translateX(-50%); }
 .js-station--today.js-current .js-shelter { z-index:5; }
 .js-ticket-org { display:-webkit-box; flex-shrink:0; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font:700 13px/1.3 var(--display); }
 .js-takeaway { display:-webkit-box; flex-shrink:0; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font:13px/1.3 var(--label); margin:5px 0 0; }
@@ -8167,14 +8167,14 @@ body.night .js-train img { filter:brightness(.6) saturate(.68) drop-shadow(0 4px
 .js-stop:focus-visible,.js-read:focus-visible,.js-controls button:focus-visible,.js-scroll:focus-visible { outline:3px solid #2e5b43; outline-offset:3px; }
 @keyframes jsStamp { from { opacity:0; transform:rotate(-9deg) scale(1.25); } to { opacity:1; transform:rotate(-9deg) scale(1); } }
 @keyframes jsSteam { from { transform:translate(0,0) scale(.6); opacity:.7; } to { transform:translate(-28px,-30px) scale(1.6); opacity:0; } }
-@media(min-width:1600px) { .js-railway { height:540px; } }
+@media(min-width:1600px) { .js-railway { height:620px; } }
 @media(min-width:761px) and (max-width:1100px) { .js-stop { top:19%; } .js-station--today .js-stop { top:26%; } }
 @media(max-width:760px) {
  #journey-view { gap:6px; }
  #journey-view .chip { width:min(140px,calc((100vw - 60px)*.40)); height:44px; }
  html[data-theme] #journey-view .js-ride-action { width:min(140px,calc((100vw - 60px)*.40)); }
  .js-ride-label { font-size:12px; line-height:1.05; } .js-ride-icon { font-size:14px; }
- .js-railway { display:flex; min-width:max-content; height:460px; }
+ .js-railway { display:flex; min-width:max-content; height:560px; }
  .js-station { flex:0 0 220px; width:220px; }
  .js-station--today { flex-basis:330px; width:330px; }
  .js-stop b { font-size:18px; } .js-stop span { font-size:11px; }
