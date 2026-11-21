@@ -62,8 +62,8 @@
       read.addEventListener('click',function(){pause();openChapter(t,i);});
       ticket.append(read);sign.addEventListener('click',function(){pause();resume=false;setStartLabel('Start journey');select(i,true);});
       shelter.append(building,sign);
-      // Today's larger artwork owns its ticket: anchor above its roof,
-      // centered on the painted role board rather than the grid column.
+      // Earlier chapter tickets use the open sky, outside the transformed
+      // shelter's stacking context and well above the moving locomotive.
       if(today)shelter.append(ticket);else station.append(ticket);
       station.append(shelter);stage.append(station);
       stations.push(station);tickets.push(ticket);buttons.push(sign);
