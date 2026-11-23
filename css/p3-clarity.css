@@ -25,7 +25,7 @@
 .ft-scene:has(.ddo-phone-evidence) .ft-brief .film-btn,
 .ft-scene:has(.ddo-phone-evidence) .ft-brief > .ft-story { display: none; }
 .wm-legend {
-  width: min(300px,82vw); padding: 22px 20px;
+  width: min(270px,calc(100vw - 28px)); padding: 22px 20px;
   border: 1px solid #a58c59; border-radius: 5px; border-image: none;
   background: #f3e7cb url('../assets/selected/header-ivory-surface-v1.webp') center/cover;
   box-shadow: 0 6px 20px #1116; color: #3b2a12;
