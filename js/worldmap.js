@@ -1186,6 +1186,11 @@
      writer, so it is also the single place a re-render must call from. */
   function setLegendOpen(isOpen) {
     if (legendEl) legendEl.classList.toggle("is-collapsed", !isOpen);
+    if (legendBtnEl) {
+      legendBtnEl.setAttribute("aria-expanded", String(isOpen));
+      legendBtnEl.setAttribute("aria-label", isOpen ? "Hide the guide" : "Show the guide");
+      layoutLegendHelp();
+    }
     try { localStorage.setItem("pf-legend-open", isOpen ? "1" : "0"); } catch (e) { /* private mode */ }
   }
   function buildLegend() {
@@ -1193,10 +1198,14 @@
     var saved = null;
     try { saved = localStorage.getItem("pf-legend-open"); } catch (e) { /* private mode */ }
     if (saved === "0") lg.classList.add("is-collapsed");
+    if (saved === "1") lg.classList.add("is-reopened");
     var xBtn = el("button", "wm-legend-x", "×");
     xBtn.type = "button";
     xBtn.setAttribute("aria-label", "Hide the guide");
-    xBtn.addEventListener("click", function () { setLegendOpen(false); });
+    xBtn.addEventListener("click", function () {
+      setLegendOpen(false);
+      if (legendBtnEl) legendBtnEl.focus({ preventScroll: true });
+    });
     lg.appendChild(xBtn);
     lg.appendChild(el("h4", "wm-leg-h", "Explore the Valley"));
     /* assets/projects/, NOT art-source/. That tree is gitignored - zero files
@@ -1223,16 +1232,125 @@
     lg.appendChild(legendRow(glyphKeys(), "WASD / arrows walk Suu"));
     return lg;
   }
-  /* Sibling of .wm-legend rather than a child of it, so it stays clickable
-     while the legend itself is display:none - the CSS shows it only via
-     `.wm-legend.is-collapsed ~ .wm-legend-btn`. */
+  /* Normalized browser-local placement survives map remounts and resizing.
+     Reserve a readable guide beneath the button, including on short screens. */
+  var legendHelpPosition = null;
+  var LEGEND_HELP_KEY = "pf-map-help-position-v1";
+  function helpClamp(value, low, high) { return Math.max(low, Math.min(high, value)); }
+  function readLegendHelpPosition() {
+    try {
+      var p = JSON.parse(localStorage.getItem(LEGEND_HELP_KEY));
+      if (p && p.v === 1 && typeof p.x === "number" && typeof p.y === "number" &&
+          isFinite(p.x) && isFinite(p.y) && p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1) return p;
+    } catch (e) { /* unavailable or malformed storage uses the default */ }
+    return null;
+  }
+  function helpBounds() {
+    return {
+      x: Math.max(10, overlay.clientWidth - legendBtnEl.offsetWidth - 10),
+      y: Math.max(10, overlay.clientHeight - legendBtnEl.offsetHeight - 8 - 150 - 14)
+    };
+  }
+  function saveLegendHelpPosition() {
+    try { localStorage.setItem(LEGEND_HELP_KEY, JSON.stringify(legendHelpPosition)); } catch (e) {}
+  }
+  function layoutLegendHelp() {
+    if (!overlay || !legendBtnEl) return;
+    var limits = helpBounds();
+    var x = legendHelpPosition ? 10 + legendHelpPosition.x * (limits.x - 10) : 14;
+    var y = legendHelpPosition ? 10 + legendHelpPosition.y * (limits.y - 10) : overlay.clientHeight / 2 - legendBtnEl.offsetHeight / 2;
+    x = helpClamp(x, 10, limits.x);
+    y = helpClamp(y, 10, limits.y);
+    legendBtnEl.style.left = x + "px";
+    legendBtnEl.style.top = y + "px";
+    legendBtnEl.style.transform = "none";
+    if (legendEl && legendEl.classList.contains("is-reopened") && !legendEl.classList.contains("is-collapsed")) {
+      var top = y + legendBtnEl.offsetHeight + 8;
+      legendEl.style.top = top + "px";
+      legendEl.style.left = helpClamp(x, 10, Math.max(10, overlay.clientWidth - legendEl.offsetWidth - 10)) + "px";
+      legendEl.style.maxHeight = Math.max(0, overlay.clientHeight - top - 14) + "px";
+    }
+  }
+  function moveLegendHelp(x, y) {
+    var limits = helpBounds();
+    legendHelpPosition = { v: 1,
+      x: limits.x > 10 ? (helpClamp(x, 10, limits.x) - 10) / (limits.x - 10) : 0,
+      y: limits.y > 10 ? (helpClamp(y, 10, limits.y) - 10) / (limits.y - 10) : 0 };
+    legendEl.classList.add("is-reopened");
+    layoutLegendHelp();
+  }
+  /* Keep the button available while the guide is open, so it can move too. */
   function buildLegendReopenBtn() {
-    var btn = el("button", "wm-legend-btn", "?");
+    var btn = el("button", "wm-legend-btn is-draggable", "?");
     btn.type = "button";
-    btn.setAttribute("aria-label", "Show the guide");
-    btn.addEventListener("click", function () {
+    var expanded = legendEl && !legendEl.classList.contains("is-collapsed");
+    btn.setAttribute("aria-label", expanded ? "Hide the guide" : "Show the guide");
+    btn.setAttribute("aria-expanded", String(!!expanded));
+    btn.setAttribute("aria-description", "Drag to reposition, or use arrow keys while focused. Click or press Enter to toggle the guide.");
+    btn.title = "Drag to move; arrow keys also move this button";
+    var gesture = null, ignoreClick = false;
+    btn.addEventListener("pointerdown", function (ev) {
+      if (!ev.isPrimary || ev.button !== 0) return;
+      ev.stopPropagation();
+      ignoreClick = false;
+      gesture = { id: ev.pointerId, x: ev.clientX, y: ev.clientY,
+        left: btn.offsetLeft, top: btn.offsetTop, previous: legendHelpPosition,
+        previousReopened: legendEl.classList.contains("is-reopened"), moved: false };
+      btn.setPointerCapture(ev.pointerId);
+    });
+    btn.addEventListener("pointermove", function (ev) {
+      if (!gesture || gesture.id !== ev.pointerId) return;
+      ev.stopPropagation();
+      var dx = ev.clientX - gesture.x, dy = ev.clientY - gesture.y;
+      if (!gesture.moved && Math.hypot(dx, dy) < 6) return;
+      gesture.moved = true;
+      btn.classList.add("is-dragging");
+      moveLegendHelp(gesture.left + dx, gesture.top + dy);
+    });
+    function finish(cancelled) {
+      if (!gesture) return;
+      var ended = gesture;
+      gesture = null;
+      ignoreClick = ended.moved;
+      btn.classList.remove("is-dragging");
+      if (cancelled) {
+        legendHelpPosition = ended.previous;
+        legendEl.classList.toggle("is-reopened", ended.previousReopened);
+        if (!ended.previousReopened) {
+          legendEl.style.top = ""; legendEl.style.left = ""; legendEl.style.maxHeight = "";
+        }
+        layoutLegendHelp();
+      }
+      else if (ended.moved) saveLegendHelpPosition();
+      if (btn.hasPointerCapture(ended.id)) btn.releasePointerCapture(ended.id);
+    }
+    btn._cancelHelpDrag = function () { finish(true); };
+    function toggleGuide() {
       if (legendEl) legendEl.classList.add("is-reopened");
-      setLegendOpen(true);
+      setLegendOpen(legendEl.classList.contains("is-collapsed"));
+    }
+    btn.addEventListener("pointerup", function (ev) {
+      if (!gesture || ev.pointerId !== gesture.id) return;
+      var touchTap = ev.pointerType === "touch" && !gesture.moved;
+      finish(false);
+      // Touch capture can suppress/delay a compatibility click. Handle the
+      // completed tap once here, and ignore that compatibility click if sent.
+      if (touchTap) { ignoreClick = true; toggleGuide(); }
+    });
+    btn.addEventListener("pointercancel", btn._cancelHelpDrag);
+    btn.addEventListener("lostpointercapture", btn._cancelHelpDrag);
+    btn.addEventListener("keydown", function (ev) {
+      var delta = { ArrowLeft: [-10,0], ArrowRight: [10,0], ArrowUp: [0,-10], ArrowDown: [0,10] }[ev.key];
+      if (!delta) return;
+      ev.preventDefault(); ev.stopPropagation();
+      moveLegendHelp(btn.offsetLeft + delta[0], btn.offsetTop + delta[1]);
+      saveLegendHelpPosition();
+    });
+    btn.addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      if (ignoreClick && ev.detail !== 0) { ignoreClick = false; return; }
+      ignoreClick = false;
+      toggleGuide();
     });
     return btn;
   }
@@ -1349,6 +1467,9 @@
     renderValley();
     legendEl = buildLegend(); overlay.appendChild(legendEl);
     legendBtnEl = buildLegendReopenBtn(); overlay.appendChild(legendBtnEl);
+    legendHelpPosition = readLegendHelpPosition();
+    if (legendHelpPosition) legendEl.classList.add("is-reopened");
+    layoutLegendHelp();
     zoomEl = buildZoom(); overlay.appendChild(zoomEl);
     /* Coarse-pointer devices never wire the hover card (see wireHoverCard),
        so on those devices don't even mount the empty element - a phone
@@ -1365,6 +1486,7 @@
     // here just replayed the same reveal twice.
   }
   function unmountMap() {
+    if (legendBtnEl && legendBtnEl._cancelHelpDrag) legendBtnEl._cancelHelpDrag();
     open = false;
     stopFlight();          // nothing animates behind a closed map
     if (overlay) overlay.remove();
@@ -1463,9 +1585,12 @@
       window.PORTFOLIO_WORLDMAP.__wasdBound = true;
     }
     window.addEventListener("blur", function () {
+      if (legendBtnEl && legendBtnEl._cancelHelpDrag) legendBtnEl._cancelHelpDrag();
       keys.up = keys.down = keys.left = keys.right = 0;
     });
     window.addEventListener("resize", function () {
+      if (legendBtnEl && legendBtnEl._cancelHelpDrag) legendBtnEl._cancelHelpDrag();
+      layoutLegendHelp();
       if (open && panG) applyPan();
     });
     // theme flip while the map is open -> repaint the valley to match
