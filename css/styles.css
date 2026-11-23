@@ -3722,15 +3722,16 @@ body.touring #sprite { display: none; }   /* one Suu at a time */
   border-style: solid;
   border-width: 16px 18px 18px 18px;
   border-image: url("../assets/projects/panel.webp") 37 52 43 55 fill / 16px 18px 18px 18px / 0 stretch;
-  color: var(--paper-ink); cursor: pointer;
+  /* This paper image stays light in both themes; its ink must stay dark. */
+  color: #40372b; cursor: pointer;
 }
 .wm-hov-kicker {
   font-family: var(--label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--accent); font-weight: 700; margin-bottom: .2rem;
+  color: #5b3d2a; font-weight: 700; margin-bottom: .2rem;
 }
-.wm-hov-title { font-family: var(--display); font-weight: 600; font-size: .98rem; margin: 0 0 .2rem; }
-.wm-hov-sub { font-size: .78rem; opacity: .85; margin: 0 0 .4rem; }
-.wm-hov-cta { font-family: var(--label); font-size: .72rem; font-weight: 700; color: var(--accent); }
+.wm-hov-title { font-family: var(--display); font-weight: 600; font-size: .98rem; margin: 0 0 .2rem; color:#243746; }
+.wm-hov-sub { font-size: .78rem; opacity: 1; margin: 0 0 .4rem; }
+.wm-hov-cta { font-family: var(--label); font-size: .72rem; font-weight: 700; color: #294733; }
 
 /* ---------- scene editor handles (owner-only, ?editor=1) ----------
    Drawn INSIDE the page rather than overlaid from the admin document, so
