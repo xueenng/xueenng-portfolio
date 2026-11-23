@@ -2110,7 +2110,7 @@ body.night .ja-post.lit .ja-signal {
   position: relative; width: min(34rem, 100%);
   color: #4a3a26; background: none;
   border: 42px solid transparent;
-  border-image: url("../assets/journey/panel.webp") 235 fill / 42px / 0 stretch;
+  border-image: url("../assets/selected/journey-chapter-paper-light-v1.webp") 279 fill / 42px / 0 stretch;
   padding: .2rem .5rem 1rem; margin: 0 -6px;
   filter: drop-shadow(0 22px 46px rgba(20, 14, 4, .5));
   transform: translateY(12px) scale(.97); transition: transform .28s cubic-bezier(.2,.8,.3,1);
