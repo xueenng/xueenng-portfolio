@@ -4084,6 +4084,14 @@ body.sed-on .sed-layer { pointer-events: none; }
 .pj-root.is-map .wm-legend.is-collapsed ~ .wm-legend-btn {
   top: 50%; left: 14px; transform: translateY(-50%);
 }
+/* Reopening follows the 38px question button, with an 8px gap. The first
+   automatic guide keeps its existing position below the map filters. */
+.pj-root.is-map .wm-legend.is-reopened {
+  top: calc(50% + 27px);
+  max-height: calc(50% - 41px);
+  overflow-y: auto;
+  pointer-events: auto;
+}
 /* the parchment wash: just enough to read the title + tabs over a bright sky,
    sized to that corner only so the rest of the valley stays uncovered. Tuned
    by rendering (Step 8), not guessed. */

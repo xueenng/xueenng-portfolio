@@ -1230,7 +1230,10 @@
     var btn = el("button", "wm-legend-btn", "?");
     btn.type = "button";
     btn.setAttribute("aria-label", "Show the guide");
-    btn.addEventListener("click", function () { setLegendOpen(true); });
+    btn.addEventListener("click", function () {
+      if (legendEl) legendEl.classList.add("is-reopened");
+      setLegendOpen(true);
+    });
     return btn;
   }
   /* First pan or zoom of the SESSION (not per mount - legendAutoFolded lives
