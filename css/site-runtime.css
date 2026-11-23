@@ -4172,7 +4172,9 @@ body.sed-on .sed-layer { pointer-events: none; }
      is what actually reserves the space. */
   border-style: solid;
   border-width: 10px 22px 10px 96px;
-  border-image: url("../assets/projects/scroll.webp") 8 19 8 87 fill / 10px 22px 10px 96px / 0 stretch;
+  /* Higher-detail1581x995 master; cuts scale with source pixels, while the
+     existing painted border widths and content insets stay unchanged. */
+  border-image: url("../assets/selected/project-detail-scroll-crisp-v1.webp") 13 29 13 134 fill / 10px 22px 10px 96px / 0 stretch;
   /* Ink PINNED, not themed - same reason .ja-panel pins its own: the scroll is
      a PHOTOGRAPH of parchment and cannot follow the theme, so in dark mode a
      themed --paper-ink turns pale and dissolves into the paper.
