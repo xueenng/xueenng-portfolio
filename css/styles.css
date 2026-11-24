@@ -225,6 +225,18 @@ html[data-hero-art-pending] #nav,
 html[data-hero-art-pending] #nav-overlay,
 html[data-hero-art-pending] #top .hero-stats::before { background-image:none; }
 
+/* Delay decorative transfers, never section text, controls or layout. This
+   attribute is JS-only and cleared on art load/error, navigation, or timeout. */
+html[data-lower-art-pending] :is(#selected,#projects,#skills,#journey,#achievements,#castle,#about,#footer,.section-join),
+html[data-lower-art-pending] :is(#selected,#projects,#skills,#journey,#achievements,#castle,#about,#footer,.section-join)::before,
+html[data-lower-art-pending] :is(#selected,#projects,#skills,#journey,#achievements,#castle,#about,#footer,.section-join)::after,
+html[data-lower-art-pending] :is(#selected,#projects,#skills,#journey,#achievements,#castle,#about,#footer,.section-join) *,
+html[data-lower-art-pending] :is(#selected,#projects,#skills,#journey,#achievements,#castle,#about,#footer,.section-join) *::before,
+html[data-lower-art-pending] :is(#selected,#projects,#skills,#journey,#achievements,#castle,#about,#footer,.section-join) *::after {
+  background-image:none !important;
+  border-image-source:none !important;
+}
+
 
 .intro {
   position: fixed; inset: 0; z-index: 500; background: var(--bg);

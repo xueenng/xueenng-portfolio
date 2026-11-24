@@ -50,9 +50,60 @@
   document.addEventListener('load', fullStylesReady, true);
   document.addEventListener('error', fullStylesReady, true);
   document.documentElement.setAttribute('data-hero-art-pending', '');
+  // Keep the existing lower-page DOM and geometry ready while its decorative
+  // downloads yield to the painting. Navigation/scrolling always wins the gate.
+  var lowerImages = [], lowerObserver = null, lowerPending = true;
+  document.documentElement.setAttribute('data-lower-art-pending', '');
+  function releaseLowerArt() {
+    if (!lowerPending) return;
+    lowerPending = false;
+    document.documentElement.removeAttribute('data-lower-art-pending');
+    lowerImages.forEach(function (item) { item.node.src = item.src; });
+    lowerImages = [];
+    if (lowerObserver) lowerObserver.disconnect();
+    window.removeEventListener('scroll', lowerScroll);
+    window.removeEventListener('hashchange', lowerHash);
+    window.removeEventListener('pageshow', lowerScroll);
+    document.removeEventListener('click', lowerLink, true);
+    document.removeEventListener('focusin', lowerFocus);
+  }
+  window.PORTFOLIO_LOWER_ART = {
+    image: function (node, src) {
+      if (lowerPending) lowerImages.push({ node: node, src: src });
+      else node.src = src;
+    },
+    release: releaseLowerArt
+  };
+  function lowerScroll() { if (window.scrollY > 64) releaseLowerArt(); }
+  function lowerHash() { if (location.hash && location.hash !== '#top') releaseLowerArt(); }
+  function lowerLink(event) {
+    var link = event.target.closest && event.target.closest('a[href]');
+    if (!link) return;
+    var url = new URL(link.href, location.href);
+    if (url.origin === location.origin && url.pathname === location.pathname && url.hash && url.hash !== '#top') releaseLowerArt();
+  }
+  function lowerFocus(event) {
+    if (event.target.closest && event.target.closest('#selected,#projects,#skills,#journey,#achievements,#castle,#about,#footer')) releaseLowerArt();
+  }
+  window.addEventListener('scroll', lowerScroll, { passive: true });
+  window.addEventListener('hashchange', lowerHash);
+  window.addEventListener('pageshow', lowerScroll);
+  document.addEventListener('click', lowerLink, true);
+  document.addEventListener('focusin', lowerFocus);
+  lowerHash();
+  document.addEventListener('DOMContentLoaded', function () {
+    lowerScroll();
+    // Also handles a tall viewport or resize that exposes the next section.
+    if (!lowerPending || !window.IntersectionObserver) return;
+    lowerObserver = new IntersectionObserver(function (entries) {
+      if (entries.some(function (entry) { return entry.isIntersecting; })) releaseLowerArt();
+    });
+    lowerObserver.observe(document.getElementById('selected'));
+  }, { once: true });
   function paintingReady(event) {
     if (event.target.id !== 'hero-art-preload') return;
     document.documentElement.removeAttribute('data-hero-art-pending');
+    releaseLowerArt();
     document.removeEventListener('load', paintingReady, true);
     document.removeEventListener('error', paintingReady, true);
   }
@@ -95,6 +146,7 @@
   window.PORTFOLIO_STARTUP_FALLBACK = setTimeout(function () {
     document.documentElement.removeAttribute('data-startup-intro');
     document.documentElement.removeAttribute('data-hero-art-pending');
+    releaseLowerArt();
     if (!window.PORTFOLIO_MOTION) document.documentElement.setAttribute('data-startup-fallback', '');
     var intro = document.getElementById('intro');
     if (intro) intro.remove();
@@ -197,6 +249,10 @@ html[data-startup-intro="pending"] #intro[hidden]{ display: flex !important; }
 html[data-startup-fallback] .reveal{ opacity:1; transform:none; transition:none; }
 html[data-full-style-pending] :is(img,svg,button,video,canvas){ max-width:100%; }
 html[data-hero-art-pending] #nav,html[data-hero-art-pending] #nav-overlay,html[data-hero-art-pending] #top .hero-stats::before{ background-image:none; }
+html[data-lower-art-pending] :is(#selected,#projects,#skills,#journey,#achievements,#castle,#about,#footer,.section-join),html[data-lower-art-pending] :is(#selected,#projects,#skills,#journey,#achievements,#castle,#about,#footer,.section-join)::before,html[data-lower-art-pending] :is(#selected,#projects,#skills,#journey,#achievements,#castle,#about,#footer,.section-join)::after,html[data-lower-art-pending] :is(#selected,#projects,#skills,#journey,#achievements,#castle,#about,#footer,.section-join) *,html[data-lower-art-pending] :is(#selected,#projects,#skills,#journey,#achievements,#castle,#about,#footer,.section-join) *::before,html[data-lower-art-pending] :is(#selected,#projects,#skills,#journey,#achievements,#castle,#about,#footer,.section-join) *::after{
+  background-image:none !important;
+  border-image-source:none !important;
+}
 .intro{
   position: fixed; inset: 0; z-index: 500; background: var(--bg);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
@@ -809,7 +865,7 @@ html[data-theme="dark"] #top .tour-link{ color:#eedfc2; text-shadow:0 1px 3px #1
 <script src="js/content.js?v=cr031-estimate-v1"></script>
 <script src="js/claims-content.js?v=cr031-estimate-v1"></script>
 <script src="js/resume-content.js?v=p2-approved-v1"></script>
-<script src="js/app.js?v=startup-v1"></script>
+<script src="js/app.js?v=art-priority-v1"></script>
 <script src="js/header-ivory.js?v=startup-v1"></script>
 
 <!-- ======== SELECTED WORK (featured exhibits) ======== -->
@@ -989,12 +1045,12 @@ html[data-theme="dark"] #top .tour-link{ color:#eedfc2; text-shadow:0 1px 3px #1
 <div class="toast" id="toast" hidden></div>
 
 <!-- Full styles gate later scripts; critical hero styles are already painted. -->
-<link rel="stylesheet" id="site-styles" href="css/site-runtime.css?v=journey-paper-light-v1">
+<link rel="stylesheet" id="site-styles" href="css/site-runtime.css?v=art-priority-v1">
 
 <!-- natural sizes of assets/journey/*.webp, generated by tools/build-journey-assets.py;
      must load before the full DOMContentLoaded section render -->
 <script fetchpriority="low" src="js/journey-art.js"></script>
-<script fetchpriority="low" src="js/journey-story.js?v=journey-original-v3"></script>
+<script fetchpriority="low" src="js/journey-story.js?v=art-priority-v1"></script>
 <!-- natural sizes of assets/hall/*.webp plus the room's measurements (clear
      plaster, plank line, frame openings), generated by
      tools/build-achievement-assets.py; must load before the full DOMContentLoaded Hall render -->

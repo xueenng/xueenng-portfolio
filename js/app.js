@@ -11,6 +11,11 @@
   var LS_THEME = "portfolio.theme";
   var CATEGORY_LABELS = { work: "Work Systems", game: "Game Dev", academic: "Academic" };
 
+  function lowerImage(node, src) {
+    if (window.PORTFOLIO_LOWER_ART) window.PORTFOLIO_LOWER_ART.image(node, src);
+    else node.src = src;
+  }
+
   /* ---------- migration: schema 1 -> 2 ---------- */
   function migrate(c) {
     if (!c || !c.identity || !c.projects) return null;
@@ -776,7 +781,7 @@
     var body = el("div", "tb-panel-body");
     var side = el("div", "tb-side");
     var chest = document.createElement("img");
-    chest.src = "assets/toolbox/" + g.chest + ".webp";
+    lowerImage(chest, "assets/toolbox/" + g.chest + ".webp");
     chest.alt = "";
     chest.className = "tb-side-icon";
     side.appendChild(chest);
@@ -864,7 +869,7 @@
     grid.className = "tb-stage";
     applyToolboxLayout(grid);
     var bench = document.createElement("img");
-    bench.src = "assets/toolbox/workshop-counter-v1.webp";
+    lowerImage(bench, "assets/toolbox/workshop-counter-v1.webp");
     bench.alt = "";
     bench.className = "tb-bench";
     grid.appendChild(bench);
@@ -903,7 +908,7 @@
       open.setAttribute("aria-expanded", "false");
       open.setAttribute("aria-label", "Open " + g.group);
       var img = document.createElement("img");
-      img.src = "assets/toolbox/" + g.chest + ".webp";
+      lowerImage(img, "assets/toolbox/" + g.chest + ".webp");
       img.alt = g.group;
       img.className = "tb-chest";
       open.appendChild(img);
@@ -1178,7 +1183,7 @@
 
     function img(src, w) {
       var i = document.createElement("img");
-      i.src = "assets/journey/" + src; i.alt = ""; i.draggable = false;
+      lowerImage(i, "assets/journey/" + src); i.alt = ""; i.draggable = false;
       i.style.width = w + "px"; i.style.height = CH + "px";
       return i;
     }
@@ -1674,7 +1679,7 @@
       shelf.style.height = (sShelfH * 100) + "%";
       shelf.style.top = ((plankY - sShelfH * A.shelf.plank) * 100) + "%";
       var plank = document.createElement("img");
-      plank.src = "assets/hall/shelf.webp";
+      lowerImage(plank, "assets/hall/shelf.webp");
       plank.alt = "";
       plank.className = "ach-plank";
       shelf.appendChild(plank);

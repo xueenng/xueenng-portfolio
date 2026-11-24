@@ -2,6 +2,10 @@
 (function () {
   'use strict';
   var memory = null, active = null;
+  function art(image, src) {
+    if(window.PORTFOLIO_LOWER_ART)window.PORTFOLIO_LOWER_ART.image(image,src);
+    else image.src=src;
+  }
   function node(tag, cls, text) {
     var e=document.createElement(tag); if(cls)e.className=cls;
     if(text!==undefined)e.textContent=text; return e;
@@ -49,7 +53,7 @@
       var shelter=node('div','js-shelter');
       var sign=node('button','js-stop');sign.type='button';sign.setAttribute('aria-label',(i+1)+'. '+(t.role||'Chapter')+' · '+(t.period||''));
       sign.append(node('b',null,today?(t.role||'Today'):label(t,i)),node('span',null,t.period||''));
-      var building=node('img','js-station-art');building.src='assets/journey-story/'+(today?'current-station-v1.webp':'shelter-v1.webp');building.alt='';building.draggable=false;
+      var building=node('img','js-station-art');art(building,'assets/journey-story/'+(today?'current-station-v1.webp':'shelter-v1.webp'));building.alt='';building.draggable=false;
       var original=(window.PORTFOLIO_CONTENT.timeline||[]).find(function(base){return base.role===t.role && base.org===t.org && base.period===t.period;});
       var unchanged=original && JSON.stringify(original.points)===JSON.stringify(t.points);
       var authored=t.highlight && (!original || t.highlight!==original.highlight || unchanged);
@@ -69,7 +73,7 @@
       stations.push(station);tickets.push(ticket);buttons.push(sign);
     });
     var train=node('div','js-train');train.setAttribute('aria-hidden','true');
-    ['tender','engine'].forEach(function(part){var image=node('img','js-'+part);image.src='assets/journey/'+part+'.webp';image.alt='';image.draggable=false;train.append(image);});
+    ['tender','engine'].forEach(function(part){var image=node('img','js-'+part);art(image,'assets/journey/'+part+'.webp');image.alt='';image.draggable=false;train.append(image);});
     var rider=node('span','js-suu');rider.innerHTML=suu;train.append(rider);
     stage.append(train);scroller.append(stage);host.append(scroller);
     function position(animate) {
