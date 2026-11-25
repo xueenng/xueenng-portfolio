@@ -4,8 +4,8 @@
    Map or the List view so both (Tasks 5/6) can just call it. Page
    1 exposes problem, contribution and outcome before tools; page 2 is the case
    study, original screenshots/video (mounted once on first arrival) and the
-   links row. Escape is handled by the shell (js/projects.js), which
-   calls isOpen()/close() - this file must not add its own listener.
+   links row. The open reader owns Escape and Tab handling, regardless
+   of entry route; a handled Escape must not also close its parent shell.
    ============================================================ */
 (function () {
   "use strict";
@@ -202,8 +202,15 @@
     return pager;
   }
 
-  function trapTab(ev) {
-    if (ev.key !== "Tab" || !scrollEl) return;
+  function onReaderKey(ev) {
+    if (!scrollEl) return;
+    if (ev.key === "Escape") {
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      close();
+      return;
+    }
+    if (ev.key !== "Tab") return;
     var nodes = scrollEl.querySelectorAll('button:not([disabled]), a[href]');
     if (!nodes.length) return;
     var first = nodes[0], last = nodes[nodes.length - 1];
@@ -243,13 +250,13 @@
     (host || defaultHost() || document.body).appendChild(backdrop);
 
     page(1);
-    document.addEventListener("keydown", trapTab, true);
+    document.addEventListener("keydown", onReaderKey, true);
     xBtn.focus();
   }
 
   function close() {
     if (!scrollEl) return;
-    document.removeEventListener("keydown", trapTab, true);
+    document.removeEventListener("keydown", onReaderKey, true);
     if (backdrop && backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
     backdrop = null;
     scrollEl = null;
