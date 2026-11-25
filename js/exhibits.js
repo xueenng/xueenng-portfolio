@@ -341,6 +341,7 @@
         if (window.PORTFOLIO_PROJ_SCROLL) {
           story.focus({ preventScroll: true });
           window.PORTFOLIO_PROJ_SCROLL.open(project);
+          if (castle && window.PORTFOLIO_PROJ_SCROLL.page) window.PORTFOLIO_PROJ_SCROLL.page(2);
         }
       });
       actions.appendChild(story);
