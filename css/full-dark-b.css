@@ -82,8 +82,20 @@ html[data-theme="dark"] #projects {
   --ink:var(--dark-ink); --ink-2:var(--dark-muted); --ink-3:var(--dark-muted);
   --paper-ink:var(--dark-ink); --bg-raise:#223442; --line:var(--dark-rule);
 }
-html[data-theme="dark"] #projects::before { background:#172735 url('../assets/selected/full-dark-b/paper-texture-dark-v1.webp') center top/cover; }
+html[data-theme="dark"] #projects::before { background:#172735 url('../assets/selected/full-dark-b/archive-night-v1.webp') center top/cover no-repeat; }
 html[data-theme="dark"] #selected::before { background-color:#14232e; }
+/* The live Hall facade replaces its old pseudo-backdrop; the animation's
+   leaves must crop the same selected painting to avoid a daytime flash. */
+html[data-theme="dark"] .ach-hall.hall-painted,
+html[data-theme="dark"] .hall-motion-leaf {
+  background-image:url('../assets/selected/full-dark-b/hall-station-night-v1.webp');
+}
+html[data-theme="dark"] #achievements.hall-closed > .section-head p:not(.ach-tally) {
+  color:var(--dark-ink); text-shadow:0 1px 3px #0d1b28;
+}
+@media(max-width:760px) {
+  html[data-theme="dark"] #achievements.hall-closed > .section-head { background:#14232e; }
+}
 /* Shared project scroll lives outside #projects. Use only source/slice
    overrides so responsive border widths continue to reserve identical space. */
 html[data-theme="dark"] .pjs-scroll {
