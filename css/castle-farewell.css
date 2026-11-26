@@ -29,6 +29,6 @@
  .castle-glow-hint { font-size:.65rem; }
 }
 @media(prefers-reduced-motion:reduce) { .castle-glow-link { animation:none; } .castle-hotspot-label { transition:none; } }
-body:has(#castle:hover) #sprite,body:has(#castle:focus-within) #sprite { opacity:0; pointer-events:none; }
+/* The farewell invitation is browsing, not an active game. */
 @media(min-width:901px) { .castle-invitation { left:12%; top:20%; width:30%; } }
 @media(max-width:900px) { .castle-window-link .castle-hotspot-label { transform:translateX(-85%); } }

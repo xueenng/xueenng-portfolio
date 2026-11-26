@@ -32,7 +32,7 @@
 #about .about-links { display:flex; flex-wrap:wrap; gap:18px; margin-top:16px; }
 #about .about-links a { color:#4f673e; font:600 .73rem/1.5 var(--label); text-decoration:underline; text-underline-offset:4px; }
 #about summary:focus-visible,#about a:focus-visible { outline:2px solid #4f673e; outline-offset:4px; }
-body.about-journal-in-view #sprite,body:has(#about:hover) #sprite,body:has(#about:focus-within) #sprite { opacity:0; pointer-events:none; }
+/* Ordinary About reading does not dismiss the valley companion. */
 @media (max-width:1200px) {
   #about { padding:2.5rem 12px 1rem; }
   #about .about-inner { width:min(100%,560px); aspect-ratio:auto; background:none; display:grid; gap:10px; }

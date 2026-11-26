@@ -42,7 +42,7 @@
   .ft-scene--mill .ft-story { font-size: .72rem; padding-block: .5rem; }
 }
 
-body:has(.ft-scene--mill:hover) #sprite,body:has(.ft-scene--mill:focus-within) #sprite { opacity:0; pointer-events:none; }
+/* Hovering the painted workshop alone does not dismiss Suu. */
 
 /* Generated paper surface and one restrained olive/brass button palette. */
 .ft-scene--mill { --mill-button-paper: url('../assets/selected/workshop-button-parchment-v1.webp'); --mill-button-ink:#314529; --mill-button-brass:#b39b61; }

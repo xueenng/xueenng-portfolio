@@ -19,7 +19,7 @@
 .ft-scene--castle .film-btn { font-size: .7rem; }
 .demo.cx-host { padding: 0; border: 0; box-shadow: none; background: transparent; }
 .demo.cx-host::before,.demo.cx-host::after { display: none; }
-body.castle-in-view #sprite, body:has(.ft-scene--castle:hover) #sprite, body:has(.cx-dialog[open]) #sprite { opacity: 0; pointer-events: none; }
+/* Suu yields to focused game controls and open dialogs, not section visibility. */
 .castle-experience { position: relative; --cx-ink: #f2e2bd; --cx-muted: #c9b998; --cx-gold: #d4aa61; color: var(--cx-ink); width: 100%; min-width: 0; background: #211c16; border: 1px solid #8e713e; border-radius: 10px; overflow: hidden; box-shadow: 0 12px 28px #15201855; font: 400 .85rem/1.4 var(--body, sans-serif); }
 .castle-experience *, .cx-dialog * { box-sizing: border-box; }
 .cx-header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; min-height: 56px; padding: .6rem 1rem; background: linear-gradient(#30271c, #211c16); border-bottom: 1px solid #7b6237; }
