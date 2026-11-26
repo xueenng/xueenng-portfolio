@@ -339,12 +339,14 @@
     sprite.addEventListener("click", function () { hopUntil = performance.now() + 900; });
   }
   var spriteY = 0;
+  // Matches the fixed 46px SVG companion; keep its whole body inside candle edges.
+  var spriteSize = 46, spriteInset = 8;
   function spriteFrame(now) {
     if (!sprite) return;
     // while the reading lantern is on, Suu carries it beside the cursor;
     // otherwise Suu walks the bottom of the valley with the scroll
     var carrying = lanternOn && mlTX > -500;
-    spriteTargetX = carrying ? mlTX - 62 : 24 + scrollPar * (window.innerWidth * 0.82);
+    spriteTargetX = carrying ? clamp(mlTX - 62, spriteInset, Math.max(spriteInset, window.innerWidth - spriteSize - spriteInset)) : 24 + scrollPar * (window.innerWidth * 0.82);
     var d = spriteTargetX - spriteX;
     spriteX += d * (carrying ? 0.09 : 0.045);
     if (Math.abs(d) > (carrying ? 40 : 2)) faceRight = d > 0;
@@ -353,7 +355,13 @@
     var walk = Math.min(Math.abs(d), 14);
     var bob = Math.abs(Math.sin(now / 130)) * clamp(walk / 5, 0, 1) * 4;
     var hop = now < hopUntil ? Math.abs(Math.sin((hopUntil - now) / 90)) * 14 : 0;
-    sprite.style.transform = "translate(" + spriteX + "px," + (spriteY - bob - hop) + "px) scaleX(" + (faceRight ? 1 : -1) + ")";
+    var drawX = spriteX, drawY = spriteY - bob - hop;
+    if (carrying) {
+      drawX = clamp(drawX, spriteInset, Math.max(spriteInset, window.innerWidth - spriteSize - spriteInset));
+      var restingTop = window.innerHeight - 4 - spriteSize;
+      drawY = clamp(drawY, spriteInset - restingTop, window.innerHeight - spriteSize - spriteInset - restingTop);
+    }
+    sprite.style.transform = "translate(" + drawX + "px," + drawY + "px) scaleX(" + (faceRight ? 1 : -1) + ")";
     var lantern = sprite.querySelector(".suu-lantern");
     if (lantern) lantern.setAttribute("opacity", lanternOn ? "1" : clamp((tCur - 0.72) / 0.18, 0, 1).toFixed(2));
   }
