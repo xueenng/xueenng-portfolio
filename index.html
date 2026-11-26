@@ -154,7 +154,17 @@
   }, 5000);
 })();
 </script>
-<link rel="preload" id="hero-art-preload" as="image" href="assets/scenes/valley-hero-quiet-v2.webp" fetchpriority="high">
+<link rel="preload" id="hero-art-preload" as="image" data-light-href="assets/scenes/valley-hero-quiet-v2.webp" data-dark-href="assets/selected/full-dark-b/hero-night-v1.webp" fetchpriority="high">
+<script>
+/* Select before the parser can speculatively fetch the wrong painting.
+   Later manual switches reuse this link; the startup gate remains bounded. */
+window.PORTFOLIO_SELECT_HERO_ART = function (theme) {
+  var link = document.getElementById('hero-art-preload');
+  var source = link.getAttribute(theme === 'dark' ? 'data-dark-href' : 'data-light-href');
+  if (link.getAttribute('href') !== source) link.setAttribute('href', source);
+};
+window.PORTFOLIO_SELECT_HERO_ART(document.documentElement.getAttribute('data-theme'));
+</script>
 <link rel="preload" as="font" href="assets/fonts/fraunces-var-latin.woff2" type="font/woff2" crossorigin>
 <link rel="preload" as="font" href="assets/fonts/space-grotesk-var-latin.woff2" type="font/woff2" crossorigin>
 <!-- Source order: tools/runtime-styles.json. Rebuild after CSS edits. -->
@@ -757,6 +767,42 @@ html[data-theme="dark"] #top .tour-link{ color:#eedfc2; text-shadow:0 1px 3px #1
 #top .hero-stats .stat b,html[data-theme="dark"] #top .hero-stats .stat b{ font-size: 28px; }
 #top .hero-stats .stat:nth-child(even){ border-left-color: #cbb995; }
 #top .hero-stats .stat:nth-child(n/**/+3){ border-top-color: #cbb995; }}
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#101b27; --bg-raise:#172735; --bg-panel:#1c2e3d;
+  --ink:#fff0cf; --ink-2:#e1d4b9; --ink-3:#c9bb9e;
+  --paper:#172735; --paper-bright:#223442; --paper-ink:#fff0cf;
+  --line:#947d5366;
+  --dark-paper:#172735; --dark-ink:#fff0cf; --dark-muted:#e1d4b9;
+  --dark-brass:#d8ba7a; --dark-rule:#947d5366;
+}
+html[data-theme="dark"] :is(#top,#projects,#journey,#skills,#about){
+  --scene-ink:var(--dark-ink); --scene-ink-2:var(--dark-muted);
+  --scene-ink-3:var(--dark-muted); --scene-paper:var(--dark-paper);
+}
+html[data-theme="dark"] :is(#nav,#nav-overlay,.atmosphere-panel),html[data-theme="dark"] #nav .nav-owner .atmosphere-owner{
+  background:#172735 url("assets/selected/full-dark-b/paper-texture-dark-v1.webp") center/cover;
+  color:var(--dark-ink); border-color:var(--dark-brass);
+}
+html[data-theme="dark"] #nav :is(.nav-brand,.nav-name,.nav-links a,.nav-menu-label,.nav-atmosphere summary,.nav-owner summary,.nav-admin),html[data-theme="dark"] #nav-overlay :is(.nav-overlay-name,.nav-overlay-close,.nav-overlay-links a,.nav-tools-label){ color:var(--dark-ink); }
+html[data-theme="dark"] #nav :is(.nav-present,.atmosphere-panel .icon-btn),html[data-theme="dark"] #nav-overlay :is(.nav-overlay-tools .icon-btn,.nav-overlay-presentation,.nav-overlay-owner a,.nav-overlay-owner button){
+  background:#223646; color:var(--dark-ink); border-color:var(--dark-brass);
+}
+html[data-theme="dark"] #nav .nav-links a:hover{ color:var(--dark-brass); }
+html[data-theme="dark"] .nav-menu-bars i{ background:var(--dark-ink); }
+html[data-theme="dark"] .hero::before{
+  background:radial-gradient(60% 66% at 30% 40%,#111e2a66,transparent 78%),url("assets/selected/full-dark-b/hero-night-v1.webp") center/cover no-repeat;
+  filter:none;
+}
+html[data-theme="dark"] #top .hero-stats::before{ background-image:url("assets/selected/full-dark-b/stats-paper-dark-v1.webp"); }
+html[data-theme="dark"] #top .hero-stats::after{ background:#172735; }
+html[data-theme="dark"] #top .hero-stats .stat b{ color:var(--dark-ink); }
+html[data-theme="dark"] #top .hero-stats .stat span{ color:var(--dark-muted); }
+html[data-theme="dark"] #top .hero-stats .stat + .stat::before{ background:var(--dark-rule); }
+html[data-theme="dark"] #top .hero-stats .stat{ border-color:var(--dark-rule); }
+html[data-theme="dark"] .ddo-evidence-actions .btn{ background:#223646; color:var(--dark-ink); border-color:var(--dark-brass); }
+html[data-theme="dark"] :is(#nav,#nav-overlay,#about) :is(a,button,summary):focus-visible{ outline-color:var(--dark-brass); }
+html[data-theme="dark"][data-hero-art-pending] #nav,html[data-theme="dark"][data-hero-art-pending] #nav-overlay,html[data-theme="dark"][data-hero-art-pending] #top .hero-stats::before{ background-image:none; }
 /* STARTUP_CRITICAL_END */
 </style>
 <link rel="preload" as="style" href="css/site-runtime.css?v=journey-paper-light-v1" fetchpriority="low">
@@ -865,7 +911,7 @@ html[data-theme="dark"] #top .tour-link{ color:#eedfc2; text-shadow:0 1px 3px #1
 <script src="js/content.js?v=cr031-estimate-v1"></script>
 <script src="js/claims-content.js?v=cr031-estimate-v1"></script>
 <script src="js/resume-content.js?v=p2-approved-v1"></script>
-<script src="js/app.js?v=art-priority-v1"></script>
+<script src="js/app.js?v=full-dark-b-v1"></script>
 <script src="js/header-ivory.js?v=startup-v1"></script>
 
 <!-- ======== SELECTED WORK (featured exhibits) ======== -->
@@ -1045,7 +1091,7 @@ html[data-theme="dark"] #top .tour-link{ color:#eedfc2; text-shadow:0 1px 3px #1
 <div class="toast" id="toast" hidden></div>
 
 <!-- Full styles gate later scripts; critical hero styles are already painted. -->
-<link rel="stylesheet" id="site-styles" href="css/site-runtime.css?v=art-priority-v1">
+<link rel="stylesheet" id="site-styles" href="css/site-runtime.css?v=full-dark-b-v1">
 
 <!-- natural sizes of assets/journey/*.webp, generated by tools/build-journey-assets.py;
      must load before the full DOMContentLoaded section render -->

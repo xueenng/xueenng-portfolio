@@ -134,6 +134,7 @@
   /* ---------- theme + accent ---------- */
   function applyTheme(theme) {
     document.documentElement.setAttribute("data-theme", theme);
+    if (window.PORTFOLIO_SELECT_HERO_ART) window.PORTFOLIO_SELECT_HERO_ART(theme);
     try { localStorage.setItem(LS_THEME, theme); } catch (e) {}
   }
   function applyAccent(hex) {

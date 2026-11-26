@@ -8582,3 +8582,193 @@ html[data-theme="dark"] #top .hero-stats .stat span {
   #top .hero-stats .stat:nth-child(even) { border-left-color: #cbb995; }
   #top .hero-stats .stat:nth-child(n+3) { border-top-color: #cbb995; }
 }
+
+/* Source: css/full-dark-b.css */
+/* Full Dark B. Night paintings and opaque navy reading grounds; light remains
+   owned by the original styles. Border paint dimensions deliberately unchanged. */
+/* Opaque light paper remains readable if its decorative border cannot load. */
+html[data-theme="light"] :is(.pjs-scroll,.ja-panel,.tb-panel) {
+  background-color:#f4e5bd; background-clip:padding-box;
+}
+@media(min-width:1201px) {
+  html[data-theme="light"] #about .about-inner { background-color:#f4e5bd; }
+}
+@media(max-width:1200px) {
+  /* Underlay stays inside the existing paper silhouette, beneath its art. */
+  html[data-theme="light"] #about .about-letter {
+    background-image:url('../assets/selected/about-letter-paper-v1.webp'),linear-gradient(#f4e5bd,#f4e5bd);
+    background-position:center,50% 95%; background-size:contain,90% 89%; background-repeat:no-repeat;
+  }
+}
+html[data-theme="dark"] {
+  color-scheme:dark;
+  --bg:#101b27; --bg-raise:#172735; --bg-panel:#1c2e3d;
+  --ink:#fff0cf; --ink-2:#e1d4b9; --ink-3:#c9bb9e;
+  --paper:#172735; --paper-bright:#223442; --paper-ink:#fff0cf;
+  --line:#947d5366;
+  --dark-paper:#172735; --dark-ink:#fff0cf; --dark-muted:#e1d4b9;
+  --dark-brass:#d8ba7a; --dark-rule:#947d5366;
+}
+html[data-theme="dark"] :is(#top,#projects,#journey,#skills,#about) {
+  --scene-ink:var(--dark-ink); --scene-ink-2:var(--dark-muted);
+  --scene-ink-3:var(--dark-muted); --scene-paper:var(--dark-paper);
+}
+/* Header, including both disclosures and the separate mobile overlay. */
+html[data-theme="dark"] :is(#nav,#nav-overlay,.atmosphere-panel),
+html[data-theme="dark"] #nav .nav-owner .atmosphere-owner {
+  background:#172735 url('../assets/selected/full-dark-b/paper-texture-dark-v1.webp') center/cover;
+  color:var(--dark-ink); border-color:var(--dark-brass);
+}
+html[data-theme="dark"] #nav :is(.nav-brand,.nav-name,.nav-links a,.nav-menu-label,.nav-atmosphere summary,.nav-owner summary,.nav-admin),
+html[data-theme="dark"] #nav-overlay :is(.nav-overlay-name,.nav-overlay-close,.nav-overlay-links a,.nav-tools-label) { color:var(--dark-ink); }
+html[data-theme="dark"] #nav :is(.nav-present,.atmosphere-panel .icon-btn),
+html[data-theme="dark"] #nav-overlay :is(.nav-overlay-tools .icon-btn,.nav-overlay-presentation,.nav-overlay-owner a,.nav-overlay-owner button) {
+  background:#223646; color:var(--dark-ink); border-color:var(--dark-brass);
+}
+html[data-theme="dark"] #nav .nav-links a:hover { color:var(--dark-brass); }
+html[data-theme="dark"] .nav-menu-bars i { background:var(--dark-ink); }
+/* Real night scenery replaces the old filtered daylight plates. */
+html[data-theme="dark"] .hero::before {
+  background:radial-gradient(60% 66% at 30% 40%,#111e2a66,transparent 78%),url('../assets/selected/full-dark-b/hero-night-v1.webp') center/cover no-repeat;
+  filter:none;
+}
+html[data-theme="dark"] #journey::before {
+  background-image:url('../assets/selected/full-dark-b/journey-orchard-night-v1.webp'); filter:none;
+}
+html[data-theme="dark"] #top .hero-stats::before { background-image:url('../assets/selected/full-dark-b/stats-paper-dark-v1.webp'); }
+html[data-theme="dark"] #top .hero-stats::after { background:#172735; }
+html[data-theme="dark"] #top .hero-stats .stat b { color:var(--dark-ink); }
+html[data-theme="dark"] #top .hero-stats .stat span { color:var(--dark-muted); }
+html[data-theme="dark"] #top .hero-stats .stat + .stat::before { background:var(--dark-rule); }
+html[data-theme="dark"] #top .hero-stats .stat { border-color:var(--dark-rule); }
+/* Featured paper and workshop ambience; evidence and natural materials retain
+   their own ink. The mill owns a separate brief rather than the shared paper. */
+html[data-theme="dark"] .ft-scene { --ft-ink:var(--dark-ink); --ft-ink-2:var(--dark-muted); --ft-rule:var(--dark-rule); }
+html[data-theme="dark"] .ft-scene--castle .ft-brief { background:#172735; }
+html[data-theme="dark"] .ft-scene--castle .ft-brief::before { background-image:url('../assets/selected/full-dark-b/feature-paper-dark-v1.webp'); }
+html[data-theme="dark"] .ft-scene--mill::before { background-image:url('../assets/selected/full-dark-b/mill-night-v1.webp'); }
+html[data-theme="dark"] .ft-scene--mill .ft-brief {
+  background:linear-gradient(115deg,#223442,#14232e); border-color:#947d53;
+  box-shadow:3px 3px 0 #263541,4px 4px 0 #947d53,0 9px 23px #08121c55;
+}
+html[data-theme="dark"] .ft-scene--mill .ft-brief::before { border-color:var(--dark-rule); }
+html[data-theme="dark"] .ft-brief :is(h3,.f-sub,.f-cat,.ft-facts li,.ft-status,.feature-stack .tag) { color:var(--dark-ink); }
+html[data-theme="dark"] .ft-brief .ft-status { background-color:#223646; }
+html[data-theme="dark"] .demo-desktop-only {
+  background:#172735 url('../assets/selected/full-dark-b/paper-texture-dark-v1.webp') center/cover;
+  color:var(--dark-ink); border-color:var(--dark-rule);
+}
+html[data-theme="dark"] .demo-desktop-only :is(b,p,.ddo-requirement) { color:var(--dark-ink); }
+html[data-theme="dark"] .ddo-evidence-actions .btn { background:#223646; color:var(--dark-ink); border-color:var(--dark-brass); }
+html[data-theme="dark"] .ft-scene--castle .ft-brief > .ft-written-story,
+html[data-theme="dark"] .ft-scene--mill > .dw-sample-feedback { background:#223646; color:var(--dark-ink); border-color:var(--dark-brass); }
+/* Archive paper and tokens. Wooden headings, signs and arrow art keep their
+   original surface-specific ink. */
+html[data-theme="dark"] #projects {
+  --ink:var(--dark-ink); --ink-2:var(--dark-muted); --ink-3:var(--dark-muted);
+  --paper-ink:var(--dark-ink); --bg-raise:#223442; --line:var(--dark-rule);
+}
+html[data-theme="dark"] #projects::before { background:#172735 url('../assets/selected/full-dark-b/paper-texture-dark-v1.webp') center top/cover; }
+html[data-theme="dark"] #selected::before { background-color:#14232e; }
+/* Shared project scroll lives outside #projects. Use only source/slice
+   overrides so responsive border widths continue to reserve identical space. */
+html[data-theme="dark"] .pjs-scroll {
+  border-image-source:url('../assets/selected/full-dark-b/project-scroll-dark-v1.webp');
+  background-color:#172735; background-clip:padding-box;
+  --pjs-ink:var(--dark-ink); --pjs-label:var(--dark-brass);
+  --paper-ink:var(--dark-ink); --ink:var(--dark-ink); --ink-2:var(--dark-muted);
+  color:var(--dark-ink);
+}
+html[data-theme="dark"] .pjs-scroll :is(.pjs-story-head h3,.pjs-story-head p,.pjs-demo-heading,.pjs-demo-intro,.pjs-evidence dd,.pjs-meta,.pjs-story-title,.pjs-reasoning-story .pjs-proof-links a,.pjs-pg2 p,.pjs-case,.pjs-tile-v) { color:var(--dark-ink); }
+html[data-theme="dark"] .pjs-scroll :is(.pjs-story-head small,.pjs-evidence dt,.pjs-case b),
+html[data-theme="dark"] .pjs-scroll.is-reading-story .pjs-story-copy .pjs-case b { color:var(--dark-brass); }
+html[data-theme="dark"] .pjs-scroll .pjs-pager,
+html[data-theme="dark"] .pjs-scroll.is-reading-story .pjs-pager { background:#172735; color:var(--dark-ink); }
+html[data-theme="dark"] .pjs-scroll :is(.pjs-demo-jump,.pjs-prev,.pjs-next) { background:#223646; color:var(--dark-ink); border-color:var(--dark-brass); }
+/* Toolbox cards are siblings of their scenery, including modal content. */
+html[data-theme="dark"] #skills::before { background-color:#1a2b32; }
+html[data-theme="dark"] .tb-stage {
+  background-image:url('../assets/selected/full-dark-b/toolbox-night-v1.webp');
+}
+html[data-theme="dark"] .tb-head::before { background-image:url('../assets/selected/full-dark-b/paper-texture-dark-v1.webp'); }
+html[data-theme="dark"] #skills .tb-head :is(h2,p) { color:var(--dark-ink); }
+html[data-theme="dark"] :is(.tb-panel,.tb-li) {
+  background:#172735 url('../assets/selected/full-dark-b/paper-texture-dark-v1.webp') center/cover;
+  color:var(--dark-ink); border-color:var(--dark-rule);
+}
+html[data-theme="dark"] .tb-panel { border-image-source:url('../assets/selected/full-dark-b/journey-paper-dark-v1.webp'); border-image-slice:279 fill; }
+html[data-theme="dark"] :is(.tb-side h3,.tb-side p,.tb-row b,.tb-row span,.tb-page-label,.tb-close,.tb-li h3,.tb-li-blurb,.tb-li .tag) { color:var(--dark-ink); }
+html[data-theme="dark"] :is(.tb-back,.tb-more,.tb-chip) { background:#223646; color:var(--dark-ink); border-color:var(--dark-brass); }
+html[data-theme="dark"] :is(.tb-side,.tb-row) { border-color:var(--dark-rule); }
+html[data-theme="dark"] .tb-dot::after { border-color:var(--dark-brass); }
+html[data-theme="dark"] .tb-dot.on::after { background:var(--dark-brass); }
+/* Railway geometry, shelter signs and original ride controls stay intact. */
+html[data-theme="dark"] .js-ticket {
+  border-image-source:url('../assets/selected/full-dark-b/hanging-ticket-dark-v1.webp');
+  border-image-slice:266 156 156 156 fill; background-color:#172735;
+  background-clip:padding-box; color:var(--dark-ink);
+}
+html[data-theme="dark"] #journey .js-read { color:var(--dark-ink); }
+html[data-theme="dark"] #journey-view .js-ride-action {
+  background-image:url('../assets/selected/full-dark-b/ride-ticket-dark-v1.webp'); color:var(--dark-ink);
+}
+html[data-theme="dark"] #journey-view .js-ride-label { color:var(--dark-ink); }
+html[data-theme="dark"] .ja-panel {
+  border-image-source:url('../assets/selected/full-dark-b/journey-paper-dark-v1.webp');
+  background:#172735; background-clip:padding-box; color:var(--dark-ink);
+}
+html[data-theme="dark"] .ja-panel :is(.ja-role,.ja-place,.ja-org,.ja-points li) { color:var(--dark-ink); }
+html[data-theme="dark"] .ja-panel :is(.ja-num,.ja-points li::before) { color:var(--dark-brass); }
+/* About's paper board and responsive letter share the same cream ink. Only
+   the desk background receives a local ambient wash; photos are untouched. */
+html[data-theme="dark"] #about {
+  background-color:#162632;
+  background-image:linear-gradient(#101d32a6,#101d32a6),url('../assets/selected/about-connect-desk-v1.webp');
+}
+html[data-theme="dark"] #about.mailbox-ready:not(.mailbox-is-open) { background:none; }
+html[data-theme="dark"] #about .about-inner { background-image:url('../assets/selected/full-dark-b/about-board-dark-v1.webp'); }
+html[data-theme="dark"] #about :is(.about-letter,.about-connect,.about-note,.about-detail) { color:var(--dark-ink); }
+html[data-theme="dark"] #about :is(.about-kicker,.about-greeting,.about-body p,.about-signature,.about-signoff,.about-note-title,.about-note-copy,.contact-heading,.connect-sub,.contact-meta,.about-summary,.about-more,.now-label,.now-list li,.about-links a,.about-detail-header h3,.about-detail-body p,.about-detail .about-summary),
+html[data-theme="dark"] #about .about-note[aria-expanded="true"] .about-note-title { color:var(--dark-ink); }
+html[data-theme="dark"] #about :is(.contact-meta,.about-more[open]) { background:#172735; }
+html[data-theme="dark"] #about :is(.contact-row a,.contact-row a:first-child,.about-detail-close) {
+  background:#223646 url('../assets/selected/full-dark-b/paper-texture-dark-v1.webp') center/cover;
+  color:var(--dark-ink); border-color:var(--dark-brass);
+}
+html[data-theme="dark"] #about :is(.contact-row a:hover,.about-detail-close:hover) { background-color:#2d4353; color:var(--dark-ink); }
+html[data-theme="dark"] #about .about-detail { background:#172735; }
+html[data-theme="dark"] .mailbox-copy { color:var(--dark-ink); }
+/* Map guide and hover cards have opaque fallbacks even when all art fails. */
+html[data-theme="dark"] :is(.wm-legend,.wm-hover) {
+  background:#172735 url('../assets/selected/full-dark-b/paper-texture-dark-v1.webp') center/cover;
+  border-image:none; border-color:var(--dark-brass); color:var(--dark-ink);
+}
+html[data-theme="dark"] .wm-legend :is(.wm-leg-row,.wm-glyph,.wm-leg-row span,.wm-legend-x,.wm-leg-h),
+html[data-theme="dark"] .wm-hover :is(.wm-hov-kicker,.wm-hov-title,.wm-hov-sub,.wm-hov-cta) { color:var(--dark-ink); }
+/* Preserve the hover card's painted border rather than flattening its wide
+   reserved border into solid brass. Only source pixel cuts are scaled. */
+html[data-theme="dark"] .wm-hover {
+  border-image:url('../assets/selected/full-dark-b/map-paper-dark-v1.webp') 292 410 339 434 fill / 16px 18px 18px 18px / 0 stretch;
+  background-clip:padding-box;
+}
+@media(max-width:1200px) {
+  html[data-theme="dark"] #about .about-inner { background:#172735; box-shadow:inset 0 0 0 4px #314650,0 8px 22px #08121c55; }
+  html[data-theme="dark"] #about .about-letter { background:#172735 url('../assets/selected/full-dark-b/about-letter-dark-v1.webp') center/contain no-repeat; }
+  html[data-theme="dark"] #about .about-connect { background:#172735 url('../assets/selected/full-dark-b/paper-texture-dark-v1.webp') center/cover; }
+  html[data-theme="dark"] #about .about-note,
+  html[data-theme="dark"] #about .about-note:nth-child(2),
+  html[data-theme="dark"] #about .about-note:nth-child(3) { background:#172735 url('../assets/selected/full-dark-b/about-note-dark-v1.webp') center/contain no-repeat; }
+}
+/* Archive cards consume their own paper tokens rather than the scene tokens. */
+html[data-theme="dark"] #projects { --paper:#172735; --paper-bright:#223442; }
+html[data-theme="dark"] #projects :is(.ar-row,.ar-shot) { background-color:#172735; }
+html[data-theme="dark"] #projects :is(.ar-cat,.ar-year,.ar-title,.ar-row .ar-sub,.ar-stack,.ar-stack .tag) { color:var(--dark-ink); opacity:1; }
+@media(min-width:1201px) {
+  html[data-theme="dark"] #about .about-inner { background-color:#172735; }
+}
+html[data-theme="dark"] :is(#nav,#nav-overlay,#about) :is(a,button,summary):focus-visible,
+html[data-theme="dark"] :is(.pjs-x,.pjs-prev,.pjs-next,.tb-close,.tb-back,.js-read):focus-visible { outline-color:var(--dark-brass); }
+/* Keep the selected hero ahead of optional first-viewport paper transfers. */
+html[data-theme="dark"][data-hero-art-pending] #nav,
+html[data-theme="dark"][data-hero-art-pending] #nav-overlay,
+html[data-theme="dark"][data-hero-art-pending] #top .hero-stats::before { background-image:none; }
