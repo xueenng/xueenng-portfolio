@@ -128,16 +128,20 @@ html[data-theme="dark"] .grain { opacity: .09; mix-blend-mode: screen; }
    touch is fine. The reading lantern she'd otherwise carry is hidden on mobile,
    so she always scroll-walks. */
 
-/* Keep Suu while browsing; yield only to active readers, dialogs and controls.
+/* Keep Suu while browsing; yield only to active readers and dialogs.
    Scope focus to the game itself so nearby story links cannot hide her. */
 body.ja-modal-open #sprite,
 body:has(.about-detail:not([hidden])) #sprite,
 body:has(.pj-overlay) #sprite,
 body:has(.hall-overlay) #sprite,
-body:has(dialog[open]) #sprite,
+body:has(dialog[open]) #sprite {
+  opacity: 0; pointer-events: none;
+}
+/* Game focus can persist after scrolling away. Keep Suu visible, but let
+   pointer input pass through her while a game control retains focus. */
 body:has(.castle-experience:focus-within) #sprite,
 body:has(.dw:focus-within) #sprite {
-  opacity: 0; pointer-events: none;
+  pointer-events: none;
 }
 
 /* night falls at the bottom of the valley */
