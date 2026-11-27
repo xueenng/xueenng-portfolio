@@ -8662,7 +8662,7 @@ html[data-theme="dark"] #top .hero-stats .stat { border-color:var(--dark-rule); 
 html[data-theme="dark"] .ft-scene { --ft-ink:var(--dark-ink); --ft-ink-2:var(--dark-muted); --ft-rule:var(--dark-rule); }
 html[data-theme="dark"] .ft-scene--castle .ft-brief { background:#172735; }
 html[data-theme="dark"] .ft-scene--castle .ft-brief::before { background-image:url('../assets/selected/full-dark-b/feature-paper-dark-v1.webp'); }
-html[data-theme="dark"] .ft-scene--mill::before { background-image:url('../assets/selected/full-dark-b/mill-night-v1.webp'); }
+html[data-theme="dark"] .ft-scene--mill::before { background-image:url('../assets/selected/full-dark-b/document-workshop-night-v2.webp'); }
 html[data-theme="dark"] .ft-scene--mill .ft-brief {
   background:linear-gradient(115deg,#223442,#14232e); border-color:#947d53;
   box-shadow:3px 3px 0 #263541,4px 4px 0 #947d53,0 9px 23px #08121c55;
